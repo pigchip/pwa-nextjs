@@ -32,7 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

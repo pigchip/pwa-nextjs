@@ -1,6 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Otros estilos globales */
+body {
+  font-family: 'Poppins', sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(var(--background-end-rgb))
+  )
+  rgb(var(--background-start-rgb));
+}
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -14,16 +28,6 @@
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
   }
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
 }
 
 @layer utilities {
