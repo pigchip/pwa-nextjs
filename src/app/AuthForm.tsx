@@ -4,8 +4,17 @@ import { useState } from 'react';
 
 export default function AuthForm() {
   const [isRegister, setIsRegister] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);  
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", description: "" });
+
+  const openSignInModal = (title: string, description: string) => {
+    setModalContent({ title, description });
+    setShowModal(true);
+  };  
 
   const openModal = (content: string) => {
     if (content === "Términos y Condiciones") {
@@ -77,6 +86,73 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     }
   };
 
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    if (isRegister) return;
+  
+    let hasError = false;
+    
+    if (!email) {
+      setEmailError(true);
+      hasError = true;
+    } else {
+      setEmailError(false);
+    }
+  
+    if (!password) {
+      setPasswordError(true);
+      hasError = true;
+    } else {
+      setPasswordError(false);
+    }
+  
+    const termsAccepted = (document.getElementById("terms-checkbox") as HTMLInputElement).checked;
+    const privacyAccepted = (document.getElementById("privacy-checkbox") as HTMLInputElement).checked;
+  
+    if (!termsAccepted || !privacyAccepted) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos y acepta los términos.");
+      return;
+    }
+  
+    if (hasError) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos.");
+      return;
+    }
+  
+    // Continuar con la solicitud a la API
+    try {
+      const response = await fetch("/api/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok && data.id !== null) {
+        // Caso exitoso
+        openSignInModal(
+          "Inicio de Sesión Exitoso",
+          `Bienvenido, ${data.name} ${data.lastname_pat} ${data.lastname_mat}.`
+        );
+      } else if (response.status === 400 || data.id === null) {
+        // Caso de datos incorrectos o bad request
+        openSignInModal(
+          "Error de Inicio de Sesión",
+          "Correo o contraseña incorrectos. Por favor, inténtalo de nuevo."
+        );
+      }
+    } catch (error) {
+      openSignInModal(
+        "Error de Conexión",
+        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+      );
+    }
+  };    
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
       <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
@@ -103,7 +179,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             Registro
           </button>
         </div>
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSignIn}>
           {isRegister && (
             <>
               <div className="relative">
@@ -156,7 +232,14 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             <input
               type="email"
               placeholder="Correo"
-              className="w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(false); // Resetea el error al escribir
+              }}
+              className={`w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e] ${
+                emailError ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
           </div>
           <div className="relative">
@@ -166,37 +249,44 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             <input
               type="password"
               placeholder="Contraseña"
-              className="w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setPasswordError(false); // Resetea el error al escribir
+              }}
+              className={`w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e] ${
+                passwordError ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
           </div>
           <div className="flex items-start mt-4">
             <input
-                type="checkbox"
-                className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-                style={{ width: '16px', height: '16px' }}
+              id="terms-checkbox"
+              type="checkbox"
+              className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
             />
             <label className="ml-2 text-sm text-gray-700 leading-tight">
-                He leído y acepto los{" "}
-                <a href="#" className="text-[#6ABDA6] underline" onClick={() => openModal("Términos y Condiciones")}>
+              He leído y acepto los{" "}
+              <a href="#" className="text-[#6ABDA6] underline" onClick={() => openModal("Términos y Condiciones")}>
                 Términos y Condiciones
-                </a>.
+              </a>.
             </label>
-            </div>
-            <div className="flex items-start mt-4">
+          </div>
+
+          <div className="flex items-start mt-4">
             <input
-                type="checkbox"
-                className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-                style={{ width: '16px', height: '16px' }}
+              id="privacy-checkbox"
+              type="checkbox"
+              className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
             />
             <label className="ml-2 text-sm text-gray-700 leading-tight">
-                ¿Usted ha leído y acepta los términos y condiciones
-                para el tratamiento de sus datos personales
-                contenidos en la{" "}
-                <a href="#" className="text-[#6ABDA6] underline" onClick={() => openModal("Política de Privacidad Web")}>
+              ¿Usted ha leído y acepta los términos y condiciones
+              para el tratamiento de sus datos personales contenidos en la{" "}
+              <a href="#" className="text-[#6ABDA6] underline" onClick={() => openModal("Política de Privacidad Web")}>
                 Política de Privacidad Web
-                </a>?
+              </a>?
             </label>
-            </div>
+          </div>
           <button
             type="submit"
             className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
