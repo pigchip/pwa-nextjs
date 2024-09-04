@@ -45,6 +45,7 @@ const Animation = () => {
           alt="Animación"
           width={500} // Ajusta el tamaño de la imagen según tu diseño
           height={500}
+          priority
         />
       ) : (
         <p>Cargando animación...</p>
