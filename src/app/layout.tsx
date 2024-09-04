@@ -10,19 +10,32 @@ export const metadata: Metadata = {
   generator: "Next.js",
   manifest: "/manifest.json",
   keywords: ["nextjs", "next14", "pwa", "next-pwa"],
-  themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#fff" }],
   authors: [
     {
       name: "pigchip",
       url: "https://www.linkedin.com/in/amgc2002/",
     },
   ],
-  viewport:
-    "minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover",
   icons: [
     { rel: "apple-touch-icon", url: "/icon-128.png" },
     { rel: "icon", url: "/icon-128.png" },
   ],
+};
+
+// Exporta `themeColor` y `viewport` por separado
+export const themeColor = {
+  color: [
+    { media: "(prefers-color-scheme: dark)", color: "#000" },
+    { media: "(prefers-color-scheme: light)", color: "#fff" },
+  ],
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  shrinkToFit: "no",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -31,8 +44,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.className}>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+        <meta name="theme-color" content="#fff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#000" media="(prefers-color-scheme: dark)" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
       </head>
       <body>{children}</body>
