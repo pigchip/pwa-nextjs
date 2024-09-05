@@ -4,6 +4,9 @@ import { useState } from 'react';
 
 export default function AuthForm() {
   const [isRegister, setIsRegister] = useState(true);
+  const [isUser, setIsUser] = useState(true);
+  const [isSupervisor, setIsSupervisor] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [name, setName] = useState("");
   const [lastname_pat, setLastnamePat] = useState("");
   const [lastname_mat, setLastnameMat] = useState("");
@@ -34,6 +37,10 @@ export default function AuthForm() {
   const [phoneErrorMessage, setPhoneErrorMessage] = useState("");
   const [occupationErrorMessage, setOccupationErrorMessage] = useState("");
 
+  const [id, setId] = useState("");
+  const [idError, setIdError] = useState(false);
+  const idErrorMessage = "ID no válido"; 
+
   const openSignInModal = (title: string, description: string) => {
     setModalContent({ title, description });
     setShowModal(true);
@@ -43,8 +50,9 @@ export default function AuthForm() {
   const validateCurp = (value: string) => /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/.test(value);
   const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(value);
+  const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
   const validateOccupation = (value: string) => value !== "";
+  const validateId = (value: string) => /^\d{10}$/.test(value);
 
   const openModal = (content: string) => {
     if (content === "Términos y Condiciones") {
@@ -116,6 +124,144 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     }
   };
 
+  const handleSupervisorClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let hasError = false;
+
+    if (!validateId(id)) {
+      setIdError(true);
+      hasError = true;
+    } else {
+      setIdError(false);
+    }
+  
+    if (!validatePassword(password)) {
+      setPasswordError(true);
+      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
+      hasError = true;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+  
+    if (hasError) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
+      return;
+    }
+  
+    // Continuar con la solicitud a la API
+    try {
+      const response = await fetch("/api/supervisor/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok && data.id !== null) {
+        // Caso exitoso
+        openSignInModal(
+          "Inicio de Sesión Exitoso",
+          `Bienvenido, Supervisor.`
+        );
+  
+        // Limpiar los campos después del éxito
+        setName("");
+        setLastnamePat("");
+        setLastnameMat("");
+        setCurp("");
+        setOccupation("");
+        setPhone("");
+        setId(""); // Cambiado a id
+        setPassword("");
+      } else if (response.status === 400 || data.id === null) {
+        // Caso de datos incorrectos o bad request
+        openSignInModal(
+          "Error de Inicio de Sesión :(",
+          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
+        );
+      }
+    } catch (error) {
+      openSignInModal(
+        "Error de Conexión",
+        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+      );
+    }
+  };
+  
+  const handleAdminClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let hasError = false;
+
+    if (!validateId(id)) {
+      setIdError(true);
+      hasError = true;
+    } else {
+      setIdError(false);
+    }
+    
+    if (!validatePassword(password)) {
+      setPasswordError(true);
+      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
+      hasError = true;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+  
+    if (hasError) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
+      return;
+    }
+  
+    // Continuar con la solicitud a la API
+    try {
+      const response = await fetch("/api/administrator/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok && data.id !== null) {
+        // Caso exitoso
+        openSignInModal(
+          "Inicio de Sesión Exitoso",
+          `Bienvenido, Administrador.`
+        );
+  
+        // Limpiar los campos después del éxito
+        setName("");
+        setLastnamePat("");
+        setLastnameMat("");
+        setCurp("");
+        setOccupation("");
+        setPhone("");
+        setId(""); // Cambiado a id
+        setPassword("");
+      } else if (response.status === 400 || data.id === null) {
+        // Caso de datos incorrectos o bad request
+        openSignInModal(
+          "Error de Inicio de Sesión :(",
+          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
+        );
+      }
+    } catch (error) {
+      openSignInModal(
+        "Error de Conexión",
+        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+      );
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -123,6 +269,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
 
     if (!validateEmail(email)) {
       setEmailError(true);
+      setEmailErrorMessage("El correo electrónico no es válido.");
       hasError = true;
     } else {
       setEmailError(false);
@@ -130,6 +277,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
 
     if (!validatePassword(password)) {
       setPasswordError(true);
+      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
       hasError = true;
     } else {
       setPasswordError(false);
@@ -351,7 +499,12 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             Iniciar sesión
           </button>
           <button
-            onClick={() => setIsRegister(true)}
+            onClick={() => {
+              setIsRegister(true);
+              setIsUser(true);
+              setIsSupervisor(false);
+              setIsAdmin(false);
+            }}
             className={`text-lg font-semibold pb-2 transition-colors ${
               isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
             }`}
@@ -359,6 +512,25 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             Registro
           </button>
         </div>
+        {isUser && (
+              <div className='text-[#6ABDA6] text-center'>
+                Usuario
+              </div>
+            )}
+        {!isRegister && (
+          <>
+            {isSupervisor && (
+              <div className='text-[#005aa7] text-center'>
+                Supervisor
+              </div>
+            )}
+            {isAdmin && (
+              <div className='text-[#fe8423] text-center'>
+                Administrador
+              </div>
+            )}
+          </>
+        )}
         <form className="space-y-4" onSubmit={isRegister ? handleSignUp : handleSignIn}>
           {isRegister && (
             <>
@@ -482,24 +654,49 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
               {phoneError && <p className="text-red-500">{phoneErrorMessage}</p>}
             </>
           )}
-          <div
-            className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-              emailError ? 'border-red-500' : 'border-gray-300'
-            } focus-within:border-green-500`}
-          >
-            <span className="material-icons text-black mr-2">email</span>
-            <input
-              type="email"
-              placeholder="Correo"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setEmailError(false); // Resetea el error al escribir
-              }}
-              className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-            />
-          </div>
-          {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
+          {isUser ? (
+            <>
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  emailError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">email</span>
+                <input
+                  type="email"
+                  placeholder="Correo"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                />
+              </div>
+              {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
+            </>
+          ) : (
+            <>
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  idError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">badge</span>
+                <input
+                  type="text"
+                  placeholder="ID"
+                  value={id}
+                  onChange={(e) => {
+                    setId(e.target.value);
+                    setIdError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                />
+              </div>
+              {idError && <p className="text-red-500">{idErrorMessage}</p>}
+            </>
+          )}
           <div
             className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
               passwordError ? 'border-red-500' : 'border-gray-300'
@@ -519,52 +716,113 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           </div>
           {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
           {isRegister && (
-  <>
-    <div className="flex items-start mt-4">
-      <input
-        id="terms-checkbox"
-        type="checkbox"
-        className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-      />
-      <label className="ml-2 text-sm text-gray-700 leading-tight">
-        He leído y acepto los{" "}
-        <a
-          href="#"
-          className="text-[#6ABDA6] underline"
-          onClick={() => openModal("Términos y Condiciones")}
-        >
-          Términos y Condiciones
-        </a>.
-      </label>
-    </div>
+          <>
+            <div className="flex items-start mt-4">
+              <input
+                id="terms-checkbox"
+                type="checkbox"
+                className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
+              />
+              <label className="ml-2 text-sm text-gray-700 leading-tight">
+                He leído y acepto los{" "}
+                <a
+                  href="#"
+                  className="text-[#6ABDA6] underline"
+                  onClick={() => openModal("Términos y Condiciones")}
+                >
+                  Términos y Condiciones
+                </a>.
+              </label>
+            </div>
 
-    <div className="flex items-start mt-4">
-      <input
-        id="privacy-checkbox"
-        type="checkbox"
-        className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-      />
-      <label className="ml-2 text-sm text-gray-700 leading-tight">
-        ¿Usted ha leído y acepta los términos y condiciones para el tratamiento
-        de sus datos personales contenidos en la{" "}
-        <a
-          href="#"
-          className="text-[#6ABDA6] underline"
-          onClick={() => openModal("Política de Privacidad Web")}
-        >
-          Política de Privacidad Web
-        </a>?
-      </label>
-    </div>
-  </>
-)}
+            <div className="flex items-start mt-4">
+              <input
+                id="privacy-checkbox"
+                type="checkbox"
+                className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
+              />
+              <label className="ml-2 text-sm text-gray-700 leading-tight">
+                ¿Usted ha leído y acepta los términos y condiciones para el tratamiento
+                de sus datos personales contenidos en la{" "}
+                <a
+                  href="#"
+                  className="text-[#6ABDA6] underline"
+                  onClick={() => openModal("Política de Privacidad Web")}
+                >
+                  Política de Privacidad Web
+                </a>?
+              </label>
+            </div>
+          </>
+        )}
 
+        {isUser && (
           <button
             type="submit"
             className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
           >
-            {isRegister ? 'Registrate aquí' : 'Iniciar sesión'}
+            {isRegister ? 'Regístrate aquí' : 'Iniciar sesión'}
           </button>
+        )}
+
+        {isSupervisor && (
+          <button
+            type="submit"
+            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
+            onClick={handleSupervisorClick}
+          >
+            Iniciar sesión
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            type="submit"
+            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
+            onClick={handleAdminClick}
+          >
+            Iniciar sesión
+          </button>
+        )}
+
+        {!isRegister && !isUser && (
+          <button
+            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+            onClick={() => {
+              setIsUser(true);
+              setIsSupervisor(false);
+              setIsAdmin(false);
+            }}
+          >
+            ¿Eres Usuario?
+          </button>
+        )}
+
+        {!isRegister && !isSupervisor && (
+          <button
+            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
+            onClick={() => {
+              setIsUser(false);
+              setIsSupervisor(true);
+              setIsAdmin(false);
+            }}
+          >
+            ¿Eres Supervisor?
+          </button>
+        )}
+
+        {!isRegister && !isAdmin && (
+          <button
+            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
+            onClick={() => {
+              setIsUser(false);
+              setIsSupervisor(false);
+              setIsAdmin(true);
+            }}
+          >
+            ¿Eres Administrador?
+          </button>
+        )}
         </form>
       </div>
 
