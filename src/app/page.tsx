@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Animation from './animation';
+import Animation from './Animation';
 import AuthForm from './AuthForm';
 
 export default function Home() {
@@ -15,7 +15,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex justify-center items-center h-screen bg-gray-100">
+    <main>
       {showAuthForm ? (
         <AuthForm />
       ) : (

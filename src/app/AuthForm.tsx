@@ -4,17 +4,47 @@ import { useState } from 'react';
 
 export default function AuthForm() {
   const [isRegister, setIsRegister] = useState(true);
+  const [name, setName] = useState("");
+  const [lastname_pat, setLastnamePat] = useState("");
+  const [lastname_mat, setLastnameMat] = useState("");
+  const [curp, setCurp] = useState("");
+  const [ocuparion, setOccupation] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);  
+  const [nameError, setNameError] = useState(false);
+  const [lastnamePatError, setLastnamePatError] = useState(false);
+  const [lastnameMatError, setLastnameMatError] = useState(false);
+  const [curpError, setCurpError] = useState(false);
+  const [occupationError, setOccupationError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", description: "" });
+
+  const [emailErrorMessage, setEmailErrorMessage] = useState("");
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+  const [nameErrorMessage, setNameErrorMessage] = useState("");
+  const [lastnamePatErrorMessage, setLastnamePatErrorMessage] = useState("");
+  const [lastnameMatErrorMessage, setLastnameMatErrorMessage] = useState("");
+  const [curpErrorMessage, setCurpErrorMessage] = useState("");
+  const [phoneErrorMessage, setPhoneErrorMessage] = useState("");
+  const [occupationErrorMessage, setOccupationErrorMessage] = useState("");
 
   const openSignInModal = (title: string, description: string) => {
     setModalContent({ title, description });
     setShowModal(true);
   };  
+
+  const validateName = (value: string) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value);
+  const validateCurp = (value: string) => /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/.test(value);
+  const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
+  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(value);
+  const validateOccupation = (value: string) => value !== "";
 
   const openModal = (content: string) => {
     if (content === "Términos y Condiciones") {
@@ -88,38 +118,28 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    if (isRegister) return;
-  
+
     let hasError = false;
-    
-    if (!email) {
+
+    if (!validateEmail(email)) {
       setEmailError(true);
       hasError = true;
     } else {
       setEmailError(false);
     }
-  
-    if (!password) {
+
+    if (!validatePassword(password)) {
       setPasswordError(true);
       hasError = true;
     } else {
       setPasswordError(false);
     }
-  
-    const termsAccepted = (document.getElementById("terms-checkbox") as HTMLInputElement).checked;
-    const privacyAccepted = (document.getElementById("privacy-checkbox") as HTMLInputElement).checked;
-  
-    if (!termsAccepted || !privacyAccepted) {
-      openSignInModal("Campos requeridos", "Por favor, completa todos los campos y acepta los términos.");
-      return;
-    }
-  
+
     if (hasError) {
-      openSignInModal("Campos requeridos", "Por favor, completa todos los campos.");
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
       return;
     }
-  
+
     // Continuar con la solicitud a la API
     try {
       const response = await fetch("/api/sign-in", {
@@ -129,20 +149,30 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok && data.id !== null) {
         // Caso exitoso
         openSignInModal(
           "Inicio de Sesión Exitoso",
           `Bienvenido, ${data.name} ${data.lastname_pat} ${data.lastname_mat}.`
         );
+
+        // Limpiar los campos después del éxito
+        setName("");
+        setLastnamePat("");
+        setLastnameMat("");
+        setCurp("");
+        setOccupation("");
+        setPhone("");
+        setEmail("");
+        setPassword("");
       } else if (response.status === 400 || data.id === null) {
         // Caso de datos incorrectos o bad request
         openSignInModal(
-          "Error de Inicio de Sesión",
-          "Correo o contraseña incorrectos. Por favor, inténtalo de nuevo."
+          "Error de Inicio de Sesión :(",
+          "Ocurrio un error al iniciar sesión, verifica que tus datos sean correctos."
         );
       }
     } catch (error) {
@@ -151,11 +181,161 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
       );
     }
-  };    
+  };  
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let hasError = false;
+
+    if (!validateName(name)) {
+      setNameError(true);
+      setNameErrorMessage("El nombre solo debe contener letras y espacios.");
+      hasError = true;
+    } else {
+      setNameError(false);
+      setNameErrorMessage("");
+    }
+    
+    if (!validateName(lastname_pat)) {
+      setLastnamePatError(true);
+      setLastnamePatErrorMessage("El apellido paterno solo debe contener letras y espacios.");
+      hasError = true;
+    } else {
+      setLastnamePatError(false);
+      setLastnamePatErrorMessage("");
+    }
+    
+    if (!validateName(lastname_mat)) {
+      setLastnameMatError(true);
+      setLastnameMatErrorMessage("El apellido materno solo debe contener letras y espacios.");
+      hasError = true;
+    } else {
+      setLastnameMatError(false);
+      setLastnameMatErrorMessage("");
+    }
+    
+    if (!validateCurp(curp)) {
+      setCurpError(true);
+      setCurpErrorMessage("La CURP no es válida.");
+      hasError = true;
+    } else {
+      setCurpError(false);
+      setCurpErrorMessage("");
+    }
+    
+    if (!validatePhone(phone)) {
+      setPhoneError(true);
+      setPhoneErrorMessage("El número de teléfono no es válido.");
+      hasError = true;
+    } else {
+      setPhoneError(false);
+      setPhoneErrorMessage("");
+    }
+    
+    if (!validateEmail(email)) {
+      setEmailError(true);
+      setEmailErrorMessage("El correo electrónico no es válido.");
+      hasError = true;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage("");
+    }
+    
+    if (!validatePassword(password)) {
+      setPasswordError(true);
+      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
+      hasError = true;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+    
+    if (!validateOccupation(ocuparion)) {
+      setOccupationError(true);
+      setOccupationErrorMessage("La ocupación no es válida.");
+      hasError = true;
+    } else {
+      setOccupationError(false);
+      setOccupationErrorMessage("");
+    }
+    
+      
+    const termsAccepted = (document.getElementById("terms-checkbox") as HTMLInputElement).checked;
+    const privacyAccepted = (document.getElementById("privacy-checkbox") as HTMLInputElement).checked;
+  
+    if (!termsAccepted || !privacyAccepted) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos y acepta los términos.");
+      return;
+    }
+
+    if (hasError) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
+      return;
+    }
+
+    // Continuar con la solicitud a la API
+    try {
+      const response = await fetch("/api/sign-up", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          lastname_pat,
+          lastname_mat,
+          email,
+          curp,
+          ocuparion,
+          password,
+          phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.id !== null) {
+        if(data == true){
+          openSignInModal(
+            "Te has registrado con éxito :)", 
+            `Inicia sesión para empezar a utilizar Mobility Time Saver`
+          );
+
+          // Limpiar los campos después del éxito
+          setName("");
+          setLastnamePat("");
+          setLastnameMat("");
+          setCurp("");
+          setOccupation("");
+          setPhone("");
+          setEmail("");
+          setPassword("");
+        }
+        else{
+          openSignInModal(
+            "El registro ha fallado :(",
+            "Ocurrió un error al realizar tu registro, verifica que tus datos sean correctos y sea una cuenta nueva."
+        );
+      }
+      } else if (response.status === 400 || data.id === null) {
+        // Caso de datos incorrectos o bad request
+        openSignInModal(
+          "El registro ha fallado :(",
+          "Ocurrió un error al realizar tu registro, verifica que tus datos sean correctos y sea una cuenta nueva."
+        );
+      }
+    } catch (error) {
+      openSignInModal(
+        "Error de Conexión",
+        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+      );
+    }
+  }; 
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-      <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
+      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
         {/* Título dinámico */}
         <h1 className="text-2xl font-bold text-center text-gray-800">
           Bienvenido a MTS, <br />
@@ -179,56 +359,135 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             Registro
           </button>
         </div>
-        <form className="space-y-4" onSubmit={handleSignIn}>
+        <form className="space-y-4" onSubmit={isRegister ? handleSignUp : handleSignIn}>
           {isRegister && (
             <>
-              <div className="relative">
-                <span className="absolute top-1/2 transform -translate-y-[45%] left-0 flex items-center pl-3">
-                  <span className="material-icons text-black">person</span>
-                </span>
+                <div
+                  className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                    nameError ? 'border-red-500' : 'border-gray-300'
+                  } focus-within:border-green-500`}
+                >
+                <span className="material-icons text-black mr-2">person</span>
                 <input
                   type="text"
                   placeholder="Nombre"
-                  className="w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    setNameError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                 />
               </div>
-              <div className="relative">
-                <span className="absolute top-1/2 transform -translate-y-[45%] left-0 flex items-center pl-3">
-                  <span className="material-icons text-black">badge</span>
-                </span>
+              {nameError && <p className="text-red-500">{nameErrorMessage}</p>}
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  lastnamePatError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">man</span>
+                <input
+                  type="text"
+                  placeholder="Apellido Paterno"
+                  value={lastname_pat}
+                  onChange={(e) => {
+                    setLastnamePat(e.target.value)
+                    setLastnamePatError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                />
+              </div>
+              {lastnamePatError && <p className="text-red-500">{lastnamePatErrorMessage}</p>}
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  lastnameMatError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">woman</span>
+                <input
+                  type="text"
+                  placeholder="Apellido Materno"
+                  value={lastname_mat}
+                  onChange={(e) =>{
+                    setLastnameMat(e.target.value)
+                    setLastnameMatError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                />
+              </div>
+              {lastnamePatError && <p className="text-red-500">{lastnameMatErrorMessage}</p>}
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  curpError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">badge</span>
                 <input
                   type="text"
                   placeholder="CURP"
-                  className="w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                  value={curp}
+                  onChange={(e) => {
+                    setCurp(e.target.value)
+                    setCurpError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                 />
               </div>
-              <div className="relative">
-                <span className="absolute top-1/2 transform -translate-y-[45%] left-0 flex items-center pl-3">
-                  <span className="material-icons text-black">calendar_today</span>
-                </span>
-                <input
-                  type="date"
-                  placeholder="DD/MM/AAAA"
-                  className="w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                  style={{ color: '#79807e' }}
-                />
+              {curpError && <p className="text-red-500">{curpErrorMessage}</p>}
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  occupationError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">work</span>
+                <select
+                  value={ocuparion}
+                  onChange={(e) => {
+                    setOccupation(e.target.value)
+                    setOccupationError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                >
+                  <option value="">Selecciona tu ocupación</option>
+                  <option value="Administrativo">Administrativo</option>
+                  <option value="Comerciante">Comerciante</option>
+                  <option value="Estudiante">Estudiante</option>
+                  <option value="Profesional de la Salud">Profesional de la Salud</option>
+                  <option value="Educador">Educador</option>
+                  <option value="Servicios">Servicios</option>
+                  <option value="Construcción">Construcción</option>
+                  <option value="Tecnologías de la Información">Tecnologías de la Información</option>
+                  <option value="Transporte">Transporte</option>
+                  <option value="Otro">Otro</option>
+                </select>
               </div>
-              <div className="relative">
-                <span className="absolute top-1/2 transform -translate-y-[45%] left-0 flex items-center pl-3">
-                  <span className="material-icons text-black">phone</span>
-                </span>
+              {occupationError && <p className="text-red-500">{occupationErrorMessage}</p>}
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  phoneError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">phone</span>
                 <input
                   type="tel"
                   placeholder="Teléfono celular"
-                  className="w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value)
+                    setPhoneError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                 />
               </div>
+              {phoneError && <p className="text-red-500">{phoneErrorMessage}</p>}
             </>
           )}
-          <div className="relative">
-            <span className="absolute top-1/2 transform -translate-y-[45%] left-0 flex items-center pl-3">
-              <span className="material-icons text-black">email</span>
-            </span>
+          <div
+            className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+              emailError ? 'border-red-500' : 'border-gray-300'
+            } focus-within:border-green-500`}
+          >
+            <span className="material-icons text-black mr-2">email</span>
             <input
               type="email"
               placeholder="Correo"
@@ -237,15 +496,16 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                 setEmail(e.target.value);
                 setEmailError(false); // Resetea el error al escribir
               }}
-              className={`w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e] ${
-                emailError ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
             />
           </div>
-          <div className="relative">
-            <span className="absolute top-1/2 transform -translate-y-[45%] left-0 flex items-center pl-3">
-              <span className="material-icons text-black">lock</span>
-            </span>
+          {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
+          <div
+            className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+              passwordError ? 'border-red-500' : 'border-gray-300'
+            } focus-within:border-green-500`}
+          >
+            <span className="material-icons text-black mr-2">lock</span>
             <input
               type="password"
               placeholder="Contraseña"
@@ -254,39 +514,51 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                 setPassword(e.target.value);
                 setPasswordError(false); // Resetea el error al escribir
               }}
-              className={`w-full px-4 py-2 pl-10 mt-1 border rounded-lg focus:ring focus:ring-[#6ABDA6] focus:outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e] ${
-                passwordError ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
             />
           </div>
-          <div className="flex items-start mt-4">
-            <input
-              id="terms-checkbox"
-              type="checkbox"
-              className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-            />
-            <label className="ml-2 text-sm text-gray-700 leading-tight">
-              He leído y acepto los{" "}
-              <a href="#" className="text-[#6ABDA6] underline" onClick={() => openModal("Términos y Condiciones")}>
-                Términos y Condiciones
-              </a>.
-            </label>
-          </div>
+          {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
+          {isRegister && (
+  <>
+    <div className="flex items-start mt-4">
+      <input
+        id="terms-checkbox"
+        type="checkbox"
+        className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
+      />
+      <label className="ml-2 text-sm text-gray-700 leading-tight">
+        He leído y acepto los{" "}
+        <a
+          href="#"
+          className="text-[#6ABDA6] underline"
+          onClick={() => openModal("Términos y Condiciones")}
+        >
+          Términos y Condiciones
+        </a>.
+      </label>
+    </div>
 
-          <div className="flex items-start mt-4">
-            <input
-              id="privacy-checkbox"
-              type="checkbox"
-              className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-            />
-            <label className="ml-2 text-sm text-gray-700 leading-tight">
-              ¿Usted ha leído y acepta los términos y condiciones
-              para el tratamiento de sus datos personales contenidos en la{" "}
-              <a href="#" className="text-[#6ABDA6] underline" onClick={() => openModal("Política de Privacidad Web")}>
-                Política de Privacidad Web
-              </a>?
-            </label>
-          </div>
+    <div className="flex items-start mt-4">
+      <input
+        id="privacy-checkbox"
+        type="checkbox"
+        className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
+      />
+      <label className="ml-2 text-sm text-gray-700 leading-tight">
+        ¿Usted ha leído y acepta los términos y condiciones para el tratamiento
+        de sus datos personales contenidos en la{" "}
+        <a
+          href="#"
+          className="text-[#6ABDA6] underline"
+          onClick={() => openModal("Política de Privacidad Web")}
+        >
+          Política de Privacidad Web
+        </a>?
+      </label>
+    </div>
+  </>
+)}
+
           <button
             type="submit"
             className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
