@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from 'react';
+import Tutorial from './Tutorial';
 
-export default function AuthForm() {
+import React from 'react';
+
+export default function AuthForm({ setShowTutorial, showTutorial }: { setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>, showTutorial: boolean }) {
   const [isRegister, setIsRegister] = useState(true);
   const [isUser, setIsUser] = useState(true);
   const [isSupervisor, setIsSupervisor] = useState(false);
@@ -168,6 +171,8 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           "Inicio de Sesión Exitoso",
           `Bienvenido, Supervisor.`
         );
+
+        setShowTutorial(true); // Agregado
   
         // Limpiar los campos después del éxito
         setName("");
@@ -237,6 +242,8 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           "Inicio de Sesión Exitoso",
           `Bienvenido, Administrador.`
         );
+
+        setShowTutorial(true); // Agregado
   
         // Limpiar los campos después del éxito
         setName("");
@@ -306,6 +313,8 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           "Inicio de Sesión Exitoso",
           `Bienvenido, ${data.name} ${data.lastname_pat} ${data.lastname_mat}.`
         );
+        
+        setShowTutorial(true); // Agregado
 
         // Limpiar los campos después del éxito
         setName("");
@@ -482,369 +491,375 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   }; 
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
-        {/* Título dinámico */}
-        <h1 className="text-2xl font-bold text-center text-gray-800">
-          Bienvenido a MTS, <br />
-          {isRegister ? 'Regístrate ahora :)' : 'Inicia sesión ;)'}
-        </h1>
-        <div className="flex justify-between mt-4 border-b border-gray-200">
-          <button
-            onClick={() => setIsRegister(false)}
-            className={`text-lg font-semibold pb-2 transition-colors ${
-              !isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
-            }`}
-          >
-            Iniciar sesión
-          </button>
-          <button
-            onClick={() => {
-              setIsRegister(true);
-              setIsUser(true);
-              setIsSupervisor(false);
-              setIsAdmin(false);
-            }}
-            className={`text-lg font-semibold pb-2 transition-colors ${
-              isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
-            }`}
-          >
-            Registro
-          </button>
-        </div>
-        {isUser && (
-              <div className='text-[#6ABDA6] text-center'>
-                Usuario
-              </div>
+    <>
+      {showTutorial ? (
+        <Tutorial />
+      ) : (
+        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+          <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
+            {/* Título dinámico */}
+            <h1 className="text-2xl font-bold text-center text-gray-800">
+              Bienvenido a MTS, <br />
+              {isRegister ? 'Regístrate ahora :)' : 'Inicia sesión ;)'}
+            </h1>
+            <div className="flex justify-between mt-4 border-b border-gray-200">
+              <button
+                onClick={() => setIsRegister(false)}
+                className={`text-lg font-semibold pb-2 transition-colors ${
+                  !isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
+                }`}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                onClick={() => {
+                  setIsRegister(true);
+                  setIsUser(true);
+                  setIsSupervisor(false);
+                  setIsAdmin(false);
+                }}
+                className={`text-lg font-semibold pb-2 transition-colors ${
+                  isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
+                }`}
+              >
+                Registro
+              </button>
+            </div>
+            {isUser && (
+                  <div className='text-[#6ABDA6] text-center'>
+                    Usuario
+                  </div>
+                )}
+            {!isRegister && (
+              <>
+                {isSupervisor && (
+                  <div className='text-[#005aa7] text-center'>
+                    Supervisor
+                  </div>
+                )}
+                {isAdmin && (
+                  <div className='text-[#fe8423] text-center'>
+                    Administrador
+                  </div>
+                )}
+              </>
             )}
-        {!isRegister && (
-          <>
+            <form className="space-y-4" onSubmit={isRegister ? handleSignUp : handleSignIn}>
+              {isRegister && (
+                <>
+                    <div
+                      className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                        nameError ? 'border-red-500' : 'border-gray-300'
+                      } focus-within:border-green-500`}
+                    >
+                    <span className="material-icons text-black mr-2">person</span>
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        setNameError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {nameError && <p className="text-red-500">{nameErrorMessage}</p>}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      lastnamePatError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">man</span>
+                    <input
+                      type="text"
+                      placeholder="Apellido Paterno"
+                      value={lastname_pat}
+                      onChange={(e) => {
+                        setLastnamePat(e.target.value)
+                        setLastnamePatError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {lastnamePatError && <p className="text-red-500">{lastnamePatErrorMessage}</p>}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      lastnameMatError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">woman</span>
+                    <input
+                      type="text"
+                      placeholder="Apellido Materno"
+                      value={lastname_mat}
+                      onChange={(e) =>{
+                        setLastnameMat(e.target.value)
+                        setLastnameMatError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {lastnamePatError && <p className="text-red-500">{lastnameMatErrorMessage}</p>}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      curpError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">badge</span>
+                    <input
+                      type="text"
+                      placeholder="CURP"
+                      value={curp}
+                      onChange={(e) => {
+                        setCurp(e.target.value)
+                        setCurpError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {curpError && <p className="text-red-500">{curpErrorMessage}</p>}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      occupationError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">work</span>
+                    <select
+                      value={ocuparion}
+                      onChange={(e) => {
+                        setOccupation(e.target.value)
+                        setOccupationError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    >
+                      <option value="">Selecciona tu ocupación</option>
+                      <option value="Administrativo">Administrativo</option>
+                      <option value="Comerciante">Comerciante</option>
+                      <option value="Estudiante">Estudiante</option>
+                      <option value="Profesional de la Salud">Profesional de la Salud</option>
+                      <option value="Educador">Educador</option>
+                      <option value="Servicios">Servicios</option>
+                      <option value="Construcción">Construcción</option>
+                      <option value="Tecnologías de la Información">Tecnologías de la Información</option>
+                      <option value="Transporte">Transporte</option>
+                      <option value="Otro">Otro</option>
+                    </select>
+                  </div>
+                  {occupationError && <p className="text-red-500">{occupationErrorMessage}</p>}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      phoneError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">phone</span>
+                    <input
+                      type="tel"
+                      placeholder="Teléfono celular"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value)
+                        setPhoneError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {phoneError && <p className="text-red-500">{phoneErrorMessage}</p>}
+                </>
+              )}
+              {isUser ? (
+                <>
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      emailError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">email</span>
+                    <input
+                      type="email"
+                      placeholder="Correo"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
+                </>
+              ) : (
+                <>
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      idError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">badge</span>
+                    <input
+                      type="text"
+                      placeholder="ID"
+                      value={id}
+                      onChange={(e) => {
+                        setId(e.target.value);
+                        setIdError(false); // Resetea el error al escribir
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {idError && <p className="text-red-500">{idErrorMessage}</p>}
+                </>
+              )}
+              <div
+                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                  passwordError ? 'border-red-500' : 'border-gray-300'
+                } focus-within:border-green-500`}
+              >
+                <span className="material-icons text-black mr-2">lock</span>
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError(false); // Resetea el error al escribir
+                  }}
+                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                />
+              </div>
+              {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
+              {isRegister && (
+              <>
+                <div className="flex items-start mt-4">
+                  <input
+                    id="terms-checkbox"
+                    type="checkbox"
+                    className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
+                  />
+                  <label className="ml-2 text-sm text-gray-700 leading-tight">
+                    He leído y acepto los{" "}
+                    <a
+                      href="#"
+                      className="text-[#6ABDA6] underline"
+                      onClick={() => openModal("Términos y Condiciones")}
+                    >
+                      Términos y Condiciones
+                    </a>.
+                  </label>
+                </div>
+
+                <div className="flex items-start mt-4">
+                  <input
+                    id="privacy-checkbox"
+                    type="checkbox"
+                    className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
+                  />
+                  <label className="ml-2 text-sm text-gray-700 leading-tight">
+                    ¿Usted ha leído y acepta los términos y condiciones para el tratamiento
+                    de sus datos personales contenidos en la{" "}
+                    <a
+                      href="#"
+                      className="text-[#6ABDA6] underline"
+                      onClick={() => openModal("Política de Privacidad Web")}
+                    >
+                      Política de Privacidad Web
+                    </a>?
+                  </label>
+                </div>
+              </>
+            )}
+
+            {isUser && (
+              <button
+                type="submit"
+                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+              >
+                {isRegister ? 'Regístrate aquí' : 'Iniciar sesión'}
+              </button>
+            )}
+
             {isSupervisor && (
-              <div className='text-[#005aa7] text-center'>
-                Supervisor
-              </div>
+              <button
+                type="submit"
+                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
+                onClick={handleSupervisorClick}
+              >
+                Iniciar sesión
+              </button>
             )}
+
             {isAdmin && (
-              <div className='text-[#fe8423] text-center'>
-                Administrador
-              </div>
+              <button
+                type="submit"
+                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
+                onClick={handleAdminClick}
+              >
+                Iniciar sesión
+              </button>
             )}
-          </>
-        )}
-        <form className="space-y-4" onSubmit={isRegister ? handleSignUp : handleSignIn}>
-          {isRegister && (
-            <>
-                <div
-                  className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                    nameError ? 'border-red-500' : 'border-gray-300'
-                  } focus-within:border-green-500`}
-                >
-                <span className="material-icons text-black mr-2">person</span>
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    setNameError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {nameError && <p className="text-red-500">{nameErrorMessage}</p>}
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  lastnamePatError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
+
+            {!isRegister && !isUser && (
+              <button
+                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+                onClick={() => {
+                  setIsUser(true);
+                  setIsSupervisor(false);
+                  setIsAdmin(false);
+                }}
               >
-                <span className="material-icons text-black mr-2">man</span>
-                <input
-                  type="text"
-                  placeholder="Apellido Paterno"
-                  value={lastname_pat}
-                  onChange={(e) => {
-                    setLastnamePat(e.target.value)
-                    setLastnamePatError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {lastnamePatError && <p className="text-red-500">{lastnamePatErrorMessage}</p>}
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  lastnameMatError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
+                ¿Eres Usuario?
+              </button>
+            )}
+
+            {!isRegister && !isSupervisor && (
+              <button
+                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
+                onClick={() => {
+                  setIsUser(false);
+                  setIsSupervisor(true);
+                  setIsAdmin(false);
+                }}
               >
-                <span className="material-icons text-black mr-2">woman</span>
-                <input
-                  type="text"
-                  placeholder="Apellido Materno"
-                  value={lastname_mat}
-                  onChange={(e) =>{
-                    setLastnameMat(e.target.value)
-                    setLastnameMatError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {lastnamePatError && <p className="text-red-500">{lastnameMatErrorMessage}</p>}
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  curpError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
+                ¿Eres Supervisor?
+              </button>
+            )}
+
+            {!isRegister && !isAdmin && (
+              <button
+                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
+                onClick={() => {
+                  setIsUser(false);
+                  setIsSupervisor(false);
+                  setIsAdmin(true);
+                }}
               >
-                <span className="material-icons text-black mr-2">badge</span>
-                <input
-                  type="text"
-                  placeholder="CURP"
-                  value={curp}
-                  onChange={(e) => {
-                    setCurp(e.target.value)
-                    setCurpError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {curpError && <p className="text-red-500">{curpErrorMessage}</p>}
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  occupationError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
-              >
-                <span className="material-icons text-black mr-2">work</span>
-                <select
-                  value={ocuparion}
-                  onChange={(e) => {
-                    setOccupation(e.target.value)
-                    setOccupationError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                >
-                  <option value="">Selecciona tu ocupación</option>
-                  <option value="Administrativo">Administrativo</option>
-                  <option value="Comerciante">Comerciante</option>
-                  <option value="Estudiante">Estudiante</option>
-                  <option value="Profesional de la Salud">Profesional de la Salud</option>
-                  <option value="Educador">Educador</option>
-                  <option value="Servicios">Servicios</option>
-                  <option value="Construcción">Construcción</option>
-                  <option value="Tecnologías de la Información">Tecnologías de la Información</option>
-                  <option value="Transporte">Transporte</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-              {occupationError && <p className="text-red-500">{occupationErrorMessage}</p>}
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  phoneError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
-              >
-                <span className="material-icons text-black mr-2">phone</span>
-                <input
-                  type="tel"
-                  placeholder="Teléfono celular"
-                  value={phone}
-                  onChange={(e) => {
-                    setPhone(e.target.value)
-                    setPhoneError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {phoneError && <p className="text-red-500">{phoneErrorMessage}</p>}
-            </>
-          )}
-          {isUser ? (
-            <>
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  emailError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
-              >
-                <span className="material-icons text-black mr-2">email</span>
-                <input
-                  type="email"
-                  placeholder="Correo"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
-            </>
-          ) : (
-            <>
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  idError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
-              >
-                <span className="material-icons text-black mr-2">badge</span>
-                <input
-                  type="text"
-                  placeholder="ID"
-                  value={id}
-                  onChange={(e) => {
-                    setId(e.target.value);
-                    setIdError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {idError && <p className="text-red-500">{idErrorMessage}</p>}
-            </>
-          )}
-          <div
-            className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-              passwordError ? 'border-red-500' : 'border-gray-300'
-            } focus-within:border-green-500`}
-          >
-            <span className="material-icons text-black mr-2">lock</span>
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setPasswordError(false); // Resetea el error al escribir
-              }}
-              className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-            />
+                ¿Eres Administrador?
+              </button>
+            )}
+            </form>
           </div>
-          {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
-          {isRegister && (
-          <>
-            <div className="flex items-start mt-4">
-              <input
-                id="terms-checkbox"
-                type="checkbox"
-                className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-              />
-              <label className="ml-2 text-sm text-gray-700 leading-tight">
-                He leído y acepto los{" "}
-                <a
-                  href="#"
-                  className="text-[#6ABDA6] underline"
-                  onClick={() => openModal("Términos y Condiciones")}
-                >
-                  Términos y Condiciones
-                </a>.
-              </label>
-            </div>
 
-            <div className="flex items-start mt-4">
-              <input
-                id="privacy-checkbox"
-                type="checkbox"
-                className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-              />
-              <label className="ml-2 text-sm text-gray-700 leading-tight">
-                ¿Usted ha leído y acepta los términos y condiciones para el tratamiento
-                de sus datos personales contenidos en la{" "}
-                <a
-                  href="#"
-                  className="text-[#6ABDA6] underline"
-                  onClick={() => openModal("Política de Privacidad Web")}
-                >
-                  Política de Privacidad Web
-                </a>?
-              </label>
-            </div>
-          </>
-        )}
-
-        {isUser && (
-          <button
-            type="submit"
-            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
-          >
-            {isRegister ? 'Regístrate aquí' : 'Iniciar sesión'}
-          </button>
-        )}
-
-        {isSupervisor && (
-          <button
-            type="submit"
-            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
-            onClick={handleSupervisorClick}
-          >
-            Iniciar sesión
-          </button>
-        )}
-
-        {isAdmin && (
-          <button
-            type="submit"
-            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
-            onClick={handleAdminClick}
-          >
-            Iniciar sesión
-          </button>
-        )}
-
-        {!isRegister && !isUser && (
-          <button
-            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
-            onClick={() => {
-              setIsUser(true);
-              setIsSupervisor(false);
-              setIsAdmin(false);
-            }}
-          >
-            ¿Eres Usuario?
-          </button>
-        )}
-
-        {!isRegister && !isSupervisor && (
-          <button
-            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
-            onClick={() => {
-              setIsUser(false);
-              setIsSupervisor(true);
-              setIsAdmin(false);
-            }}
-          >
-            ¿Eres Supervisor?
-          </button>
-        )}
-
-        {!isRegister && !isAdmin && (
-          <button
-            className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
-            onClick={() => {
-              setIsUser(false);
-              setIsSupervisor(false);
-              setIsAdmin(true);
-            }}
-          >
-            ¿Eres Administrador?
-          </button>
-        )}
-        </form>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div
-          id="modal-overlay"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={handleClickOutside}
-        >
-          <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg h-96 overflow-y-auto relative">
-          <button
-            className="fixed top-2 right-2 bg-[#6ABDA6] text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
-            onClick={closeModal}
+          {/* Modal */}
+          {showModal && (
+            <div
+              id="modal-overlay"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+              onClick={handleClickOutside}
             >
-            <span className="material-icons">close</span>
-            </button>
-            <h2 className="text-xl font-bold mb-4 text-gray-900">{modalContent.title}</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{modalContent.description}</p>
-          </div>
+              <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg h-96 overflow-y-auto relative">
+              <button
+                className="fixed top-2 right-2 bg-[#6ABDA6] text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                onClick={closeModal}
+                >
+                <span className="material-icons">close</span>
+                </button>
+                <h2 className="text-xl font-bold mb-4 text-gray-900">{modalContent.title}</h2>
+                <p className="text-gray-700 whitespace-pre-wrap">{modalContent.description}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }

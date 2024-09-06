@@ -8,6 +8,16 @@ import Tutorial from './Tutorial';
 
 export default function Home() {
   const [showAuthForm, setShowAuthForm] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false); // Controla si se debe mostrar el Tutorial o el Container
+
+  // Cargar el estado de showTutorial desde localStorage al cargar la página
+  useEffect(() => {
+    const savedShowTutorial = localStorage.getItem('showTutorial');
+    if (savedShowTutorial === 'true') {
+      setShowTutorial(true);
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowAuthForm(true); // Mostrar el formulario de autenticación después de la animación
@@ -18,7 +28,19 @@ export default function Home() {
 
   return (
     <main>
-      {showAuthForm ? <Container /> : <Animation />}
+      {showTutorial ? (
+        <Tutorial /> // Mostrar el Tutorial si showTutorial es true
+      ) : showAuthForm ? (
+        <AuthForm 
+          setShowTutorial={(value) => {
+            setShowTutorial(value);
+            localStorage.setItem('showTutorial', value.toString()); // Guardar en localStorage
+          }}
+          showTutorial={showTutorial} // Pasar la variable showTutorial
+        />
+      ) : (
+        <Animation />
+      )}
     </main>
   );
 }
