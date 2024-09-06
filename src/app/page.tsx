@@ -1,8 +1,10 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import Animation from './Animation';
 import AuthForm from './AuthForm';
+import Container from './Container';
+import Tutorial from './Tutorial';
 
 export default function Home() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -16,11 +18,8 @@ export default function Home() {
 
   return (
     <main>
-      {showAuthForm ? (
-        <AuthForm />
-      ) : (
-        <Animation />
-      )}
+      {<Tutorial/>
+      /* {showAuthForm ? <Container /> : <Animation />} */}
     </main>
   );
 }
