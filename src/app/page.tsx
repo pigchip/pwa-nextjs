@@ -11,15 +11,14 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowAuthForm(true); // Mostrar el formulario de autenticación después de la animación
-    }, 3500); // Duración de la animación en milisegundos
+    }, 5000); // Duración de la animación en milisegundos
 
     return () => clearTimeout(timer); // Limpia el timeout al desmontar
   }, []);
 
   return (
     <main>
-      {<Tutorial/>
-      /* {showAuthForm ? <Container /> : <Animation />} */}
+      {showAuthForm ? <Container /> : <Animation />}
     </main>
   );
 }
