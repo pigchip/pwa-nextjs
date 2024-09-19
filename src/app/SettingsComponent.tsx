@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import AccountDetailsComponent from './AccountDetailsComponent';
 
 // Validaciones
-const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
 
 const SettingsComponent: React.FC = () => {
@@ -45,10 +44,9 @@ const SettingsComponent: React.FC = () => {
 
   // Función para manejar el envío del formulario de eliminación de cuenta
   const handleDeleteAccount = async () => {
-    if (!validateEmail(email)) {
-      setError('Por favor, introduce un correo electrónico válido.');
-      return;
-    }
+
+    const email = localStorage.getItem('email'); // Obtener email de localStorage
+
     if (!validatePassword(password)) {
       setError('La contraseña debe tener al menos 8 caracteres, una letra y un número.');
       return;
@@ -123,16 +121,6 @@ const SettingsComponent: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
             <h3 className="text-lg font-semibold mb-4">Eliminar cuenta</h3>
             {error && <p className="text-red-500 mb-2">{error}</p>}
-            <label className="block mb-2">
-              Correo electrónico:
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="border border-gray-300 rounded-md p-2 w-full"
-                placeholder="Introduce tu correo"
-              />
-            </label>
             <label className="block mb-4">
               Contraseña:
               <input
