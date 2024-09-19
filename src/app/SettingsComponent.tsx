@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import { NextResponse } from 'next/server';
+import AccountDetailsComponent from './AccountDetailsComponent';
 
 // Validaciones
 const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
 
 const SettingsComponent: React.FC = () => {
+  const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false);
+
+  // Función para abrir el modal
+  const handleAccountDetailsClick = () => {
+    setShowAccountDetailsModal(true);
+  };
+
+  // Función para cerrar el modal desde el componente hijo
+  const handleCloseModalProfile = () => {
+    setShowAccountDetailsModal(false);
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +38,7 @@ const SettingsComponent: React.FC = () => {
 
   // Función para cerrar sesión
   const handleLogout = () => {
+    localStorage.removeItem('email'); // Eliminar email de localStorage
     localStorage.setItem('showTutorial', 'false'); // Cambiar el estado de showTutorial en localStorage
     window.location.reload(); // Recargar la página para simular cierre de sesión
   };
@@ -58,6 +71,7 @@ const SettingsComponent: React.FC = () => {
         alert('Cuenta eliminada correctamente.');
         
         // Cerrar sesión después de eliminar la cuenta
+        localStorage.removeItem('email'); // Eliminar email de localStorage
         handleLogout();
       } else {
         setError('Error al eliminar la cuenta. Intenta de nuevo.');
@@ -74,7 +88,12 @@ const SettingsComponent: React.FC = () => {
       <div className="flex flex-col flex-grow items-start space-y-6 w-full pl-4 mt-4 overflow-y-auto">
         {/* User Avatar and Options Title */}
         <div className="flex flex-col items-start space-y-2 w-full">
-          <span className="material-icons text-[#6ABDA6]">account_circle</span>
+          <span
+              className="material-icons text-[#6ABDA6] cursor-pointer"
+              onClick={handleAccountDetailsClick}
+            >
+              account_circle
+          </span>
           <h2 className="text-xl font-bold text-black">Opciones</h2>
         </div>
       </div>
@@ -134,6 +153,11 @@ const SettingsComponent: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal para mostrar detalles de la cuenta */}
+      {showAccountDetailsModal && (
+        <AccountDetailsComponent onClose={handleCloseModalProfile} />
       )}
     </div>
   );

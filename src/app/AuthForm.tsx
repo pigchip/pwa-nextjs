@@ -128,6 +128,9 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   };
 
   const handleSupervisorClick = async (e: React.FormEvent) => {
+    // Guardar el email en localStorage
+    localStorage.setItem("email", email);
+
     e.preventDefault();
 
     let hasError = false;
@@ -199,6 +202,9 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   };
   
   const handleAdminClick = async (e: React.FormEvent) => {
+    // Guardar el email en localStorage
+    localStorage.setItem("email", email);
+    
     e.preventDefault();
 
     let hasError = false;
@@ -308,6 +314,9 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       const data = await response.json();
 
       if (response.ok && data.id !== null) {
+        // Guardar el email en localStorage
+        localStorage.setItem("email", email);
+
         // Caso exitoso
         openSignInModal(
           "Inicio de Sesión Exitoso",
