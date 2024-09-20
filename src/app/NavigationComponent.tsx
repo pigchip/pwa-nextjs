@@ -41,7 +41,7 @@ const NavigationComponent: React.FC = () => {
       <div className="relative flex-grow">
         {/* Autocompletar Inicio - Posicionamos encima del mapa con transparencia y menor ancho */}
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-opacity-50 shadow-md rounded-md backdrop-blur-sm max-w-64 w-full">
-          <AutoComplete placeholder="Inicio" onSelect={setStartLocation} />
+          <AutoComplete placeholder="Mi Ubicación" onSelect={setStartLocation} />
         </div>
 
         {/* Autocompletar Destino - Posicionamos encima del mapa con transparencia y menor ancho */}

@@ -84,7 +84,7 @@ export default function AutoComplete({ placeholder, onSelect }: AutoCompleteProp
     }, 100);
   };
 
-  const inputStyle = placeholder === "Inicio"
+  const inputStyle = placeholder === "Mi Ubicación"
   ? "bg-[#dadada] placeholder-black text-black p-2 rounded-xl w-full shadow-xl"
   : "bg-[#6ABDA6] placeholder-black opacity-70 text-black p-2 rounded-xl w-full shadow-xl";
 

@@ -2,7 +2,7 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Room } from '@mui/icons-material'; // Importamos el ícono de ubicación de Material Icons
 import { renderToStaticMarkup } from 'react-dom/server';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Función para crear un ícono con estilo circular para el inicio
 const createStartIcon = () => {
@@ -94,6 +94,7 @@ const createEndIcon = () => {
   });
 };
 
+
 interface MapProps {
   startLocation: { lat: number, lon: number } | null;
   endLocation: { lat: number, lon: number } | null;
@@ -133,10 +134,34 @@ export default function Map({ startLocation, endLocation }: MapProps) {
   const defaultPosition: L.LatLngExpression = [19.432608, -99.133209]; // Coordenadas iniciales (CDMX)
   const startIcon = createStartIcon(); // Ícono para el inicio
   const endIcon = createEndIcon(); // Ícono para el destino
+
+  const [userLocation, setUserLocation] = useState<{ lat: number, lon: number } | null>(null);
   
+  useEffect(() => {
+    if (!startLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lon: longitude });
+        },
+        (error) => {
+          console.error('Error al obtener la ubicación', error);
+          alert(`Error (${error.code}): ${error.message}`);
+          setUserLocation({ lat: 19.432608, lon: -99.133209 }); // Ubicación predeterminada si falla
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    }
+  }, [startLocation]);
+  
+
   return (
     <MapContainer
-      center={defaultPosition}
+      center={userLocation ? [userLocation.lat, userLocation.lon] : defaultPosition}
       zoom={13}
       style={{ height: '100%', width: '100%' }}
     >
@@ -154,9 +179,17 @@ export default function Map({ startLocation, endLocation }: MapProps) {
           <Popup>Destino</Popup>
         </Marker>
       )}
+
+      {/* Renderizamos el marcador de la ubicación del usuario si está disponible */}
+{!startLocation && userLocation && (
+  <Marker position={[userLocation.lat, userLocation.lon] as L.LatLngExpression} icon={startIcon}>
+    <Popup>Ubicación actual</Popup>
+  </Marker>
+)}
+
       
       {/* Componente que maneja el centrado y zoom */}
-      <MapView startLocation={startLocation} endLocation={endLocation} />
+      <MapView startLocation={startLocation || userLocation} endLocation={endLocation} />
     </MapContainer>
   );
 }
