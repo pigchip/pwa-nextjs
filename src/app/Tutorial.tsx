@@ -52,7 +52,7 @@ const Tutorial = () => {
       {hasStarted ? (
         <Container /> // Muestra el componente Container cuando el tutorial ha comenzado
       ) : (
-        <div className="flex flex-col items-center justify-between min-h-screen mx-auto p-6 bg-white">
+        <div className="flex flex-col items-center justify-between h-[93vh] sm:h-screen mx-auto p-6 bg-white">
           {/* Contenedor fijo para el GIF con margen superior */}
           <div className="flex justify-center w-full mt-16 mb-8">
             <div className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded-md overflow-hidden">

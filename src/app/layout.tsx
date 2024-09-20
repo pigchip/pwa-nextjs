@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import 'leaflet/dist/leaflet.css'; // Importa los estilos aquí
+import './globals.css'; // Si tienes estilos globales
 
 const inter = Inter({ subsets: ["latin"] });
 

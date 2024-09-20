@@ -25,7 +25,7 @@ const Container: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden"> {/* Asegura que no se extienda más de la pantalla */}
+    <div className="flex flex-col h-[93vh] sm:h-screen overflow-hidden"> {/* Asegura que no se extienda más de la pantalla */}
       {/* Vista principal */}
       <div className="flex-grow overflow-y-auto"> {/* Solo el contenido principal puede desplazarse */}
         {renderComponent()}

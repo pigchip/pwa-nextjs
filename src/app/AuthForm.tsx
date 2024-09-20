@@ -499,12 +499,16 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     }
   }; 
 
+  const inputStyle = isRegister
+  ? "flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100"
+  : "flex flex-col items-center justify-center h-[93vh] sm:h-screen p-4 bg-gray-100";
+
   return (
     <>
       {showTutorial ? (
         <Tutorial />
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+        <div className={inputStyle}>
           <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
             {/* Título dinámico */}
             <h1 className="text-2xl font-bold text-center text-gray-800">

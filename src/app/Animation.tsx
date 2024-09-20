@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Animation = () => {
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
+    <div className="flex justify-center items-center h-[93vh] sm:h-screen bg-gray-100">
       <Image
         src="/main_anim.gif"
         alt="Animación"
