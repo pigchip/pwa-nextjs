@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import 'leaflet/dist/leaflet.css'; // Importa los estilos aquí
-import './globals.css'; // Si tienes estilos globales
+import 'leaflet/dist/leaflet.css';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,15 +19,7 @@ export const metadata: Metadata = {
   ],
   icons: [
     { rel: "apple-touch-icon", url: "/icon-128.png" },
-    { rel: "icon", type: "image/x-icon", url: "/favicon.ico" },  // Asegura que esté bien especificado
-  ],
-};
-
-// Exporta `themeColor` y `viewport` por separado
-export const themeColor = {
-  color: [
-    { media: "(prefers-color-scheme: dark)", color: "#000" },
-    { media: "(prefers-color-scheme: light)", color: "#fff" },
+    { rel: "icon", type: "image/x-icon", url: "/favicon.ico" },
   ],
 };
 

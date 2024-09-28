@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AccountDetailsComponent from './AccountDetailsComponent';
+import Image from 'next/image';
 
 // Validaciones
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
@@ -112,7 +113,7 @@ const SettingsComponent: React.FC = () => {
             Cerrar sesión
           </button>
         </div>
-        <img src="/icon-512.png" alt="Logo" className="h-16 w-16 mt-4" />
+        <Image src="/icon-512.png" alt="Logo" width={64} height={64} className="mt-4" />
       </div>
 
       {/* Modal de eliminación de cuenta */}

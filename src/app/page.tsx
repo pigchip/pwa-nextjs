@@ -15,8 +15,12 @@ export default function Home() {
     const savedShowTutorial = localStorage.getItem('showTutorial');
     if (savedShowTutorial === 'true') {
       setShowTutorial(true);
+    } else {
+      setShowTutorial(false);
     }
+    console.log("Show Tutorial State Loaded:", savedShowTutorial);
   }, []);
+  
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Container from './Container'; 
+import Image from 'next/image';
 
 const Tutorial = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -56,10 +57,13 @@ const Tutorial = () => {
           {/* Contenedor fijo para el GIF con margen superior */}
           <div className="flex justify-center w-full mt-16 mb-8">
             <div className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded-md overflow-hidden">
-              <img
+              <Image
+                unoptimized
                 src={steps[currentStep].gif}
                 alt="Tutorial Gif"
                 className="object-contain w-full h-full bg-white"
+                width={256}
+                height={256}
               />
             </div>
           </div>
