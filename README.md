@@ -166,4 +166,6 @@ Follow these steps to set up the project locally:
 
 ## 🔙 Backend
 
-The backend of the project is developed in **Spring Boot** available soon...
+The backend of the project is developed in **Spring Boot**.
+
+[Click here](https://github.com/Angel-GL-GL/MTS_Backend)
