@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+// src/app/ReportsComponent.tsx
+import React from 'react';
+import { useRouter } from 'next/navigation';
 
 const ReportsComponent: React.FC = () => {
+  const router = useRouter();
+
+  const handleButtonClick = () => {
+    router.push('/create-evidence');
+  };
 
   return (
     <div className="flex flex-col h-full justify-between bg-gray-100">
@@ -14,7 +21,10 @@ const ReportsComponent: React.FC = () => {
         <span className='text-[#6C7976] text-lg'>
           Todo bien por aquí, no tienes ninguna evidencia aprobada :)
         </span>
-        <button className="w-64 py-2 mt-4 bg-[#6ABDA6] text-white font-semibold rounded-lg">
+        <button 
+          className="w-64 py-2 mt-4 bg-[#6ABDA6] text-white font-semibold rounded-lg"
+          onClick={handleButtonClick}
+        >
           Solicitar Evidencia
         </button>
       </div>
