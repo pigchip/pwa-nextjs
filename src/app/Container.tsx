@@ -1,11 +1,10 @@
-// Container.tsx
 import React, { useState } from 'react';
 import NavigationComponent from './NavigationComponent';
 import SavedLocationsComponent from './SavedLocationsComponent';
 import ReportsComponent from './ReportsComponent';
 import SettingsComponent from './SettingsComponent';
 import HeaderComponent from './HeaderComponent';
-import FooterComponent from './FooterComponent'; // Importa el FooterComponent
+import FooterComponent from './FooterComponent';
 
 type ActiveComponent = 'navigation' | 'search-history' | 'reports' | 'settings';
 
@@ -29,19 +28,27 @@ const Container: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[93vh] sm:h-screen overflow-hidden"> {/* Asegura que no se extienda más de la pantalla */}
-      {/* Vista principal */}
-      <div className="flex-1 overflow-auto">
-        {renderComponent()}
+      
+      {/* Header con altura fija */}
+      <div className="flex-none h-16 bg-gray-200">
+        <HeaderComponent />
       </div>
 
-      {/* Footer con botones de navegación */}
-      <div className="flex-none">
+      {/* Vista principal que ocupa el espacio restante y ajusta el contenido */}
+      <div className="flex-1 overflow-y-auto"> {/* Permite el scroll solo si el contenido se desborda */}
+        <div className="h-full">
+          {renderComponent()}
+        </div>
+      </div>
+
+      {/* Footer con altura fija */}
+      <div className="flex-none h-16 bg-gray-200">
         <FooterComponent 
           activeComponent={activeComponent} 
           setActiveComponent={setActiveComponent} 
         />
       </div>
-      
+
     </div>
   );
 };

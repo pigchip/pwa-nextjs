@@ -187,7 +187,7 @@ function MapView({
       ]);
 
       map.fitBounds(bounds.pad(0.1), {
-        paddingBottomRight: [0, 180],
+        paddingTopLeft: [0, 100],
         maxZoom: 14,
       });
     } else {
@@ -458,9 +458,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Contenedor del mapa */}
-      <div className="flex-1 z-10">
+    <div className="flex flex-col h-full">
+      {/* Contenedor del mapa con una altura fija */}
+      <div className={`flex-grow min-h-[100px] z-10 ${isExpanded ? 'h-[145px]' : 'h-[420px]'}`}>
         <MapContainer
           center={
             startLocation
@@ -497,20 +497,16 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           )}
 
           {/* Itinerarios trazados */}
-          {itineraryData.map((itinerary, index) => (
-            <React.Fragment key={index}>
-              {itinerary.legs.map((leg, legIndex) => {
-                if (leg.legGeometry && leg.legGeometry.points) {
-                  const decodedPoints = polyline.decode(leg.legGeometry.points);
-                  const style = getPolylineStyle(leg);
-                  return (
-                    <Polyline key={legIndex} positions={decodedPoints} pathOptions={style} />
-                  );
-                }
-                return null;
-              })}
-            </React.Fragment>
-          ))}
+          {selectedItinerary && selectedItinerary.legs.map((leg, legIndex) => {
+            if (leg.legGeometry && leg.legGeometry.points) {
+              const decodedPoints = polyline.decode(leg.legGeometry.points);
+              const style = getPolylineStyle(leg);
+              return (
+                <Polyline key={legIndex} positions={decodedPoints} pathOptions={style} />
+              );
+            }
+            return null;
+          })}
 
           {/* Componente que maneja el centrado y zoom */}
           <MapView startLocation={startLocation || userLocation} endLocation={endLocation} />
@@ -518,10 +514,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       </div>
       
       {/* Contenedor del menú expandible */}
-      <div className={`bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg ${isExpanded ? 'h-1/2' : 'h-30'}`}>
+      <div className={`overflow-y-auto bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg flex-none ${isExpanded ? 'h-[454px]' : 'h-[180px]'}`}>
         {/* Botón para expandir/contraer */}
         <div
-          className="flex justify-center items-center cursor-pointer bg-gray-200 py-2"
+          className="flex justify-center items-center cursor-pointer bg-gray-200"
           onClick={toggleExpand}
         >
           {isExpanded ? (
@@ -530,7 +526,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
             <ExpandMoreIcon className="text-gray-500" />
           )}
         </div>
-        <div className="p-4 flex flex-col h-full">
+        <div className="p-4 flex flex-col">
           {/* Contenido del menú */}
           {loading ? (
             <p className="text-center">Cargando itinerarios...</p>
