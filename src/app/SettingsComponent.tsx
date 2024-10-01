@@ -1,23 +1,10 @@
 import React, { useState } from 'react';
-import AccountDetailsComponent from './AccountDetailsComponent';
 import Image from 'next/image';
 
 // Validaciones
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
 
 const SettingsComponent: React.FC = () => {
-  const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false);
-
-  // Función para abrir el modal
-  const handleAccountDetailsClick = () => {
-    setShowAccountDetailsModal(true);
-  };
-
-  // Función para cerrar el modal desde el componente hijo
-  const handleCloseModalProfile = () => {
-    setShowAccountDetailsModal(false);
-  };
-
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,17 +71,8 @@ const SettingsComponent: React.FC = () => {
   return (
     <div className="flex flex-col h-full justify-between bg-gray-100 overflow-hidden">
       {/* Main Content */}
-      <div className="flex flex-col flex-grow items-start space-y-6 w-full pl-4 mt-4 overflow-y-auto">
-        {/* User Avatar and Options Title */}
-        <div className="flex flex-col items-start space-y-2 w-full">
-          <span
-              className="material-icons text-[#6ABDA6] cursor-pointer"
-              onClick={handleAccountDetailsClick}
-            >
-              account_circle
-          </span>
-          <h2 className="text-xl font-bold text-black">Opciones</h2>
-        </div>
+      <div className="flex flex-col items-start w-full pl-5">
+        <h2 className="text-xl font-bold text-black">Opciones</h2>
       </div>
 
       {/* Bottom Buttons and Image */}
@@ -142,11 +120,6 @@ const SettingsComponent: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Modal para mostrar detalles de la cuenta */}
-      {showAccountDetailsModal && (
-        <AccountDetailsComponent onClose={handleCloseModalProfile} />
       )}
     </div>
   );

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Animation from './Animation';
 import AuthForm from './AuthForm';
-import Container from './Container';
 import Tutorial from './Tutorial';
 
 export default function Home() {

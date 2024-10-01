@@ -1,18 +1,17 @@
-// src/app/MapComponent.tsx
-import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
-const Map = dynamic(() => import('./Map'), { ssr: false });
-
 interface MapComponentProps {
-  startLocation: { lat: number, lon: number } | null;
-  endLocation: { lat: number, lon: number } | null;
+  startLocation: { lat: number; lon: number } | null;
+  endLocation: { lat: number; lon: number } | null;
 }
+
+// Importa dinámicamente el componente combinado
+const ItineraryMapComponent = dynamic(() => import('./ItineraryMapComponent'), { ssr: false });
 
 export default function MapComponent({ startLocation, endLocation }: MapComponentProps) {
   return (
-    <div style={{ height: '100%', width: '100%', position: 'relative', zIndex: 1 }}>
-      <Map startLocation={startLocation} endLocation={endLocation} />
+    <div className='flex-1 overflow-auto'>
+      <ItineraryMapComponent startLocation={startLocation} endLocation={endLocation} />
     </div>
   );
 }
