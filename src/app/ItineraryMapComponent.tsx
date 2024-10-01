@@ -378,7 +378,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     `;
 
     try {
-      const response = await fetch('http://localhost:8080/otp/routers/default/index/graphql', {
+
+      const otpUrl = process.env.OTP_API_BASE_URL;
+
+      const response = await fetch(`${otpUrl}otp/routers/default/index/graphql`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
