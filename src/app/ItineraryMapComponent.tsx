@@ -379,7 +379,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
     try {
 
-      const otpUrl = process.env.OTP_API_BASE_URL;
+      const otpUrl = process.env.NEXT_PUBLIC_OTP_API_BASE_URL;
 
       const response = await fetch(`${otpUrl}otp/routers/default/index/graphql`, {
         method: 'POST',
