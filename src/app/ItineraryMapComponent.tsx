@@ -425,7 +425,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     // Filtrar itinerarios nulos y ordenar de menor a mayor duración
     const sortedItineraries = [walkItinerary, oneTransferItinerary, twoTransferItinerary]
       .filter(Boolean)
-      .sort((a, b) => a.duration - b.duration);
+      .sort((a, b) => (a && b ? a.duration - b.duration : 0));
 
     setItineraryData(sortedItineraries as Itinerary[]);
     setLoading(false);
