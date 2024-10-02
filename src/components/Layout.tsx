@@ -13,7 +13,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, []);
 
   return (
-    <SelectedItineraryProvider>
       <div className="flex flex-col h-[93vh] sm:h-screen overflow-hidden">
         <div className="flex-none h-16 bg-gray-200">
           <HeaderComponent />
@@ -25,7 +24,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <FooterComponent />
         </div>
       </div>
-    </SelectedItineraryProvider>
   );
 };
 
