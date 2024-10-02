@@ -6,8 +6,9 @@ import 'leaflet/dist/leaflet.css';
 import '../globals.css';
 import { SelectedItineraryContext } from '../contexts/SelectedItineraryContext';
 import Layout from '@/components/Layout';
-import ItineraryMapComponent from '../ItineraryMapComponent';
+import dynamic from 'next/dynamic';
 
+const ItineraryMapComponent = dynamic(() => import('../ItineraryMapComponent'), { ssr: false });
 
 const NavigationComponent: React.FC = () => {
   const {
