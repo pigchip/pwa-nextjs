@@ -24,31 +24,37 @@ const FooterComponent: React.FC = () => {
           onClick={() => handleNavigation('/navigation')}
           className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/navigation')}`}
         >
-          <i className="material-icons mt-2">navigation</i>
+          <NavigationIcon className="mt-2" />
         </button>
       </div>
+
+      {/* Botón Rutas Guardadas */}
       <div className="flex-1 relative">
         <button
           onClick={() => handleNavigation('/search-history')}
           className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/search-history')}`}
         >
-          <i className="material-icons mt-2">save</i>
+          <BookmarkIcon className="mt-2" />
         </button>
       </div>
+
+      {/* Botón Reportes */}
       <div className="flex-1 relative">
         <button
           onClick={() => handleNavigation('/reports')}
           className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/reports')}`}
         >
-          <i className="material-icons mt-2">assignment</i>
+          <AssigmentIcon className="mt-2" />
         </button>
       </div>
+
+      {/* Botón Configuración */}
       <div className="flex-1 relative">
         <button
           onClick={() => handleNavigation('/settings')}
           className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/settings')}`}
         >
-          <i className="material-icons mt-2">settings</i>
+          <SettingsIcon className="mt-2" />
         </button>
       </div>
     </footer>
