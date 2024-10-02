@@ -1,5 +1,7 @@
+"use client";
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Layout from '@/components/Layout';
 
 // Validaciones
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
@@ -69,6 +71,7 @@ const SettingsComponent: React.FC = () => {
   };
 
   return (
+    <Layout>
     <div className="flex flex-col h-full justify-between bg-gray-100 overflow-hidden">
       {/* Main Content */}
       <div className="flex flex-col items-start w-full pl-5">
@@ -122,6 +125,7 @@ const SettingsComponent: React.FC = () => {
         </div>
       )}
     </div>
+    </Layout>
   );
 };
 
