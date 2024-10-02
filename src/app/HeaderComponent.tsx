@@ -13,7 +13,7 @@ const HeaderComponent: React.FC = () => {
   };
 
   return (
-    <header className="bg-[#f3f4f6] text-white p-4 shadow-md">
+    <header className="bg-[#f3f4f6] text-white p-5">
       <div className="flex flex-col items-start space-y-6 w-full ">
         <div className="flex flex-col items-start space-y-2 w-full">
           <span
