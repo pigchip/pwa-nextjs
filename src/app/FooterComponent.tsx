@@ -15,8 +15,9 @@ const FooterComponent: React.FC = () => {
     router.push(path);
   };
 
-  const getButtonClass = (path: string) => {
-    return currentPath === path
+  const getButtonClass = (paths: string | string[]) => {
+    const pathArray = Array.isArray(paths) ? paths : [paths];
+    return pathArray.includes(currentPath)
       ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]'
       : 'text-black';
   };
@@ -42,15 +43,15 @@ const FooterComponent: React.FC = () => {
         </button>
       </div>
 
-      {/* Botón Reportes */}
-      <div className="flex-1 relative">
-        <button
-          onClick={() => handleNavigation('/reports')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/reports')}`}
-        >
-          <AssigmentIcon className="mt-2" />
-        </button>
-      </div>
+{/* Botón Reportes */}
+<div className="flex-1 relative">
+  <button
+    onClick={() => handleNavigation('/reports')}
+    className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(['/reports', '/create-evidence'])}`}
+  >
+    <AssigmentIcon className="mt-2" />
+  </button>
+</div>
 
       {/* Botón Configuración */}
       <div className="flex-1 relative">
