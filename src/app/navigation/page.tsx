@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
-import dynamic from 'next/dynamic';
 import AutoComplete from '../AutoComplete';
 import 'leaflet/dist/leaflet.css';
 import '../globals.css';
 import { SelectedItineraryContext } from '../contexts/SelectedItineraryContext';
 import Layout from '@/components/Layout';
+import ItineraryMapComponent from '../ItineraryMapComponent';
 
-// Dynamically import ItineraryMapComponent with no SSR
-const ItineraryMapComponent = dynamic(() => import('../ItineraryMapComponent'), { ssr: false });
 
 const NavigationComponent: React.FC = () => {
   const {
