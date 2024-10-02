@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import NavigationComponent from './NavigationComponent';
-import ReportsComponent from './ReportsComponent';
-import SettingsComponent from './SettingsComponent';
-import HeaderComponent from './HeaderComponent';
-import FooterComponent from './FooterComponent';
+import React, { useState, useEffect, useContext } from 'react';
+import dynamic from 'next/dynamic';
 import { SelectedItineraryProvider, SelectedItineraryContext } from './contexts/SelectedItineraryContext';
-import SavedRoutesComponent from './SavedRoutesComponent';
+
+// Import components dynamically with SSR disabled
+const NavigationComponent = dynamic(() => import('./NavigationComponent'), { ssr: false });
+const ReportsComponent = dynamic(() => import('./ReportsComponent'), { ssr: false });
+const SettingsComponent = dynamic(() => import('./SettingsComponent'), { ssr: false });
+const HeaderComponent = dynamic(() => import('./HeaderComponent'), { ssr: false });
+const FooterComponent = dynamic(() => import('./FooterComponent'), { ssr: false });
+const SavedRoutesComponent = dynamic(() => import('./SavedRoutesComponent'), { ssr: false });
 
 const Container: React.FC = () => {
   const [startPlaceholder, setStartPlaceholder] = useState<string>('');
@@ -27,7 +30,7 @@ const Container: React.FC = () => {
 };
 
 const ContainerContent: React.FC<{ startPlaceholder: string; endPlaceholder: string }> = ({ startPlaceholder, endPlaceholder }) => {
-  const { activeComponent } = React.useContext(SelectedItineraryContext);
+  const { activeComponent } = useContext(SelectedItineraryContext);
 
   const renderComponent = () => {
     switch (activeComponent) {

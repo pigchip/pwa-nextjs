@@ -32,7 +32,7 @@ const SavedRoutesComponent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full justify-between bg-gray-100">
+    <div className="flex flex-col h-full justify-start bg-gray-100">
       {/* Alineación exacta del título "Rutas Guardadas" */}
       <div className="flex flex-col items-start w-full pl-5">
         <h2 className="text-xl font-bold text-black mb-4 md:mb-6">Rutas Guardadas</h2>

@@ -24,6 +24,7 @@ export default function AutoComplete({ placeholder, onSelect, value }: AutoCompl
     if (value !== undefined && value !== query) {
       setQuery(value);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   useEffect(() => {

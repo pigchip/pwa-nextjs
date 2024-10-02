@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback} from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L, { PathOptions } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -348,7 +348,7 @@ const getPolylineStyle = (leg: Leg): PathOptions => {
 };
 
 // Función para obtener el itinerario más rápido
-const fetchFastestItinerary = async (maxTransfers: number): Promise<Itinerary | null> => {
+const fetchFastestItinerary = useCallback(async (maxTransfers: number): Promise<Itinerary | null> => {
   const currentDate = new Date().toISOString().split('T')[0];
   const currentTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
 
@@ -444,10 +444,10 @@ const fetchFastestItinerary = async (maxTransfers: number): Promise<Itinerary | 
     console.error('Error fetching itineraries:', error);
     return null;
   }
-};
+}, [fromLat, fromLon, toLat, toLon]); // Asegúrate de incluir todas las dependencias relevantes
 
 // Función para obtener todos los itinerarios necesarios
-const fetchAllItineraries = async () => {
+const fetchAllItineraries = useCallback(async () => {
   if (!fromLat || !fromLon || !toLat || !toLon) {
     // No realizar fetch si faltan coordenadas
     return;
@@ -470,14 +470,15 @@ const fetchAllItineraries = async () => {
 
   setItineraryData(sortedItineraries as Itinerary[]);
   setLoading(false);
-};
+}, [fromLat, fromLon, toLat, toLon, fetchFastestItinerary, setLoading, setIsExpanded, setItineraryData]);
+
 
 // Obtener itinerarios automáticamente cuando cambian las coordenadas
 useEffect(() => {
   if (fromLat && fromLon && toLat && toLon) {
     fetchAllItineraries();
   }
-}, [fromLat, fromLon, toLat, toLon]);
+}, [fromLat, fromLon, toLat, toLon, fetchAllItineraries]);
 
 // Función para trazar un itinerario seleccionado
 const handlePlotItinerary = (itinerary: Itinerary) => {
