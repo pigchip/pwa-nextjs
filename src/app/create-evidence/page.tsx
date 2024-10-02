@@ -7,9 +7,11 @@ import SubwayIcon from '@mui/icons-material/Subway';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import Layout from '@/components/Layout';
 
 const CreateEvidenceComponent: React.FC = () => {
   return (
+    <Layout>
     <div className="flex flex-col min-h-screen justify-between p-4">
       <div>
         <h1 className="text-2xl font-bold text-left mb-6">Solicitar Evidencia</h1>
@@ -112,6 +114,7 @@ const CreateEvidenceComponent: React.FC = () => {
         </button>
       </div>
     </div>
+    </Layout>
   );
 };
 

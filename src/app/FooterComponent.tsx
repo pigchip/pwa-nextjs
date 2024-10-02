@@ -1,25 +1,32 @@
-// src/components/FooterComponent.tsx
+"use client";
 
-import React, { useContext } from 'react';
+import React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import AssigmentIcon from '@mui/icons-material/Assignment';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { SelectedItineraryContext } from './contexts/SelectedItineraryContext';
 
 const FooterComponent: React.FC = () => {
-  const { activeComponent, setActiveComponent } = useContext(SelectedItineraryContext);
+  const router = useRouter();
+  const currentPath = usePathname();
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
+  const getButtonClass = (path: string) => {
+    return currentPath === path
+      ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]'
+      : 'text-black';
+  };
 
   return (
-    <footer className="flex justify-between bg-gray-100 flex-shrink-0 w-full"> {/* Evita que los botones crezcan */}
-      {/* Botón Navegación */}
+    <footer className="flex justify-between bg-gray-100 flex-shrink-0 w-full">
       <div className="flex-1 relative">
         <button
-          onClick={() => setActiveComponent('navigation')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${
-            activeComponent === 'navigation' ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]' : 'text-black'
-          }`}
-          aria-label="Navegación"
+          onClick={() => handleNavigation('/navigation')}
+          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/navigation')}`}
         >
           <NavigationIcon className="mt-2" />
         </button>
@@ -28,11 +35,8 @@ const FooterComponent: React.FC = () => {
       {/* Botón Rutas Guardadas */}
       <div className="flex-1 relative">
         <button
-          onClick={() => setActiveComponent('saved-routes')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${
-            activeComponent === 'saved-routes' ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]' : 'text-black'
-          }`}
-          aria-label="Rutas Guardadas"
+          onClick={() => handleNavigation('/search-history')}
+          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/search-history')}`}
         >
           <BookmarkIcon className="mt-2" />
         </button>
@@ -41,11 +45,8 @@ const FooterComponent: React.FC = () => {
       {/* Botón Reportes */}
       <div className="flex-1 relative">
         <button
-          onClick={() => setActiveComponent('reports')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${
-            activeComponent === 'reports' ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]' : 'text-black'
-          }`}
-          aria-label="Reportes"
+          onClick={() => handleNavigation('/reports')}
+          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/reports')}`}
         >
           <AssigmentIcon className="mt-2" />
         </button>
@@ -54,11 +55,8 @@ const FooterComponent: React.FC = () => {
       {/* Botón Configuración */}
       <div className="flex-1 relative">
         <button
-          onClick={() => setActiveComponent('settings')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${
-            activeComponent === 'settings' ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]' : 'text-black'
-          }`}
-          aria-label="Configuración"
+          onClick={() => handleNavigation('/settings')}
+          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/settings')}`}
         >
           <SettingsIcon className="mt-2" />
         </button>

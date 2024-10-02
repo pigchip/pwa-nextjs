@@ -1,6 +1,8 @@
 // src/app/ReportsComponent.tsx
+"use client";
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Layout from '@/components/Layout';
 
 const ReportsComponent: React.FC = () => {
   const router = useRouter();
@@ -10,6 +12,7 @@ const ReportsComponent: React.FC = () => {
   };
 
   return (
+    <Layout>
     <div className="flex flex-col h-full justify-between bg-gray-100">
       {/* Main Content */}
       <div className="flex flex-col items-start w-full pl-5">
@@ -29,6 +32,7 @@ const ReportsComponent: React.FC = () => {
         </button>
       </div>
     </div>
+    </Layout>
   );
 };
 
