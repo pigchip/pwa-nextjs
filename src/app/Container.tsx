@@ -50,7 +50,7 @@ const ContainerContent: React.FC<{ startPlaceholder: string; endPlaceholder: str
   return (
     <div className="flex flex-col h-[93vh] sm:h-screen overflow-hidden">
       {/* Header con altura fija */}
-      <div className="flex-none h-16 bg-gray-200">
+      <div className="flex-none h-18 bg-gray-200">
         <HeaderComponent />
       </div>
 
