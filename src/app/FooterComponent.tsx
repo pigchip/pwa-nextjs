@@ -2,6 +2,10 @@
 
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import NavigationIcon from '@mui/icons-material/Navigation';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import AssigmentIcon from '@mui/icons-material/Assignment';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const FooterComponent: React.FC = () => {
   const router = useRouter();
