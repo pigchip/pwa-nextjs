@@ -19,6 +19,40 @@ const CreateEvidenceComponent: React.FC = () => {
   const [selectedTransport, setSelectedTransport] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<Line | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<{ id: number; name: string; description: string } | null>(null);
+
+  const incidents = [
+    {
+      id: 1,
+      name: 'Fallas técnicas',
+      description: 'Problemas con el vehículo o la infraestructura',
+    },
+    {
+      id: 2,
+      name: 'Accidente',
+      description: 'Colisión o atropello'
+    },
+    {
+      id: 3,
+      name: 'Operación',
+      description: 'Problemas con el personal o el servicio'
+    },
+    {
+      id: 4,
+      name: 'Factores externos',
+      description: 'Clima, tráfico u otros factores externos'
+    },
+    {
+      id: 5,
+      name: 'Seguridad',
+      description: 'Robo, vandalismo o agresión'
+    },
+    {
+      id: 6,
+      name: 'Otro',
+      description: 'Otro tipo de incidente'
+    },
+  ]
 
   useEffect(() => {
     fetch('/api/transports')
@@ -156,10 +190,32 @@ const CreateEvidenceComponent: React.FC = () => {
               </MenuItems>
             </Menu>
 
-            <button className="w-64 py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
-              <ReportProblemIcon className="ml-2" />
-              <span className="flex-grow text-left pl-2 text-gray-400">Incidente</span>
-            </button>
+            <Menu as="div" className="relative inline-block text-left w-64">
+              <MenuButton
+                className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2"
+              >
+                <ReportProblemIcon className="ml-2" />
+                <span className="flex-grow text-left pl-2 text-gray-400">{selectedIncident ? selectedIncident.name : 'Incidente'}</span>
+                <ArrowDropDownIcon className="ml-auto mr-4" />
+              </MenuButton>
+              <MenuItems className="absolute mt-2 w-full bg-white shadow-lg rounded-md z-10">
+                {incidents.map((incident, index) => (
+                  <MenuItem key={index}>
+                    {({ focus }) => (
+                      <button
+                        className={`${
+                          focus ? 'bg-gray-200' : ''
+                        } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                        onClick={() => setSelectedIncident(incident)}
+                        title={incident.description}
+                      >
+                        {incident.name}
+                      </button>
+                    )}
+                  </MenuItem>
+                ))}
+              </MenuItems>
+            </Menu>
           </div>
         </div>
 
