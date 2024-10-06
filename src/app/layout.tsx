@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
-import { SelectedItineraryProvider } from "./contexts/SelectedItineraryContext";
+import { ReportsProvider } from "@/contexts/ReportsContext";
+import { SelectedItineraryProvider } from "@/contexts/SelectedItineraryContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,7 +38,9 @@ export default function RootLayout({
         />
       </head>
       <SelectedItineraryProvider>
+        <ReportsProvider>
         <body>{children}</body>
+        </ReportsProvider>
       </SelectedItineraryProvider>
     </html>
   );

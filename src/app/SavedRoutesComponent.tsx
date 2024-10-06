@@ -7,8 +7,8 @@ import DirectionsBoatIcon from '@mui/icons-material/DirectionsBoat';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MapIcon from '@mui/icons-material/Map';
 import { Button } from '@mui/material';
-import { SelectedItineraryContext } from './contexts/SelectedItineraryContext';
 import { Itinerary, Leg } from '../app/ItineraryMapComponent';
+import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 
 const SavedRoutesComponent: React.FC = () => {
   const [savedRoutes, setSavedRoutes] = useState<Itinerary[]>([]);

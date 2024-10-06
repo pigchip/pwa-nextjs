@@ -47,7 +47,7 @@ const FooterComponent: React.FC = () => {
 <div className="flex-1 relative">
   <button
     onClick={() => handleNavigation('/reports')}
-    className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(['/reports', '/create-evidence'])}`}
+    className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(['/reports', '/reports/create'])}`}
   >
     <AssigmentIcon className="mt-2" />
   </button>
