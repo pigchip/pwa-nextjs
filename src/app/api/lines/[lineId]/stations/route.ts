@@ -59,7 +59,7 @@ async function getStationsForLine(line: number): Promise<Station[]> {
   }
 
   const data: Station[] = await response.json();
-
+  
   return data;
 }
 
