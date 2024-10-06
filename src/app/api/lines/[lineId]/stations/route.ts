@@ -1,5 +1,6 @@
+import { Station } from '@/types/station';
 import { NextRequest, NextResponse } from 'next/server';
-import { Station } from '@/path/to/station'; // Adjust the import path as necessary
+
 
 export async function GET(req: NextRequest) {
   const { pathname } = new URL(req.url);
@@ -59,7 +60,7 @@ async function getStationsForLine(line: number): Promise<Station[]> {
   }
 
   const data: Station[] = await response.json();
-  
+
   return data;
 }
 
