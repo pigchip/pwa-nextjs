@@ -13,6 +13,9 @@ export interface Register {
     y: string;
 }
 
-export interface Status {
-    name: "Sin validar" | "En proceso" | "Validado" | "Rechazado";
+export enum Status {
+    SinValidar = "Sin validar",
+    EnProceso = "En proceso",
+    Validado = "Validado",
+    Rechazado = "Rechazado"
 }

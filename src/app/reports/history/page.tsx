@@ -13,13 +13,13 @@ import { useReports } from "@/contexts/ReportsContext";
 
 const getStatusIcon = (status: Status) => {
   switch (status) {
-    case "Sin validar":
+    case Status.SinValidar:
       return <ErrorOutlineIcon className="text-yellow-500" />;
-    case "En proceso":
+    case Status.EnProceso:
       return <HourglassEmptyIcon className="text-blue-500" />;
-    case "Validado":
+    case Status.Validado:
       return <CheckCircleIcon className="text-green-500" />;
-    case "Rechazado":
+    case Status.Rechazado:
       return <CancelIcon className="text-red-500" />;
     default:
       return <HourglassEmptyIcon className="text-blue-500" />;
