@@ -152,10 +152,21 @@ const CreateEvidenceComponent: React.FC = () => {
 
       const data = await response.json();
       console.log('Report created successfully:', data);
+      // Clean up the form
+      cleanUpForm();
     } catch (error) {
       console.error('Error creating report:', error);
     }
   };
+
+  const cleanUpForm = () => {
+    setSelectedTransport(null);
+    setSelectedLine(null);
+    setSelectedStation(null);
+    setSelectedIncident(null);
+    setLines([]);
+    setStations([]);
+  }
 
   return (
     <Layout>
