@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import HeaderComponent from "../app/HeaderComponent";
 import FooterComponent from "../app/FooterComponent";
-import { SelectedItineraryProvider } from "@/app/contexts/SelectedItineraryContext";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {

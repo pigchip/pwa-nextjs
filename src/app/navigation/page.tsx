@@ -4,9 +4,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import AutoComplete from '../AutoComplete';
 import 'leaflet/dist/leaflet.css';
 import '../globals.css';
-import { SelectedItineraryContext } from '../contexts/SelectedItineraryContext';
 import Layout from '@/components/Layout';
 import dynamic from 'next/dynamic';
+import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 
 const ItineraryMapComponent = dynamic(() => import('../ItineraryMapComponent'), { ssr: false });
 

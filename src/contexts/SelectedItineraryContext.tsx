@@ -1,5 +1,6 @@
+import { Itinerary } from '@/app/ItineraryMapComponent';
 import React, { createContext, useState, ReactNode } from 'react';
-import { Itinerary } from '../ItineraryMapComponent'; // Asegúrate de que la ruta sea correcta
+
 
 type ActiveComponent = 'navigation' | 'search-history' | 'saved-routes' | 'reports' | 'settings';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import dynamic from 'next/dynamic';
-import { SelectedItineraryProvider, SelectedItineraryContext } from './contexts/SelectedItineraryContext';
+import { SelectedItineraryProvider } from '@/contexts/SelectedItineraryContext';
 
 // Import components dynamically with SSR disabled
 const HeaderComponent = dynamic(() => import('./HeaderComponent'), { ssr: false });

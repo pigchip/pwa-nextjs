@@ -21,8 +21,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-
-import { SelectedItineraryContext } from './contexts/SelectedItineraryContext';
+import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 
 // Interfaces para los datos
 export interface Place {
