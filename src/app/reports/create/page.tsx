@@ -154,6 +154,7 @@ const CreateEvidenceComponent: React.FC = () => {
       console.log('Report created successfully:', data);
       // Clean up the form
       cleanUpForm();
+      router.push('/reports/status');
     } catch (error) {
       console.error('Error creating report:', error);
     }
