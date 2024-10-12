@@ -86,6 +86,20 @@ const RegisterList: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const resetFilters = () => {
+    setFilters({
+      user: '',
+      transport: '',
+      line: '',
+      route: '',
+      station: '',
+      status: '',
+      sort: 'mostRecent',
+      search: '',
+    });
+    setCurrentPage(1); // Reset to first page when filters reset
+  };
+
   const uniqueValues = (key: keyof Register) => {
     return Array.from(new Set(registers.map(register => register[key])));
   };
@@ -151,6 +165,7 @@ const RegisterList: React.FC = () => {
           <option value="leastRecent">Menos reciente</option>
         </select>
       </div>
+      <button onClick={resetFilters} className="mb-4 p-2 bg-[#6ABDA6] text-white rounded">Reiniciar filtros</button>
       <ul className="space-y-4">
         {paginatedRegisters.map(register => (
           <li key={register.id} className="p-4 border border-gray-300 rounded shadow">
