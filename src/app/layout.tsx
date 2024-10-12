@@ -6,6 +6,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { ReportsProvider } from "@/contexts/ReportsContext";
 import { SelectedItineraryProvider } from "@/contexts/SelectedItineraryContext";
+import { RoleProvider } from "@/contexts/RoleContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,11 +38,13 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
         />
       </head>
-      <SelectedItineraryProvider>
-        <ReportsProvider>
-        <body>{children}</body>
-        </ReportsProvider>
-      </SelectedItineraryProvider>
+      <RoleProvider>
+        <SelectedItineraryProvider>
+          <ReportsProvider>
+            <body>{children}</body>
+          </ReportsProvider>
+        </SelectedItineraryProvider>
+      </RoleProvider>
     </html>
   );
 }
