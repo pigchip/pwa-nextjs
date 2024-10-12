@@ -13,6 +13,7 @@ const RegisterList: React.FC = () => {
     status: '',
     sort: 'mostRecent', // Default sorting order
     search: '', // Search term
+    sortField: 'date', // Default sort field
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items per page
@@ -63,11 +64,17 @@ const RegisterList: React.FC = () => {
       );
     }
 
-    // Sort by date
+    // Sort by selected field
     filtered = filtered.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return filters.sort === 'mostRecent' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+      const fieldA = a[filters.sortField as keyof Register];
+      const fieldB = b[filters.sortField as keyof Register];
+      if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+        return filters.sort === 'mostRecent' ? fieldB.localeCompare(fieldA) : fieldA.localeCompare(fieldB);
+      } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
+        return filters.sort === 'mostRecent' ? fieldB - fieldA : fieldA - fieldB;
+      } else {
+        return 0;
+      }
     });
 
     setFilteredRegisters(filtered);
@@ -96,6 +103,7 @@ const RegisterList: React.FC = () => {
       status: '',
       sort: 'mostRecent',
       search: '',
+      sortField: 'date',
     });
     setCurrentPage(1); // Reset to first page when filters reset
   };
@@ -163,6 +171,15 @@ const RegisterList: React.FC = () => {
         <select name="sort" value={filters.sort} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
           <option value="mostRecent">Más reciente</option>
           <option value="leastRecent">Menos reciente</option>
+        </select>
+        <select name="sortField" value={filters.sortField} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
+          <option value="date">Fecha</option>
+          <option value="user">Usuario</option>
+          <option value="transport">Transporte</option>
+          <option value="line">Línea</option>
+          <option value="route">Ruta</option>
+          <option value="station">Estación</option>
+          <option value="status">Estado</option>
         </select>
       </div>
       <button onClick={resetFilters} className="mb-4 p-2 bg-[#6ABDA6] text-white rounded">Reiniciar filtros</button>
