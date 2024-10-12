@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Register, Status } from '@/types/register';
-
-interface RegisterResponse {
-    message: string;
-    data: Register[];
-}
+import { Register, RegisterResponse, Status } from '@/types/register';
 
 const RegisterList: React.FC = () => {
   const [registers, setRegisters] = useState<Register[]>([]);

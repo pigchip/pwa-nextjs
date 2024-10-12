@@ -19,3 +19,8 @@ export enum Status {
     Validado = "Validado",
     Rechazado = "Rechazado"
 }
+
+export interface RegisterResponse {
+    message: string;
+    data: Register[];
+}
