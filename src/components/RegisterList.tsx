@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Register, Status, RegisterResponse } from '@/types/register';
 
 const RegisterList: React.FC = () => {
@@ -34,20 +34,7 @@ const RegisterList: React.FC = () => {
     fetchRegisters();
   }, []);
 
-  useEffect(() => {
-    filterRegisters();
-  }, [filters, currentPage]);
-
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilters({
-      ...filters,
-      [name]: value,
-    });
-    setCurrentPage(1); // Reset to first page when filters change
-  };
-
-  const filterRegisters = () => {
+  const filterRegisters = useCallback(() => {
     let filtered = registers;
 
     if (filters.user) {
@@ -84,6 +71,19 @@ const RegisterList: React.FC = () => {
     });
 
     setFilteredRegisters(filtered);
+  }, [registers, filters]);
+
+  useEffect(() => {
+    filterRegisters();
+  }, [filters, currentPage, filterRegisters]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
+    });
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const uniqueValues = (key: keyof Register) => {
