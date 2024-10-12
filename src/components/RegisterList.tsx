@@ -36,19 +36,7 @@ const RegisterList: React.FC = () => {
     fetchRegisters();
   }, []);
 
-  useEffect(() => {
-    filterRegisters();
-  }, [filters]);
-
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilters({
-      ...filters,
-      [name]: value,
-    });
-  };
-
-  const filterRegisters = () => {
+  const filterRegisters = React.useCallback(() => {
     let filtered = registers;
 
     if (filters.user) {
@@ -78,6 +66,18 @@ const RegisterList: React.FC = () => {
     });
 
     setFilteredRegisters(filtered);
+  }, [registers, filters]);
+
+  useEffect(() => {
+    filterRegisters();
+  }, [filterRegisters, filters]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
+    });
   };
 
   const uniqueValues = (key: keyof Register) => {
