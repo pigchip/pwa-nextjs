@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Register, RegisterResponse, Status } from '@/types/register';
+import { Register, Status, RegisterResponse } from '@/types/register';
 
 const RegisterList: React.FC = () => {
   const [registers, setRegisters] = useState<Register[]>([]);
@@ -12,7 +12,10 @@ const RegisterList: React.FC = () => {
     station: '',
     status: '',
     sort: 'mostRecent', // Default sorting order
+    search: '', // Search term
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Number of items per page
 
   useEffect(() => {
     const fetchRegisters = async () => {
@@ -31,7 +34,20 @@ const RegisterList: React.FC = () => {
     fetchRegisters();
   }, []);
 
-  const filterRegisters = React.useCallback(() => {
+  useEffect(() => {
+    filterRegisters();
+  }, [filters, currentPage]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
+    });
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const filterRegisters = () => {
     let filtered = registers;
 
     if (filters.user) {
@@ -52,6 +68,13 @@ const RegisterList: React.FC = () => {
     if (filters.status) {
       filtered = filtered.filter(register => register.status === filters.status);
     }
+    if (filters.search) {
+      filtered = filtered.filter(register =>
+        Object.values(register).some(value =>
+          value.toString().toLowerCase().includes(filters.search.toLowerCase())
+        )
+      );
+    }
 
     // Sort by date
     filtered = filtered.sort((a, b) => {
@@ -61,71 +84,75 @@ const RegisterList: React.FC = () => {
     });
 
     setFilteredRegisters(filtered);
-  }, [registers, filters]);
-
-  useEffect(() => {
-    filterRegisters();
-  }, [filterRegisters, filters]);
-
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilters({
-      ...filters,
-      [name]: value,
-    });
   };
 
   const uniqueValues = (key: keyof Register) => {
     return Array.from(new Set(registers.map(register => register[key])));
   };
 
+  // Calculate paginated data
+  const paginatedRegisters = filteredRegisters.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const totalPages = Math.ceil(filteredRegisters.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Register List</h1>
+      <h1 className="text-2xl font-bold mb-4">Lista de reportes</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <input
+          name="search"
+          placeholder="Buscar"
+          value={filters.search}
+          onChange={handleFilterChange}
+          className="p-2 border border-gray-300 rounded"
+        />
         <select name="user" value={filters.user} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="">All Users</option>
+          <option value="">Todos los usuarios</option>
           {uniqueValues('user').map(user => (
             <option key={user} value={user}>{user}</option>
           ))}
         </select>
         <select name="transport" value={filters.transport} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="">All Transports</option>
+          <option value="">Todos los transportes</option>
           {uniqueValues('transport').map(transport => (
             <option key={transport} value={transport}>{transport}</option>
           ))}
         </select>
         <select name="line" value={filters.line} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="">All Lines</option>
+          <option value="">Todas las líneas</option>
           {uniqueValues('line').map(line => (
             <option key={line} value={line}>{line}</option>
           ))}
         </select>
         <select name="route" value={filters.route} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="">All Routes</option>
+          <option value="">Todas las rutas</option>
           {uniqueValues('route').map(route => (
             <option key={route} value={route}>{route}</option>
           ))}
         </select>
         <select name="station" value={filters.station} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="">All Stations</option>
+          <option value="">Todas las estaciones</option>
           {uniqueValues('station').map(station => (
             <option key={station} value={station}>{station}</option>
           ))}
         </select>
         <select name="status" value={filters.status} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="">All Statuses</option>
+          <option value="">Todos los status</option>
           {Object.values(Status).map(status => (
             <option key={status} value={status}>{status}</option>
           ))}
         </select>
         <select name="sort" value={filters.sort} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
-          <option value="mostRecent">Most Recent</option>
-          <option value="leastRecent">Least Recent</option>
+          <option value="mostRecent">Más reciente</option>
+          <option value="leastRecent">Menos reciente</option>
         </select>
       </div>
       <ul className="space-y-4">
-        {filteredRegisters.map(register => (
+        {paginatedRegisters.map(register => (
           <li key={register.id} className="p-4 border border-gray-300 rounded shadow">
             <div className="flex flex-col md:flex-row justify-between">
               <div>
@@ -146,6 +173,17 @@ const RegisterList: React.FC = () => {
           </li>
         ))}
       </ul>
+      <div className="flex justify-center mt-4">
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index}
+            onClick={() => handlePageChange(index + 1)}
+            className={`px-4 py-2 mx-1 border rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
