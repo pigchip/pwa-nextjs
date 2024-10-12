@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Tutorial from './Tutorial';
 
 import React from 'react';
+import { useRole } from '@/contexts/RoleContext';
 
 export default function AuthForm({ setShowTutorial, showTutorial }: { setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>, showTutorial: boolean }) {
   const [isRegister, setIsRegister] = useState(true);
@@ -43,6 +44,8 @@ export default function AuthForm({ setShowTutorial, showTutorial }: { setShowTut
   const [id, setId] = useState("");
   const [idError, setIdError] = useState(false);
   const idErrorMessage = "ID no válido"; 
+
+  const { setRole } = useRole();
 
   const openSignInModal = (title: string, description: string) => {
     setModalContent({ title, description });
@@ -186,6 +189,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         setPhone("");
         setId(""); // Cambiado a id
         setPassword("");
+        setRole("supervisor");
       } else if (response.status === 400 || data.id === null) {
         // Caso de datos incorrectos o bad request
         openSignInModal(
@@ -260,6 +264,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         setPhone("");
         setId(""); // Cambiado a id
         setPassword("");
+        setRole("admin");
       } else if (response.status === 400 || data.id === null) {
         // Caso de datos incorrectos o bad request
         openSignInModal(
@@ -334,6 +339,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         setPhone("");
         setEmail("");
         setPassword("");
+        setRole("user");
       } else if (response.status === 400 || data.id === null) {
         // Caso de datos incorrectos o bad request
         openSignInModal(

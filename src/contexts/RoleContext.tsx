@@ -1,5 +1,5 @@
-// src/contexts/RoleContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { parseCookies, setCookie } from 'nookies';
 
 type Role = 'admin' | 'user' | 'supervisor';
 
@@ -11,7 +11,14 @@ interface RoleContextProps {
 const RoleContext = createContext<RoleContextProps | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
-  const [role, setRole] = useState<Role>('user');
+  const cookies = parseCookies();
+  const initialRole = cookies.role ? (cookies.role as Role) : 'user';
+  const [role, setRole] = useState<Role>(initialRole);
+
+  useEffect(() => {
+    // Save role in cookies
+    setCookie(null, 'role', role, { path: '/' });
+  }, [role]);
 
   return (
     <RoleContext.Provider value={{ role, setRole }}>
