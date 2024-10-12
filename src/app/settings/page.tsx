@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
+import { useRouter } from 'next/navigation';
 
 // Validaciones
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
@@ -11,6 +12,8 @@ const SettingsComponent: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const router = useRouter();
 
   // Función para abrir el modal
   const handleDeleteAccountClick = () => {
@@ -29,7 +32,7 @@ const SettingsComponent: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('email'); // Eliminar email de localStorage
     localStorage.setItem('showTutorial', 'false'); // Cambiar el estado de showTutorial en localStorage
-    window.location.reload(); // Recargar la página para simular cierre de sesión
+    router.push('/');
   };
 
   // Función para manejar el envío del formulario de eliminación de cuenta
