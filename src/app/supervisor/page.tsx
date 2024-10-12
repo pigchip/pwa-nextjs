@@ -3,6 +3,7 @@
 import Layout from '@/components/Layout'
 import React, { useEffect, useState } from 'react'
 import { useRole } from '@/contexts/RoleContext';
+import RegisterList from '@/components/RegisterList';
 
 const Page = () => {
   const { role } = useRole();
@@ -22,10 +23,7 @@ const Page = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-green-400 to-blue-500 text-black">
-        <h1 className="text-4xl font-bold mb-4">Página del supervisor</h1>
-        <p className="text-xl">Bienvenido Supervisor! Puedes autorizar los reportes de los usuarios.</p>
-      </div>
+      <RegisterList />
     </Layout>
   )
 }
