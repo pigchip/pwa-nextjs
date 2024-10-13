@@ -6,10 +6,13 @@ import NavigationIcon from '@mui/icons-material/Navigation';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import AssigmentIcon from '@mui/icons-material/Assignment';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { useRole } from '@/contexts/RoleContext';
+
 
 const FooterComponent: React.FC = () => {
   const router = useRouter();
   const currentPath = usePathname();
+  const { role } = useRole(); // Get the current role
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -24,36 +27,50 @@ const FooterComponent: React.FC = () => {
 
   return (
     <footer className="flex justify-between bg-gray-100 flex-shrink-0 w-full">
-      <div className="flex-1 relative">
-        <button
-          onClick={() => handleNavigation('/navigation')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/navigation')}`}
-        >
-          <NavigationIcon className="mt-2" />
-        </button>
-      </div>
+      {role === 'user' && (
+        <>
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation('/navigation')}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/navigation')}`}
+            >
+              <NavigationIcon className="mt-2" />
+            </button>
+          </div>
 
-      {/* Botón Rutas Guardadas */}
-      <div className="flex-1 relative">
-        <button
-          onClick={() => handleNavigation('/search-history')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/search-history')}`}
-        >
-          <BookmarkIcon className="mt-2" />
-        </button>
-      </div>
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation('/search-history')}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/search-history')}`}
+            >
+              <BookmarkIcon className="mt-2" />
+            </button>
+          </div>
 
-{/* Botón Reportes */}
-<div className="flex-1 relative">
-  <button
-    onClick={() => handleNavigation('/reports')}
-    className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(['/reports', '/reports/create', '/reports/status'])}`}
-  >
-    <AssigmentIcon className="mt-2" />
-  </button>
-</div>
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation('/reports')}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(['/reports', '/reports/create', '/reports/status'])}`}
+            >
+              <AssigmentIcon className="mt-2" />
+            </button>
+          </div>
+        </>
+      )}
 
-      {/* Botón Configuración */}
+      {role === 'supervisor' && (
+        <>
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation('/supervisor')}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/supervisor')}`}
+            >
+              <AssigmentIcon className="mt-2" />
+            </button>
+          </div>
+        </>
+      )}
+
       <div className="flex-1 relative">
         <button
           onClick={() => handleNavigation('/settings')}
