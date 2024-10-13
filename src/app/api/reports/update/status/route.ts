@@ -1,4 +1,4 @@
-import { Register, Status } from '@/types';
+import { Status } from '@/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -18,30 +18,13 @@ export async function PUT(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Fetch the register by id
-    const response = await fetch(`${apiUrl}/api/reports/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new FetchError(response.status, 'Failed to fetch register');
-    }
-
-    const register: Register = await response.json();
-
-    // Update the status
-    register.status = status;
-
     // Save the updated register
-    const updateResponse = await fetch(`${apiUrl}/api/reports/${id}`, {
+    const updateResponse = await fetch(`${apiUrl}/api/reports/update/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(register),
+      body: JSON.stringify({ id, status }),
     });
 
     if (!updateResponse.ok) {
