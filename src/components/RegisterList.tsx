@@ -17,7 +17,7 @@ const RegisterList: React.FC = () => {
     sortField: 'date', // Default sort field
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Number of items per page
+  const itemsPerPage = 5; // Number of items per page
   const router = useRouter();
   const { reports, setSelectedReport } = useReports();
 
