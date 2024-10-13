@@ -27,7 +27,7 @@ const EvidenceDetails: React.FC = () => {
     if (!newStatus || !selectedReport) return;
 
     try {
-      const response = await fetch(`/api/reports/${selectedReport.id}`, {
+      const response = await fetch(`/api/reports/update/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -39,8 +39,13 @@ const EvidenceDetails: React.FC = () => {
         throw new Error('Failed to update status');
       }
 
-      const updatedReport = await response.json();
-      setSelectedReport(updatedReport.data);
+      const newReport = await fetch(`/api/reports/${selectedReport.id}`);
+      if (!newReport.ok) {
+        throw new Error('Failed to fetch updated report');
+      }
+
+      const updatedReport = await newReport.json();
+      setSelectedReport(updatedReport);
       setNewStatus(null);
     } catch (error) {
       console.error('Error updating status:', error);
