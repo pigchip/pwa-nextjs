@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Register, Status, RegisterResponse } from '@/types/register';
+import { useRouter } from 'next/navigation';
+import { useReports } from '@/contexts/ReportsContext';
 
 const RegisterList: React.FC = () => {
   const [registers, setRegisters] = useState<Register[]>([]);
@@ -17,6 +19,8 @@ const RegisterList: React.FC = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items per page
+  const router = useRouter();
+  const { setSelectedReport } = useReports();
 
   useEffect(() => {
     const fetchRegisters = async () => {
@@ -121,6 +125,11 @@ const RegisterList: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const handleViewMore = (register: Register) => {
+    setSelectedReport(register);
+    router.push('/reports/details');
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Lista de reportes</h1>
@@ -200,6 +209,12 @@ const RegisterList: React.FC = () => {
                 <p><strong>Time:</strong> {register.time}</p>
                 <p><strong>Body:</strong> {register.body}</p>
                 <p><strong>Coordinates:</strong> ({register.x}, {register.y})</p>
+                <button
+                  onClick={() => handleViewMore(register)}
+                  className="mt-2 p-2 bg-[#6ABDA6] text-white rounded"
+                >
+                  Ver más
+                </button>
               </div>
             </div>
           </li>
