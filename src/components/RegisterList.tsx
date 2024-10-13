@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Register, Status, RegisterResponse } from '@/types/register';
+import { Register, Status } from '@/types/register';
+import { useRouter } from 'next/navigation';
+import { useReports } from '@/contexts/ReportsContext';
 
 const RegisterList: React.FC = () => {
-  const [registers, setRegisters] = useState<Register[]>([]);
   const [filteredRegisters, setFilteredRegisters] = useState<Register[]>([]);
   const [filters, setFilters] = useState({
     user: '',
@@ -16,27 +17,12 @@ const RegisterList: React.FC = () => {
     sortField: 'date', // Default sort field
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Number of items per page
-
-  useEffect(() => {
-    const fetchRegisters = async () => {
-      try {
-        const response = await fetch('/api/reports');
-        const data: RegisterResponse = await response.json();
-        setRegisters(data.data);
-        setFilteredRegisters(data.data);
-      } catch (error) {
-        console.error('Error fetching registers:', error);
-        setRegisters([]); // Ensure registers is always an array
-        setFilteredRegisters([]);
-      }
-    };
-
-    fetchRegisters();
-  }, []);
+  const itemsPerPage = 5; // Number of items per page
+  const router = useRouter();
+  const { reports, setSelectedReport } = useReports();
 
   const filterRegisters = useCallback(() => {
-    let filtered = registers;
+    let filtered = reports;
 
     if (filters.user) {
       filtered = filtered.filter(register => register.user.toString().includes(filters.user));
@@ -78,7 +64,7 @@ const RegisterList: React.FC = () => {
     });
 
     setFilteredRegisters(filtered);
-  }, [registers, filters]);
+  }, [reports, filters]);
 
   useEffect(() => {
     filterRegisters();
@@ -109,7 +95,7 @@ const RegisterList: React.FC = () => {
   };
 
   const uniqueValues = (key: keyof Register) => {
-    return Array.from(new Set(registers.map(register => register[key])));
+    return Array.from(new Set(reports.map(register => register[key])));
   };
 
   // Calculate paginated data
@@ -119,6 +105,11 @@ const RegisterList: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleViewMore = (register: Register) => {
+    setSelectedReport(register);
+    router.push('/reports/details');
   };
 
   return (
@@ -200,6 +191,12 @@ const RegisterList: React.FC = () => {
                 <p><strong>Time:</strong> {register.time}</p>
                 <p><strong>Body:</strong> {register.body}</p>
                 <p><strong>Coordinates:</strong> ({register.x}, {register.y})</p>
+                <button
+                  onClick={() => handleViewMore(register)}
+                  className="mt-2 p-2 bg-[#6ABDA6] text-white rounded"
+                >
+                  Ver más
+                </button>
               </div>
             </div>
           </li>
