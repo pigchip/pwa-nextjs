@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Status } from "@/types/register";
 
 const EvidenceDetails: React.FC = () => {
-  const { selectedReport, setSelectedReport } = useReports();
+  const { selectedReport, setSelectedReport, updateReport } = useReports();
   const router = useRouter();
   const { role } = useRole();
   const [newStatus, setNewStatus] = useState<Status | null>(null);
@@ -46,6 +46,7 @@ const EvidenceDetails: React.FC = () => {
 
       const updatedReport = await newReport.json();
       setSelectedReport(updatedReport);
+      updateReport(updatedReport); // Add this line
       setNewStatus(null);
     } catch (error) {
       console.error('Error updating status:', error);
