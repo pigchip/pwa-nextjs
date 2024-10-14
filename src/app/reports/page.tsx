@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
-import EvidenceHistory from './history/page';
 import { useReports } from '@/contexts/ReportsContext';
 import { Register } from '@/types';
+import EvidenceHistory from '@/components/EvidenceHistory';
 
 const Page: React.FC = () => {
   const router = useRouter();
