@@ -4,14 +4,16 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import EvidenceHistory from './history/page';
 import { useReports } from '@/contexts/ReportsContext';
+import { Register } from '@/types';
 
 const Page: React.FC = () => {
   const router = useRouter();
   const { reports, setReports } = useReports();
   const [loading, setLoading] = useState(true);
+  const [userReports, setUserReports] = useState<Register[]>([]);
 
   useEffect(() => {
-    const fetchReports = async () => {
+    const filterReportsByUser = async () => {
       try {
         // Step 1: Get the email from localStorage
         const email = localStorage.getItem('email');
@@ -30,13 +32,9 @@ const Page: React.FC = () => {
           throw new Error('User ID not found');
         }
   
-        // Step 3: Fetch the reports using the user ID
-        const reportsResponse = await fetch(`/api/user/${userId}/reports`);
-        if (!reportsResponse.ok) {
-          throw new Error('Failed to fetch reports');
-        }
-        const reportsData = await reportsResponse.json();
-        setReports(reportsData);
+        // Step 3: Filter the reports using the user ID
+        const filteredReports = reports.filter(report => report.user === userId);
+        setUserReports(filteredReports);
   
       } catch (error) {
         console.error(error);
@@ -45,13 +43,13 @@ const Page: React.FC = () => {
       }
     };
 
-    // Fetch reports only if they are not already loaded
-    if (reports.length === 0) {
-      fetchReports();
+    // Filter reports only if they are not already filtered
+    if (userReports.length === 0) {
+      filterReportsByUser();
     } else {
       setLoading(false);
     }
-  }, [reports, setReports]);
+  }, [reports, userReports]);
 
   const handleButtonClick = () => {
     router.push('/create-evidence');
@@ -62,14 +60,14 @@ const Page: React.FC = () => {
       <div className="flex flex-col h-full justify-between">
         {/* Main Content */}
         <div className="flex flex-col items-start w-full pl-5">
-        <h1 className="text-2xl font-bold text-left">Evidencias</h1>
+          <h1 className="text-2xl font-bold text-left">Evidencias</h1>
         </div>
 
         {/* Centered Text and Button */}
         <div className="flex flex-col flex-grow justify-center items-center text-center px-4">
           {loading ? (
             <span className="text-[#6C7976] text-lg">Cargando...</span>
-          ) : reports.length === 0 ? (
+          ) : userReports.length === 0 ? (
             <>
               <span className="text-[#6C7976] text-lg">
                 Todo bien por aquí, no tienes ninguna evidencia aprobada :)
@@ -82,7 +80,7 @@ const Page: React.FC = () => {
               </button>
             </>
           ) : (
-            <EvidenceHistory />
+            <EvidenceHistory reports={userReports} />
           )}
         </div>
       </div>

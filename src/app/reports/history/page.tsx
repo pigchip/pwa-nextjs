@@ -26,8 +26,12 @@ const getStatusIcon = (status: Status) => {
   }
 };
 
-const EvidenceHistory: React.FC = () => {
-  const { reports, selectedReport, setSelectedReport } = useReports();
+interface EvidenceHistoryProps {
+  reports: Register[];
+}
+
+const EvidenceHistory: React.FC<EvidenceHistoryProps> = ({ reports }) => {
+  const { selectedReport, setSelectedReport } = useReports();
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const [swipeEnd, setSwipeEnd] = useState<number | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
