@@ -11,35 +11,44 @@ const Page: React.FC = () => {
   const { reports, setReports } = useReports();
   const [loading, setLoading] = useState(true);
   const [userReports, setUserReports] = useState<Register[]>([]);
+  const [reportsFetched, setReportsFetched] = useState(false);
+
+  const getEmailFromLocalStorage = () => {
+    const email = localStorage.getItem('email');
+    if (!email) {
+      throw new Error('Email not found in localStorage');
+    }
+    return email;
+  };
+
+  const fetchUserIdByEmail = async (email: string) => {
+    const response = await fetch(`/api/userByEmail/${email}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch user ID');
+    }
+    const data = await response.json();
+    if (!data.id) {
+      throw new Error('User ID not found');
+    }
+    return data.id;
+  };
+
+  const fetchReportsByUserId = async (userId: string) => {
+    const response = await fetch(`/api/user/${userId}/reports?timestamp=${new Date().getTime()}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch reports');
+    }
+    return response.json();
+  };
 
   useEffect(() => {
     const filterReportsByUser = async () => {
       try {
-        // Step 1: Get the email from localStorage
-        const email = localStorage.getItem('email');
-        if (!email) {
-          throw new Error('Email not found in localStorage');
-        }
-  
-        // Step 2: Fetch the user ID using the email
-        const userIdResponse = await fetch(`/api/userByEmail/${email}`);
-        if (!userIdResponse.ok) {
-          throw new Error('Failed to fetch user ID');
-        }
-        const userIdData = await userIdResponse.json();
-        const userId = userIdData.id;
-        if (!userId) {
-          throw new Error('User ID not found');
-        }
-  
-        // Step 3: Fetch the latest reports using the user ID
-        const reportsResponse = await fetch(`/api/user/${userId}/reports?timestamp=${new Date().getTime()}`);
-        if (!reportsResponse.ok) {
-          throw new Error('Failed to fetch reports');
-        }
-        const reportsData = await reportsResponse.json();
+        const email = getEmailFromLocalStorage();
+        const userId = await fetchUserIdByEmail(email);
+        const reportsData = await fetchReportsByUserId(userId);
         setUserReports(reportsData);
-  
+        setReportsFetched(true);
       } catch (error) {
         console.error(error);
       } finally {
@@ -47,13 +56,12 @@ const Page: React.FC = () => {
       }
     };
 
-    // Filter reports only if they are not already filtered
-    if (userReports.length === 0) {
+    if (!reportsFetched || reports.length !== userReports.length) {
       filterReportsByUser();
     } else {
       setLoading(false);
     }
-  }, [reports, userReports]);
+  }, [reports, userReports.length, reportsFetched]);
 
   const handleButtonClick = () => {
     router.push('/reports/create');
