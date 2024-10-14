@@ -56,7 +56,7 @@ const Page: React.FC = () => {
   }, [reports, userReports]);
 
   const handleButtonClick = () => {
-    router.push('/create-evidence');
+    router.push('/reports/create');
   };
 
   return (
