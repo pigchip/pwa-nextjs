@@ -32,9 +32,13 @@ const Page: React.FC = () => {
           throw new Error('User ID not found');
         }
   
-        // Step 3: Filter the reports using the user ID
-        const filteredReports = reports.filter(report => report.user === userId);
-        setUserReports(filteredReports);
+        // Step 3: Fetch the latest reports using the user ID
+        const reportsResponse = await fetch(`/api/user/${userId}/reports?timestamp=${new Date().getTime()}`);
+        if (!reportsResponse.ok) {
+          throw new Error('Failed to fetch reports');
+        }
+        const reportsData = await reportsResponse.json();
+        setUserReports(reportsData);
   
       } catch (error) {
         console.error(error);
