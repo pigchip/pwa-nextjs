@@ -1,85 +1,94 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react';
-import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import SubwayIcon from '@mui/icons-material/Subway';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useRouter } from 'next/navigation';
-import Layout from '@/components/Layout';
-import { Transport, Line, Station, Register, Status } from '@/types';
+import React, { useEffect, useState } from "react";
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import SubwayIcon from "@mui/icons-material/Subway";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useRouter } from "next/navigation";
+import Layout from "@/components/Layout";
+import { Transport, Line, Station, Register, Status } from "@/types";
 
 const CreateEvidenceComponent: React.FC = () => {
   const router = useRouter();
   const [transports, setTransports] = useState<Transport[]>([]);
   const [lines, setLines] = useState<Line[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
-  const [selectedTransport, setSelectedTransport] = useState<string | null>(null);
+  const [selectedTransport, setSelectedTransport] = useState<string | null>(
+    null
+  );
   const [selectedLine, setSelectedLine] = useState<Line | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [selectedIncident, setSelectedIncident] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<{
+    id: number;
+    name: string;
+    description: string;
+  } | null>(null);
+  const [stationsDisabled, setStationsDisabled] = useState<boolean>(false);
 
   const incidents = [
     {
       id: 1,
-      name: 'Fallas técnicas',
-      description: 'Problemas con el vehículo o la infraestructura',
+      name: "Fallas técnicas",
+      description: "Problemas con el vehículo o la infraestructura",
     },
     {
       id: 2,
-      name: 'Accidente',
-      description: 'Colisión o atropello'
+      name: "Accidente",
+      description: "Colisión o atropello",
     },
     {
       id: 3,
-      name: 'Operación',
-      description: 'Problemas con el personal o el servicio'
+      name: "Operación",
+      description: "Problemas con el personal o el servicio",
     },
     {
       id: 4,
-      name: 'Factores externos',
-      description: 'Clima, tráfico u otros factores externos'
+      name: "Factores externos",
+      description: "Clima, tráfico u otros factores externos",
     },
     {
       id: 5,
-      name: 'Seguridad',
-      description: 'Robo, vandalismo o agresión'
+      name: "Seguridad",
+      description: "Robo, vandalismo o agresión",
     },
     {
       id: 6,
-      name: 'Otro',
-      description: 'Otro tipo de incidente'
+      name: "Otro",
+      description: "Otro tipo de incidente",
     },
-  ]
+  ];
 
   useEffect(() => {
-    fetch('/api/transports')
-      .then(response => response.json())
-      .then(data => setTransports(data))
-      .catch(error => console.error('Error fetching transports:', error));
+    fetch("/api/transports")
+      .then((response) => response.json())
+      .then((data) => setTransports(data))
+      .catch((error) => console.error("Error fetching transports:", error));
   }, []);
-  
+
   useEffect(() => {
     const fetchLines = () => {
       if (selectedTransport) {
-        fetch('/api/lines', {
-          method: 'GET',
+        fetch("/api/lines", {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         })
-          .then(response => response.json())
-          .then(data => {
-            const filteredLines = data.filter((line: Line) => line.transport === selectedTransport);
+          .then((response) => response.json())
+          .then((data) => {
+            const filteredLines = data.filter(
+              (line: Line) => line.transport === selectedTransport
+            );
             setLines(filteredLines);
           })
-          .catch(error => console.error('Error fetching lines:', error));
+          .catch((error) => console.error("Error fetching lines:", error));
       }
     };
-  
+
     fetchLines();
   }, [selectedTransport]);
 
@@ -87,9 +96,9 @@ const CreateEvidenceComponent: React.FC = () => {
     const fetchStations = () => {
       if (selectedLine && stations.length === 0) {
         fetch(`/api/lines/${selectedLine.id}/stations`)
-          .then(response => response.json())
-          .then(data => setStations(data))
-          .catch(error => console.error('Error fetching stations:', error));
+          .then((response) => response.json())
+          .then((data) => setStations(data))
+          .catch((error) => console.error("Error fetching stations:", error));
       }
     };
 
@@ -102,6 +111,16 @@ const CreateEvidenceComponent: React.FC = () => {
     setSelectedStation(null);
     setLines([]);
     setStations([]);
+    setStationsDisabled(
+      [
+        "Red de Transporte de Pasajeros, Servicio Ordinario",
+        "Red de Transporte de Pasajeros, Servicio Expreso",
+        "Red de Transporte de Pasajeros, Servicio Nochebús",
+        "Trolebús",
+        "Trolebús Elevado",
+        "Nochebús",
+      ].includes(transportName)
+    );
   };
 
   const handleBackClick = () => {
@@ -110,16 +129,18 @@ const CreateEvidenceComponent: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const email = localStorage.getItem('email');
+      const email = localStorage.getItem("email");
       if (!email) {
-        throw new Error('Email not found in localStorage');
+        throw new Error("Email not found in localStorage");
       }
 
       const userResponse = await fetch(`/api/userByEmail/${email}`);
       const userData = await userResponse.json();
       const userId = userData.id;
 
-      const routeResponse = await fetch(`/api/lines/${selectedLine?.id}/routes`);
+      const routeResponse = await fetch(
+        `/api/lines/${selectedLine?.id}/routes`
+      );
       const routeData = await routeResponse.json();
       const routeId = routeData[0]?.id;
 
@@ -129,34 +150,34 @@ const CreateEvidenceComponent: React.FC = () => {
         transport: selectedTransport!,
         line: selectedLine!.id,
         route: routeId,
-        station: selectedStation!.id,
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toISOString().split('T')[1].split('.')[0],
+        station: stationsDisabled ? 0 : selectedStation!.id,
+        date: new Date().toISOString().split("T")[0],
+        time: new Date().toISOString().split("T")[1].split(".")[0],
         body: selectedIncident!.description,
         status: Status.SinValidar,
-        x: '0', // Assuming default values for x and y
-        y: '0',
+        x: "0", // Assuming default values for x and y
+        y: "0",
       };
 
-      const response = await fetch('/api/reports/register', {
-        method: 'POST',
+      const response = await fetch("/api/reports/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(report),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create report');
+        throw new Error("Failed to create report");
       }
 
       const data = await response.json();
-      console.log('Report created successfully:', data);
+      console.log("Report created successfully:", data);
       // Clean up the form
       cleanUpForm();
-      router.push('/reports/status');
+      router.push("/reports/status");
     } catch (error) {
-      console.error('Error creating report:', error);
+      console.error("Error creating report:", error);
     }
   };
 
@@ -167,52 +188,51 @@ const CreateEvidenceComponent: React.FC = () => {
     setSelectedIncident(null);
     setLines([]);
     setStations([]);
-  }
+  };
 
   return (
     <Layout>
       <div className="flex flex-col min-h-screen justify-between p-4">
         <div className="flex items-center mb-6">
           <button onClick={handleBackClick} className="mr-2">
-          <ArrowBackIcon style={{ color: '#6ABDA6' }} />
+            <ArrowBackIcon style={{ color: "#6ABDA6" }} />
           </button>
           <h1 className="text-2xl font-bold text-left">Solicitar Evidencia</h1>
         </div>
-        
+
         <div className="flex flex-col items-center space-y-4">
           <Menu as="div" className="relative inline-block text-left w-64">
             <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
               <DirectionsBusIcon className="ml-2" />
               <span className="flex-grow text-left pl-2 text-gray-400">
-                {selectedTransport ? selectedTransport : 'Medio de transporte'}
+                {selectedTransport ? selectedTransport : "Medio de transporte"}
               </span>
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
             <MenuItems className="absolute mt-2 w-full bg-white shadow-lg rounded-md z-10">
-              {Array.isArray(transports) && transports.map((transport, index) => (
-                <MenuItem key={index}>
-                  {({ focus }) => (
-                    <button
-                      className={`${
-                        focus ? 'bg-gray-200' : ''
-                      } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                      onClick={() => handleTransportSelect(transport.name)}
-                    >
-                      {transport.name}
-                    </button>
-                  )}
-                </MenuItem>
-              ))}
+              {Array.isArray(transports) &&
+                transports.map((transport, index) => (
+                  <MenuItem key={index}>
+                    {({ focus }) => (
+                      <button
+                        className={`${
+                          focus ? "bg-gray-200" : ""
+                        } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                        onClick={() => handleTransportSelect(transport.name)}
+                      >
+                        {transport.name}
+                      </button>
+                    )}
+                  </MenuItem>
+                ))}
             </MenuItems>
           </Menu>
 
           <Menu as="div" className="relative inline-block text-left w-64">
-            <MenuButton
-              className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2"
-            >
+            <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
               <SubwayIcon className="ml-2" />
               <span className="flex-grow text-left pl-2 text-gray-400">
-                {selectedLine ? selectedLine.name : 'Línea'}
+                {selectedLine ? selectedLine.name : "Línea"}
               </span>
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
@@ -222,7 +242,7 @@ const CreateEvidenceComponent: React.FC = () => {
                   {({ focus }) => (
                     <button
                       className={`${
-                        focus ? 'bg-gray-200' : ''
+                        focus ? "bg-gray-200" : ""
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                       onClick={() => setSelectedLine(line)}
                     >
@@ -236,10 +256,17 @@ const CreateEvidenceComponent: React.FC = () => {
 
           <Menu as="div" className="relative inline-block text-left w-64">
             <MenuButton
-              className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2"
+              className={`w-full py-2 ${
+                stationsDisabled
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-100 text-gray-800"
+              } font-semibold rounded-lg flex items-center space-x-2`}
+              disabled={stationsDisabled}
             >
               <LocationOnIcon className="ml-2" />
-              <span className="flex-grow text-left pl-2 text-gray-400">{selectedStation ? selectedStation.name : 'Estación'}</span>
+              <span className="flex-grow text-left pl-2 text-gray-400">
+                {selectedStation ? selectedStation.name : "Estación"}
+              </span>
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
             <MenuItems className="absolute mt-2 w-full bg-white shadow-lg rounded-md z-10">
@@ -248,7 +275,7 @@ const CreateEvidenceComponent: React.FC = () => {
                   {({ focus }) => (
                     <button
                       className={`${
-                        focus ? 'bg-gray-200' : ''
+                        focus ? "bg-gray-200" : ""
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                       onClick={() => setSelectedStation(station)}
                     >
@@ -261,11 +288,11 @@ const CreateEvidenceComponent: React.FC = () => {
           </Menu>
 
           <Menu as="div" className="relative inline-block text-left w-64">
-            <MenuButton
-              className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2"
-            >
+            <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
               <ReportProblemIcon className="ml-2" />
-              <span className="flex-grow text-left pl-2 text-gray-400">{selectedIncident ? selectedIncident.name : 'Incidente'}</span>
+              <span className="flex-grow text-left pl-2 text-gray-400">
+                {selectedIncident ? selectedIncident.name : "Incidente"}
+              </span>
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
             <MenuItems className="absolute mt-2 w-full bg-white shadow-lg rounded-md z-10">
@@ -274,7 +301,7 @@ const CreateEvidenceComponent: React.FC = () => {
                   {({ focus }) => (
                     <button
                       className={`${
-                        focus ? 'bg-gray-200' : ''
+                        focus ? "bg-gray-200" : ""
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                       onClick={() => setSelectedIncident(incident)}
                       title={incident.description}
@@ -289,7 +316,10 @@ const CreateEvidenceComponent: React.FC = () => {
         </div>
 
         <div className="flex justify-center mt-6">
-          <button onClick={handleSubmit} className="w-64 py-2 bg-[#6ABDA6] text-white font-semibold rounded-lg mb-32">
+          <button
+            onClick={handleSubmit}
+            className="w-64 py-2 bg-[#6ABDA6] text-white font-semibold rounded-lg mb-32"
+          >
             Solicitar
           </button>
         </div>
