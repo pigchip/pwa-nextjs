@@ -9,10 +9,10 @@ import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MapIcon from "@mui/icons-material/Map";
 import { Button } from "@mui/material";
-import { Itinerary, Leg } from "../../app/ItineraryMapComponent";
 import Layout from "@/components/Layout";
 import { useRouter } from "next/navigation";
 import { SelectedItineraryContext } from "@/contexts/SelectedItineraryContext";
+import { Itinerary } from "@/types/map";
 
 const SavedRoutesComponent: React.FC = () => {
   const [savedRoutes, setSavedRoutes] = useState<Itinerary[]>([]);
