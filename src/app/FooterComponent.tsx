@@ -1,13 +1,13 @@
 "use client";
 
-import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import NavigationIcon from '@mui/icons-material/Navigation';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import AssigmentIcon from '@mui/icons-material/Assignment';
-import SettingsIcon from '@mui/icons-material/Settings';
-import { useRole } from '@/contexts/RoleContext';
-
+import React from "react";
+import { useRouter, usePathname } from "next/navigation";
+import NavigationIcon from "@mui/icons-material/Navigation";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import AssigmentIcon from "@mui/icons-material/Assignment";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useRole } from "@/contexts/RoleContext";
+import { AdminPanelSettings } from "@mui/icons-material";
 
 const FooterComponent: React.FC = () => {
   const router = useRouter();
@@ -21,18 +21,20 @@ const FooterComponent: React.FC = () => {
   const getButtonClass = (paths: string | string[]) => {
     const pathArray = Array.isArray(paths) ? paths : [paths];
     return pathArray.includes(currentPath)
-      ? 'text-[#6ABDA6] border-t-4 border-[#6ABDA6]'
-      : 'text-black';
+      ? "text-[#6ABDA6] border-t-4 border-[#6ABDA6]"
+      : "text-black";
   };
 
   return (
     <footer className="flex justify-between bg-gray-100 flex-shrink-0 w-full">
-      {role === 'user' && (
+      {role === "user" && (
         <>
           <div className="flex-1 relative">
             <button
-              onClick={() => handleNavigation('/navigation')}
-              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/navigation')}`}
+              onClick={() => handleNavigation("/navigation")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                "/navigation"
+              )}`}
             >
               <NavigationIcon className="mt-2" />
             </button>
@@ -40,8 +42,10 @@ const FooterComponent: React.FC = () => {
 
           <div className="flex-1 relative">
             <button
-              onClick={() => handleNavigation('/search-history')}
-              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/search-history')}`}
+              onClick={() => handleNavigation("/search-history")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                "/search-history"
+              )}`}
             >
               <BookmarkIcon className="mt-2" />
             </button>
@@ -49,8 +53,10 @@ const FooterComponent: React.FC = () => {
 
           <div className="flex-1 relative">
             <button
-              onClick={() => handleNavigation('/reports')}
-              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(['/reports', '/reports/create', '/reports/status'])}`}
+              onClick={() => handleNavigation("/reports")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                ["/reports", "/reports/create", "/reports/status"]
+              )}`}
             >
               <AssigmentIcon className="mt-2" />
             </button>
@@ -58,14 +64,31 @@ const FooterComponent: React.FC = () => {
         </>
       )}
 
-      {role === 'supervisor' && (
+      {role === "supervisor" && (
         <>
           <div className="flex-1 relative">
             <button
-              onClick={() => handleNavigation('/supervisor')}
-              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/supervisor')}`}
+              onClick={() => handleNavigation("/supervisor")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                "/supervisor"
+              )}`}
             >
               <AssigmentIcon className="mt-2" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {role === "admin" && (
+        <>
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation("/admin/users")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                "/admin/users"
+              )}`}
+            >
+              <AdminPanelSettings className="mt-2" />
             </button>
           </div>
         </>
@@ -73,8 +96,10 @@ const FooterComponent: React.FC = () => {
 
       <div className="flex-1 relative">
         <button
-          onClick={() => handleNavigation('/settings')}
-          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass('/settings')}`}
+          onClick={() => handleNavigation("/settings")}
+          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+            "/settings"
+          )}`}
         >
           <SettingsIcon className="mt-2" />
         </button>
