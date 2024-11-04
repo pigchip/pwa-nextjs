@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AutoComplete from '../AutoComplete';
 import 'leaflet/dist/leaflet.css';
 import '../globals.css';
@@ -37,6 +38,37 @@ const NavigationComponent: React.FC = () => {
       setEndLocation(newEnd);
     }
   }, [selectedItinerary]);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    
+    const startLat = searchParams.get('startLat');
+    const startLon = searchParams.get('startLon');
+    const startName = searchParams.get('startName');
+    const startDisplayName = searchParams.get('startDisplayName');
+    const endLat = searchParams.get('endLat');
+    const endLon = searchParams.get('endLon');
+    const endName = searchParams.get('endName');
+    const endDisplayName = searchParams.get('endDisplayName');
+
+    if (startLat && startLon && startName && startDisplayName) {
+      setStartLocation({
+        lat: parseFloat(startLat),
+        lon: parseFloat(startLon),
+        name: startName,
+        display_name: startDisplayName,
+      });
+    }
+    if (endLat && endLon && endName && endDisplayName) {
+      setEndLocation({
+        lat: parseFloat(endLat),
+        lon: parseFloat(endLon),
+        name: endName,
+        display_name: endDisplayName,
+      });
+    }
+  }, [searchParams]);
 
   const handleSelectStart = (location: { lat: number; lon: number; display_name: string } | null) => {
     if (location) {
