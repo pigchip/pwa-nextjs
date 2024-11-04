@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useContext } from "react";
 import DirectionsWalkIcon from "@mui/icons-material/DirectionsWalk";
@@ -8,6 +8,7 @@ import TrainIcon from "@mui/icons-material/Train";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MapIcon from "@mui/icons-material/Map";
+import ShareIcon from "@mui/icons-material/Share";
 import { Button } from "@mui/material";
 import Layout from "@/components/Layout";
 import { useRouter } from "next/navigation";
@@ -42,10 +43,40 @@ const SavedRoutesComponent: React.FC = () => {
     router.push("/navigation");
   };
 
+  const generateShareUrl = (itinerary: Itinerary) => {
+    const url = new URL(window.location.href);
+    url.pathname = '/navigation';
+    url.searchParams.set('startLat', itinerary.legs[0].from.lat.toString());
+    url.searchParams.set('startLon', itinerary.legs[0].from.lon.toString());
+    url.searchParams.set('startName', itinerary.startNameIti ?? '');
+    url.searchParams.set('startDisplayName', itinerary.startNameIti ?? '');
+    url.searchParams.set('endLat', itinerary.legs[itinerary.legs.length - 1].to.lat.toString());
+    url.searchParams.set('endLon', itinerary.legs[itinerary.legs.length - 1].to.lon.toString());
+    url.searchParams.set('endName', itinerary.endNameIti ?? '');
+    url.searchParams.set('endDisplayName', itinerary.endNameIti ?? '');
+    return url.toString();
+  };
+
+  const shareRoute = (itinerary: Itinerary) => {
+    const shareUrl = generateShareUrl(itinerary);
+    const shareData = {
+      title: "Ruta Guardada",
+      text: `Ruta desde ${itinerary.startNameIti} hasta ${itinerary.endNameIti}. Duración: ${formatDuration(itinerary.duration)}. Distancia a pie: ${Math.round(itinerary.walkDistance)}m.`,
+      url: shareUrl
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(console.error);
+    } else {
+      // Fallback for browsers that do not support the Web Share API
+      navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+      alert("Detalles de la ruta copiados al portapapeles.");
+    }
+  };
+
   return (
     <Layout>
       <div className="flex flex-col h-full justify-start bg-gray-100">
-        {/* Alineación exacta del título "Rutas Guardadas" */}
         <div className="flex flex-col items-start w-full pl-5">
           <h2 className="text-xl font-bold text-black mb-4 md:mb-6">
             Rutas Guardadas
@@ -110,6 +141,15 @@ const SavedRoutesComponent: React.FC = () => {
                       >
                         Mapear Ruta
                       </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<ShareIcon />}
+                        onClick={() => shareRoute(itinerary)}
+                        className="w-1/2 bg-green-500 hover:bg-green-600"
+                      >
+                        Compartir
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center space-x-4 md:space-x-6">
@@ -148,14 +188,12 @@ const SavedRoutesComponent: React.FC = () => {
   );
 };
 
-// Formatea la duración en "Xh Ymin"
 const formatDuration = (durationInSeconds: number) => {
   const hours = Math.floor(durationInSeconds / 3600);
   const minutes = Math.floor((durationInSeconds % 3600) / 60);
   return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
 };
 
-// Obtiene el ícono de transporte basado en el modo
 const getTransportIcon = (mode: string) => {
   switch (mode) {
     case "WALK":
