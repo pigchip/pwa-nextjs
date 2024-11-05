@@ -53,7 +53,7 @@ const AdminSupervisorDelete = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center text-[#6ABDA6]">Delete Supervisor</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center text-[#6ABDA6]">Eliminar Supervisor</h1>
       {error && <div className="mb-4 text-red-500">{error}</div>}
       {success && <div className="mb-4 text-green-500">{success}</div>}
       <form onSubmit={(e) => { e.preventDefault(); handleOpen(); }} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -84,7 +84,7 @@ const AdminSupervisorDelete = () => {
           className="w-full bg-[#6ABDA6] text-white py-2 px-4 rounded-lg hover:bg-[#5aa58e] transition duration-200"
           disabled={loading}
         >
-          {loading ? 'Deleting...' : 'Delete Supervisor'}
+          {loading ? 'Eliminando...' : 'Eliminar Supervisor'}
         </button>
       </form>
 

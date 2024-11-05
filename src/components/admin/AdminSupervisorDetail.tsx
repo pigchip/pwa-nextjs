@@ -62,7 +62,7 @@ const AdminSupervisorDetail = () => {
         <IconButton aria-label="back" style={{ color: '#6ABDA6' }} onClick={() => router.push('/admin/supervisors')}>
           <ArrowBackIcon />
         </IconButton>
-        <h1 className="text-3xl font-bold text-center text-[#6ABDA6] flex-1">Supervisor Details</h1>
+        <h1 className="text-3xl font-bold text-center text-[#6ABDA6] flex-1">Detalles del supervisor</h1>
       </div>
       <div className="bg-white p-6 rounded-lg shadow-md">
         <p><strong>Supervisor ID:</strong> {supervisor.sup}</p>

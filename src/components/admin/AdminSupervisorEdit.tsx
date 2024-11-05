@@ -112,7 +112,7 @@ const AdminSupervisorEdit = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center text-[#6ABDA6]">
-        Edit Supervisor
+        Editar Supervisor
       </h1>
       {success && <div className="mb-4 text-green-500">{success}</div>}
       <form
@@ -179,7 +179,7 @@ const AdminSupervisorEdit = () => {
           className="w-full bg-[#6ABDA6] text-white py-2 px-4 rounded-lg hover:bg-[#5aa58e] transition duration-200"
           disabled={loading}
         >
-          {loading ? "Updating..." : "Update Supervisor"}
+          {loading ? "Actualizando..." : "Actualizar Supervisor"}
         </button>
       </form>
     </div>
