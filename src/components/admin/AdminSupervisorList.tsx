@@ -1,7 +1,12 @@
 // components/AdminSupervisorList.tsx
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Supervisor } from '@/types/supervisor';
+import { IconButton } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const AdminSupervisorList = () => {
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
@@ -47,6 +52,7 @@ const AdminSupervisorList = () => {
               <th className="py-3 px-6 border-b">Admin</th>
               <th className="py-3 px-6 border-b">Line</th>
               <th className="py-3 px-6 border-b">Station</th>
+              <th className="py-3 px-6 border-b">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -57,6 +63,23 @@ const AdminSupervisorList = () => {
                 <td className="py-3 px-6 border-b text-center">{supervisor.admin}</td>
                 <td className="py-3 px-6 border-b text-center">{supervisor.line}</td>
                 <td className="py-3 px-6 border-b text-center">{supervisor.station}</td>
+                <td className="py-3 px-6 border-b text-center">
+                  <Link href={`/admin/supervisors/${supervisor.sup}`} passHref>
+                    <IconButton aria-label="view" color="primary">
+                      <VisibilityIcon />
+                    </IconButton>
+                  </Link>
+                  <Link href={`/admin/supervisors/${supervisor.sup}/edit`} passHref>
+                    <IconButton aria-label="edit" color="secondary">
+                      <EditIcon />
+                    </IconButton>
+                  </Link>
+                  <Link href={`/admin/supervisors/${supervisor.sup}/delete`} passHref>
+                    <IconButton aria-label="delete" color="error">
+                      <DeleteIcon />
+                    </IconButton>
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
