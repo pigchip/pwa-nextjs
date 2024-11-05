@@ -1,7 +1,7 @@
 // components/AdminSupervisorEdit.tsx
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 import { Supervisor } from "@/types/supervisor";
 
 const AdminSupervisorEdit = () => {
@@ -9,8 +9,8 @@ const AdminSupervisorEdit = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const id = useParams().id;
   const router = useRouter();
-  const { id } = router.query;
 
   useEffect(() => {
     if (!id) return;
