@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { IconButton } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const AdminSupervisorForm = () => {
   const [formData, setFormData] = useState({
@@ -86,72 +88,79 @@ const AdminSupervisorForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center text-[#6ABDA6]">Agregar Supervisor</h2>
-      {error && <div className="mb-4 text-red-500">{error}</div>}
-      <div className="mb-4">
-        <label className="block text-gray-700">Email</label>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg"
-          required
-        />
+    <div className="container mx-auto p-4">
+      <div className="flex items-center mb-6">
+        <IconButton aria-label="back" style={{ color: '#6ABDA6' }} onClick={() => router.push('/admin/supervisors')}>
+          <ArrowBackIcon />
+        </IconButton>
+        <h2 className="text-2xl font-bold text-center text-[#6ABDA6] flex-1">Agregar Supervisor</h2>
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Supervisor ID</label>
-        <input
-          type="text"
-          name="sup"
-          value={formData.sup}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg"
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Admin</label>
-        <input
-          type="text"
-          name="admin"
-          value={formData.admin}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg"
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Line</label>
-        <input
-          type="number"
-          name="line"
-          value={formData.line}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg"
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Station</label>
-        <input
-          type="number"
-          name="station"
-          value={formData.station}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg"
-          required
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full bg-[#6ABDA6] text-white py-2 px-4 rounded-lg hover:bg-[#5aa58e] transition duration-200"
-        disabled={loading}
-      >
-        {loading ? 'Submitting...' : 'Agregar Supervisor'}
-      </button>
-    </form>
+      <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+        {error && <div className="mb-4 text-red-500">{error}</div>}
+        <div className="mb-4">
+          <label className="block text-gray-700">Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Supervisor ID</label>
+          <input
+            type="text"
+            name="sup"
+            value={formData.sup}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Admin</label>
+          <input
+            type="text"
+            name="admin"
+            value={formData.admin}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Line</label>
+          <input
+            type="number"
+            name="line"
+            value={formData.line}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Station</label>
+          <input
+            type="number"
+            name="station"
+            value={formData.station}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-[#6ABDA6] text-white py-2 px-4 rounded-lg hover:bg-[#5aa58e] transition duration-200"
+          disabled={loading}
+        >
+          {loading ? 'Submitting...' : 'Agregar Supervisor'}
+        </button>
+      </form>
+    </div>
   );
 };
 
