@@ -1,4 +1,5 @@
 // pages/admin/supervisors/[id]/delete.tsx
+'use client';
 
 import AdminSupervisorDelete from '@/components/admin/AdminSupervisorDelete';
 import Layout from '@/components/Layout';

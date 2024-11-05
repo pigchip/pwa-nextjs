@@ -1,7 +1,7 @@
 // components/AdminSupervisorDelete.tsx
 
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
 const AdminSupervisorDelete = () => {
