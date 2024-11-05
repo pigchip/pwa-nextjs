@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import NavigationIcon from "@mui/icons-material/Navigation";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
-import AssigmentIcon from "@mui/icons-material/Assignment";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useRole } from "@/contexts/RoleContext";
 import { AdminPanelSettings } from "@mui/icons-material";
@@ -20,7 +20,7 @@ const FooterComponent: React.FC = () => {
 
   const getButtonClass = (paths: string | string[]) => {
     const pathArray = Array.isArray(paths) ? paths : [paths];
-    return pathArray.includes(currentPath)
+    return pathArray.some((path) => currentPath.startsWith(path))
       ? "text-[#6ABDA6] border-t-4 border-[#6ABDA6]"
       : "text-black";
   };
@@ -58,7 +58,7 @@ const FooterComponent: React.FC = () => {
                 ["/reports", "/reports/create", "/reports/status"]
               )}`}
             >
-              <AssigmentIcon className="mt-2" />
+              <AssignmentIcon className="mt-2" />
             </button>
           </div>
         </>
@@ -73,7 +73,7 @@ const FooterComponent: React.FC = () => {
                 "/supervisor"
               )}`}
             >
-              <AssigmentIcon className="mt-2" />
+              <AssignmentIcon className="mt-2" />
             </button>
           </div>
         </>
@@ -85,7 +85,7 @@ const FooterComponent: React.FC = () => {
             <button
               onClick={() => handleNavigation("/admin/supervisors")}
               className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
-                ["/admin/supervisors", "/admin/supervisors/[id]", "/admin/supervisors/new"]
+                ["/admin/supervisors", "/admin/supervisors/", "/admin/supervisors/new"]
               )}`}
             >
               <AdminPanelSettings className="mt-2" />
