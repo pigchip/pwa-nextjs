@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
 const AdminSupervisorDelete = () => {
   const [id, setId] = useState('');
@@ -9,10 +10,18 @@ const AdminSupervisorDelete = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const handleDelete = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleDelete = async () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -38,6 +47,7 @@ const AdminSupervisorDelete = () => {
       setError((error as Error).message);
     } finally {
       setLoading(false);
+      handleClose();
     }
   };
 
@@ -46,7 +56,7 @@ const AdminSupervisorDelete = () => {
       <h1 className="text-3xl font-bold mb-6 text-center text-[#6ABDA6]">Delete Supervisor</h1>
       {error && <div className="mb-4 text-red-500">{error}</div>}
       {success && <div className="mb-4 text-green-500">{success}</div>}
-      <form onSubmit={handleDelete} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+      <form onSubmit={(e) => { e.preventDefault(); handleOpen(); }} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
         <div className="mb-4">
           <label className="block text-gray-700">Supervisor ID</label>
           <input
@@ -77,6 +87,23 @@ const AdminSupervisorDelete = () => {
           {loading ? 'Deleting...' : 'Delete Supervisor'}
         </button>
       </form>
+
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this supervisor? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="secondary" disabled={loading}>
+            {loading ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
