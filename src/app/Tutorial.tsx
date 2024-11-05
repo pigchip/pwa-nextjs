@@ -2,7 +2,11 @@ import { useState } from 'react';
 import Container from './Container'; 
 import Image from 'next/image';
 
-const Tutorial = () => {
+interface TutorialProps {
+  onFinish?: () => void;
+}
+
+const Tutorial = ({ onFinish }: TutorialProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [hasStarted, setHasStarted] = useState(false); // Controla el estado de inicio
 
@@ -33,6 +37,9 @@ const Tutorial = () => {
   const handleNext = () => {
     if (steps[currentStep].buttonText === "Iniciar") {
       setHasStarted(true); // Cambia al estado de iniciado
+      if (onFinish) {
+        onFinish(); // Call onFinish when the tutorial is finished
+      }
     } else if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -46,6 +53,9 @@ const Tutorial = () => {
 
   const handleSkip = () => {
     setHasStarted(true); // Cambia al estado de iniciado al hacer clic en "Saltar"
+    if (onFinish) {
+      onFinish(); // Call onFinish when the tutorial is skipped
+    }
   };
 
   return (
@@ -73,7 +83,7 @@ const Tutorial = () => {
             <h2 className="text-2xl font-bold text-black mb-4">
               {steps[currentStep].title}
             </h2>
-            <p className="text-gray-600 mb-8 text-[#6C7976]">
+            <p className="mb-8 text-[#6C7976]">
               {steps[currentStep].description}
             </p>
           </div>

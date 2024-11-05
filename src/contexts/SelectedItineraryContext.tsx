@@ -1,4 +1,4 @@
-import { Itinerary } from '@/app/ItineraryMapComponent';
+import { Itinerary } from '@/types/map';
 import React, { createContext, useState, ReactNode } from 'react';
 
 

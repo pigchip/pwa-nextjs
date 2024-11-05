@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AutoComplete from '../AutoComplete';
 import 'leaflet/dist/leaflet.css';
 import '../globals.css';
@@ -35,8 +36,39 @@ const NavigationComponent: React.FC = () => {
       };
       setStartLocation(newStart);
       setEndLocation(newEnd);
+      saveRouteToLocalStorage(selectedItinerary);
     }
   }, [selectedItinerary]);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const startLat = searchParams.get('startLat');
+    const startLon = searchParams.get('startLon');
+    const startName = searchParams.get('startName');
+    const startDisplayName = searchParams.get('startDisplayName');
+    const endLat = searchParams.get('endLat');
+    const endLon = searchParams.get('endLon');
+    const endName = searchParams.get('endName');
+    const endDisplayName = searchParams.get('endDisplayName');
+
+    if (startLat && startLon && startName && startDisplayName) {
+      setStartLocation({
+        lat: parseFloat(startLat),
+        lon: parseFloat(startLon),
+        name: startName,
+        display_name: startDisplayName,
+      });
+    }
+    if (endLat && endLon && endName && endDisplayName) {
+      setEndLocation({
+        lat: parseFloat(endLat),
+        lon: parseFloat(endLon),
+        name: endName,
+        display_name: endDisplayName,
+      });
+    }
+  }, [searchParams]);
 
   const handleSelectStart = (location: { lat: number; lon: number; display_name: string } | null) => {
     if (location) {
@@ -52,6 +84,29 @@ const NavigationComponent: React.FC = () => {
       setEndLocation({ ...location, name: location.display_name });
       setSelectedItinerary(null);
     }
+  };
+
+  const saveRouteToLocalStorage = (itinerary: any) => {
+    const existingRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+
+    const itineraryToSave = {
+      ...itinerary,
+      frequency: 1, // Initialize frequency
+    };
+
+    const existingRouteIndex = existingRoutes.findIndex(
+      (route: any) =>
+        route.startNameIti === itineraryToSave.startNameIti &&
+        route.endNameIti === itineraryToSave.endNameIti
+    );
+
+    if (existingRouteIndex !== -1) {
+      existingRoutes[existingRouteIndex].frequency += 1; // Increment frequency if route exists
+    } else {
+      existingRoutes.push(itineraryToSave);
+    }
+
+    localStorage.setItem('savedRoutes', JSON.stringify(existingRoutes));
   };
 
   return (
