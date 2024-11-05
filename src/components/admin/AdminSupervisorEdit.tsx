@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Supervisor } from "@/types/supervisor";
+import { IconButton } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const AdminSupervisorEdit = () => {
   const [formData, setFormData] = useState<Supervisor | null>(null);
@@ -111,9 +113,12 @@ const AdminSupervisorEdit = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center text-[#6ABDA6]">
-        Editar Supervisor
-      </h1>
+      <div className="flex items-center mb-6">
+        <IconButton aria-label="back" style={{ color: '#6ABDA6' }} onClick={() => router.push('/admin/supervisors')}>
+          <ArrowBackIcon />
+        </IconButton>
+        <h1 className="text-3xl font-bold text-center text-[#6ABDA6] flex-1">Editar Supervisor</h1>
+      </div>
       {success && <div className="mb-4 text-green-500">{success}</div>}
       <form
         onSubmit={handleSubmit}
