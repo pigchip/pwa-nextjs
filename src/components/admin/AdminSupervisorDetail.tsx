@@ -1,17 +1,19 @@
 // components/AdminSupervisorDetail.tsx
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 import { Supervisor } from '@/types/supervisor';
+import { useParams } from 'next/navigation';
 
 const AdminSupervisorDetail = () => {
   const [supervisor, setSupervisor] = useState<Supervisor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  const { id } = router.query;
+
+  const params = useParams();
+  const id = params?.id;
 
   useEffect(() => {
+    console.log('id:', id);
     if (!id) return;
 
     const fetchSupervisors = async () => {
