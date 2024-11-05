@@ -223,16 +223,48 @@ const Page: React.FC = () => {
             onChange={handleToggle}
             aria-label="view toggle"
           >
-            <ToggleButton value="saved" aria-label="saved routes">
+            <ToggleButton
+              value="saved"
+              aria-label="saved routes"
+              sx={{
+                backgroundColor: "#6ABDA6",
+                color: "white",
+                "&.Mui-selected": {
+                  backgroundColor: "#5AAE96", // Slightly darker shade for selected state
+                  color: "white",
+                },
+                "&:hover": {
+                  backgroundColor: "#7BCDB6", // Lighter shade for hover state
+                },
+              }}
+            >
               Rutas Guardadas
             </ToggleButton>
-            <ToggleButton value="frequented" aria-label="frequented routes">
+            <ToggleButton
+              value="frequented"
+              aria-label="frequented routes"
+              sx={{
+                backgroundColor: "#6ABDA6",
+                color: "white",
+                "&.Mui-selected": {
+                  backgroundColor: "#5AAE96", // Slightly darker shade for selected state
+                  color: "white",
+                },
+                "&:hover": {
+                  backgroundColor: "#7BCDB6", // Lighter shade for hover state
+                },
+              }}
+            >
               Rutas Más Frecuentadas
             </ToggleButton>
           </ToggleButtonGroup>
         </div>
         <div className="flex-grow overflow-y-auto">
-          {view === "saved" ? <SavedRoutesComponent /> : <MostFrequentedRoutes />}
+          {view === "saved" ? (
+            <SavedRoutesComponent />
+          ) : (
+            <MostFrequentedRoutes />
+          )}
         </div>
       </div>
     </Layout>
