@@ -83,9 +83,9 @@ const FooterComponent: React.FC = () => {
         <>
           <div className="flex-1 relative">
             <button
-              onClick={() => handleNavigation("/admin/users")}
+              onClick={() => handleNavigation("/admin/supervisors")}
               className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
-                "/admin/users"
+                "/admin/supervisors"
               )}`}
             >
               <AdminPanelSettings className="mt-2" />
