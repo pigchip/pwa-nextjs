@@ -85,7 +85,7 @@ const FooterComponent: React.FC = () => {
             <button
               onClick={() => handleNavigation("/admin/supervisors")}
               className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
-                "/admin/supervisors"
+                ["/admin/supervisors", "/admin/supervisors/[id]", "/admin/supervisors/new"]
               )}`}
             >
               <AdminPanelSettings className="mt-2" />
