@@ -17,7 +17,7 @@ import MapIcon from '@mui/icons-material/Map';
 import { Itinerary, ItineraryMapComponentProps, PlanResponse, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
-import { formatDuration, generateRandomETA, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -118,31 +118,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       default:
         return <DirectionsWalkIcon className="text-white" />;
     }
-  };
-
-  const getColorForLeg = (leg: Leg) => {
-    return leg.route?.color ? `#${leg.route.color}` : leg.mode === 'WALK' ? '#00BFFF' : 'gray';
-  };
-
-  const getPolylineStyle = (leg: Leg): PathOptions => {
-    if (leg.mode === 'WALK') {
-      return {
-        color: '#00BFFF',
-        weight: 5,
-        dashArray: '5, 10',
-      };
-    }
-
-    let color = 'gray';
-
-    if (leg.route && leg.route.color) {
-      color = `#${leg.route.color}`;
-    }
-
-    return {
-      color,
-      weight: 5,
-    };
   };
 
   const fetchFastestItinerary = useCallback(async (maxTransfers: number): Promise<Itinerary | null> => {

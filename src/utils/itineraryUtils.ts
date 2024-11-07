@@ -1,3 +1,5 @@
+import { PathOptions } from 'leaflet';
+
 export const toggleExpand = (
   isExpanded: boolean,
   setIsExpanded: (value: boolean) => void
@@ -45,8 +47,32 @@ export const generateRandomETA = () => {
 };
 
 export const formatDuration = (durationInSeconds: number) => {
-    const hours = Math.floor(durationInSeconds / 3600);
-    const minutes = Math.floor((durationInSeconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
-  };
+  const hours = Math.floor(durationInSeconds / 3600);
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+};
 
+export const getColorForLeg = (leg: { route?: { color?: string }, mode: string }) => {
+  return leg.route?.color ? `#${leg.route.color}` : leg.mode === 'WALK' ? '#00BFFF' : 'gray';
+};
+
+export const getPolylineStyle = (leg: { mode: string, route?: { color?: string } }): PathOptions => {
+  if (leg.mode === 'WALK') {
+    return {
+      color: '#00BFFF',
+      weight: 5,
+      dashArray: '5, 10',
+    };
+  }
+
+  let color = 'gray';
+
+  if (leg.route && leg.route.color) {
+    color = `#${leg.route.color}`;
+  }
+
+  return {
+    color,
+    weight: 5,
+  };
+};
