@@ -19,6 +19,7 @@ import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
 import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
 import { ITINERARY_QUERY } from '@/queries/queries';
+import { fetchItineraries } from '@/utils/fetchItineraries';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -127,34 +128,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
     const query = ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers);
 
-    try {
-      const otpUrl = process.env.NEXT_PUBLIC_OTP_API_BASE_URL;
-
-      const response = await fetch(`${otpUrl}otp/routers/default/index/graphql`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data: PlanResponse = await response.json();
-      console.log("API response data:", data);
-
-      if (data.errors || !data.data?.plan?.itineraries) {
-        console.error('Invalid data or errors:', data.errors);
-        return null;
-      }
-
-      return data.data.plan.itineraries.reduce((prev, current) =>
-        prev.duration < current.duration ? prev : current
-      );
-    } catch (error) {
-      console.error('Error fetching itineraries:', error);
-      return null;
-    }
+    const itinerary = await fetchItineraries(query);
+    
+    return itinerary;
   }, [fromLat, fromLon, toLat, toLon]);
 
   const fetchAllItineraries = useCallback(async () => {
