@@ -2,65 +2,84 @@
 
 import { useState } from 'react';
 import Tutorial from './Tutorial';
-
 import React from 'react';
 import { useRole } from '@/contexts/RoleContext';
 
-export default function AuthForm({ setShowTutorial, showTutorial }: { setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>, showTutorial: boolean }) {
-  const [isRegister, setIsRegister] = useState(true);
-  const [isUser, setIsUser] = useState(true);
-  const [isSupervisor, setIsSupervisor] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [name, setName] = useState("");
-  const [lastname_pat, setLastnamePat] = useState("");
-  const [lastname_mat, setLastnameMat] = useState("");
-  const [curp, setCurp] = useState("");
-  const [ocuparion, setOccupation] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+interface ModalContent {
+  title: string;
+  description: string;
+}
 
-  const [emailError, setEmailError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);  
-  const [nameError, setNameError] = useState(false);
-  const [lastnamePatError, setLastnamePatError] = useState(false);
-  const [lastnameMatError, setLastnameMatError] = useState(false);
-  const [curpError, setCurpError] = useState(false);
-  const [occupationError, setOccupationError] = useState(false);
-  const [phoneError, setPhoneError] = useState(false);
+export default function AuthForm({
+  setShowTutorial,
+  showTutorial,
+}: {
+  setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>;
+  showTutorial: boolean;
+}) {
+  // Estados para registro e inicio de sesión
+  const [isRegister, setIsRegister] = useState<boolean>(true);
+  const [isUser, setIsUser] = useState<boolean>(true);
+  const [isSupervisor, setIsSupervisor] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState({ title: "", description: "" });
+  // Estados para campos de registro
+  const [name, setName] = useState<string>('');
+  const [lastname_pat, setLastnamePat] = useState<string>('');
+  const [lastname_mat, setLastnameMat] = useState<string>('');
+  const [curp, setCurp] = useState<string>('');
+  const [occupation, setOccupation] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [id, setId] = useState<string>('');
 
-  const [emailErrorMessage, setEmailErrorMessage] = useState("");
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
-  const [nameErrorMessage, setNameErrorMessage] = useState("");
-  const [lastnamePatErrorMessage, setLastnamePatErrorMessage] = useState("");
-  const [lastnameMatErrorMessage, setLastnameMatErrorMessage] = useState("");
-  const [curpErrorMessage, setCurpErrorMessage] = useState("");
-  const [phoneErrorMessage, setPhoneErrorMessage] = useState("");
-  const [occupationErrorMessage, setOccupationErrorMessage] = useState("");
+  // Estados para errores
+  const [emailError, setEmailError] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<boolean>(false);
+  const [nameError, setNameError] = useState<boolean>(false);
+  const [lastnamePatError, setLastnamePatError] = useState<boolean>(false);
+  const [lastnameMatError, setLastnameMatError] = useState<boolean>(false);
+  const [curpError, setCurpError] = useState<boolean>(false);
+  const [occupationError, setOccupationError] = useState<boolean>(false);
+  const [phoneError, setPhoneError] = useState<boolean>(false);
+  const [idError, setIdError] = useState<boolean>(false);
 
-  const [id, setId] = useState("");
-  const [idError, setIdError] = useState(false);
-  const idErrorMessage = "ID no válido"; 
+  // Mensajes de error
+  const [emailErrorMessage, setEmailErrorMessage] = useState<string>('');
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>('');
+  const [nameErrorMessage, setNameErrorMessage] = useState<string>('');
+  const [lastnamePatErrorMessage, setLastnamePatErrorMessage] = useState<string>('');
+  const [lastnameMatErrorMessage, setLastnameMatErrorMessage] = useState<string>('');
+  const [curpErrorMessage, setCurpErrorMessage] = useState<string>('');
+  const [phoneErrorMessage, setPhoneErrorMessage] = useState<string>('');
+  const [occupationErrorMessage, setOccupationErrorMessage] = useState<string>('');
+  const idErrorMessage: string = "ID no válido";
+
+  // Estados para 2FA
+  const [is2FA, setIs2FA] = useState<boolean>(false);
+  const [received2FA, setReceived2FA] = useState<number | null>(null);
+  const [entered2FA, setEntered2FA] = useState<string>('');
+  const [twoFAError, setTwoFAError] = useState<boolean>(false);
+  const [twoFAErrorMessage, setTwoFAErrorMessage] = useState<string>('');
+
+  // Estados para el modal
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [modalContent, setModalContent] = useState<ModalContent>({ title: '', description: '' });
 
   const { setRole } = useRole();
 
-  const openSignInModal = (title: string, description: string) => {
-    setModalContent({ title, description });
-    setShowModal(true);
-  };  
+  // Funciones de validación
+  const validateName = (value: string): boolean => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value);
+  const validateCurp = (value: string): boolean => /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/.test(value);
+  const validatePhone = (value: string): boolean => /^[0-9]{10}$/.test(value);
+  const validateEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const validatePassword = (value: string): boolean => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
+  const validateOccupation = (value: string): boolean => value !== '';
+  const validateId = (value: string): boolean => /^\d{10}$/.test(value);
 
-  const validateName = (value: string) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value);
-  const validateCurp = (value: string) => /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/.test(value);
-  const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
-  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
-  const validateOccupation = (value: string) => value !== "";
-  const validateId = (value: string) => /^\d{10}$/.test(value);
-
-  const openModal = (content: string) => {
+  // Función para abrir el modal
+  const openModal = (content: string): void => {
     if (content === "Términos y Condiciones") {
       setModalContent({
         title: "Términos y Condiciones",
@@ -119,178 +138,39 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     setShowModal(true);
   };
 
-  const closeModal = () => {
+  // Función para cerrar el modal
+  const closeModal = (): void => {
     setShowModal(false);
-    setModalContent({ title: "", description: "" });
+    setModalContent({ title: '', description: '' });
   };
 
-  const handleClickOutside = (event: React.MouseEvent) => {
+  // Manejar clic fuera del modal para cerrarlo
+  const handleClickOutside = (event: React.MouseEvent<HTMLDivElement>): void => {
     if ((event.target as HTMLElement).id === "modal-overlay") {
       closeModal();
     }
   };
 
-  const handleSupervisorClick = async (e: React.FormEvent) => {
-    // Guardar el email en localStorage
-    localStorage.setItem("email", email);
-
-    e.preventDefault();
-
-    let hasError = false;
-
-    if (!validateId(id)) {
-      setIdError(true);
-      hasError = true;
-    } else {
-      setIdError(false);
-    }
-  
-    if (!validatePassword(password)) {
-      setPasswordError(true);
-      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
-      hasError = true;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage("");
-    }
-  
-    if (hasError) {
-      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
-      return;
-    }
-  
-    // Continuar con la solicitud a la API
-    try {
-      const response = await fetch("/api/supervisor/sign-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok && data.id !== null) {
-        // Caso exitoso
-        openSignInModal(
-          "Inicio de Sesión Exitoso",
-          `Bienvenido, Supervisor.`
-        );
-
-        setShowTutorial(true); // Agregado
-  
-        // Limpiar los campos después del éxito
-        setName("");
-        setLastnamePat("");
-        setLastnameMat("");
-        setCurp("");
-        setOccupation("");
-        setPhone("");
-        setId(""); // Cambiado a id
-        setPassword("");
-        setRole("supervisor");
-      } else if (response.status === 400 || data.id === null) {
-        // Caso de datos incorrectos o bad request
-        openSignInModal(
-          "Error de Inicio de Sesión :(",
-          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
-        );
-      }
-    } catch (error) {
-      openSignInModal(
-        "Error de Conexión",
-        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
-      );
-    }
-  };
-  
-  const handleAdminClick = async (e: React.FormEvent) => {
-    // Guardar el email en localStorage
-    localStorage.setItem("email", email);
-    
-    e.preventDefault();
-
-    let hasError = false;
-
-    if (!validateId(id)) {
-      setIdError(true);
-      hasError = true;
-    } else {
-      setIdError(false);
-    }
-    
-    if (!validatePassword(password)) {
-      setPasswordError(true);
-      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
-      hasError = true;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage("");
-    }
-  
-    if (hasError) {
-      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
-      return;
-    }
-  
-    // Continuar con la solicitud a la API
-    try {
-      const response = await fetch("/api/administrator/sign-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok && data.id !== null) {
-        // Caso exitoso
-        openSignInModal(
-          "Inicio de Sesión Exitoso",
-          `Bienvenido, Administrador.`
-        );
-
-        setShowTutorial(true); // Agregado
-  
-        // Limpiar los campos después del éxito
-        setName("");
-        setLastnamePat("");
-        setLastnameMat("");
-        setCurp("");
-        setOccupation("");
-        setPhone("");
-        setId(""); // Cambiado a id
-        setPassword("");
-        setRole("admin");
-      } else if (response.status === 400 || data.id === null) {
-        // Caso de datos incorrectos o bad request
-        openSignInModal(
-          "Error de Inicio de Sesión :(",
-          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
-        );
-      }
-    } catch (error) {
-      openSignInModal(
-        "Error de Conexión",
-        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
-      );
-    }
+  // Función para abrir el modal con mensajes
+  const openSignInModal = (title: string, description: string): void => {
+    setModalContent({ title, description });
+    setShowModal(true);
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  // Función para manejar el envío del formulario de inicio de sesión de Usuario
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     let hasError = false;
 
+    // Validaciones
     if (!validateEmail(email)) {
       setEmailError(true);
       setEmailErrorMessage("El correo electrónico no es válido.");
       hasError = true;
     } else {
       setEmailError(false);
+      setEmailErrorMessage("");
     }
 
     if (!validatePassword(password)) {
@@ -299,6 +179,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       hasError = true;
     } else {
       setPasswordError(false);
+      setPasswordErrorMessage("");
     }
 
     if (hasError) {
@@ -306,7 +187,10 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       return;
     }
 
-    // Continuar con la solicitud a la API
+    // Guardar el email en localStorage
+    localStorage.setItem("email", email);
+
+    // Solicitud a la API
     try {
       const response = await fetch("/api/sign-in", {
         method: "POST",
@@ -318,33 +202,34 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
 
       const data = await response.json();
 
-      if (response.ok && data.id !== null) {
-        // Guardar el email en localStorage
-        localStorage.setItem("email", email);
+      if (response.ok) {
+        if (data._2fa) {
+          // Se requiere 2FA
+          setReceived2FA(data._2fa);
+          setIs2FA(true);
+          openSignInModal(
+            "Autenticación de Dos Factores",
+            "Se ha enviado un código de verificación a tu dispositivo. Por favor, ingresa el código para continuar."
+          );
+        } else {
+          // Inicio de sesión exitoso sin 2FA
+          openSignInModal(
+            "Inicio de Sesión Exitoso",
+            `Bienvenido, ${data.usuario.name} ${data.usuario.lastname_pat} ${data.usuario.lastname_mat}.`
+          );
 
-        // Caso exitoso
-        openSignInModal(
-          "Inicio de Sesión Exitoso",
-          `Bienvenido, ${data.name} ${data.lastname_pat} ${data.lastname_mat}.`
-        );
-        
-        setShowTutorial(true); // Agregado
+          setShowTutorial(true);
 
-        // Limpiar los campos después del éxito
-        setName("");
-        setLastnamePat("");
-        setLastnameMat("");
-        setCurp("");
-        setOccupation("");
-        setPhone("");
-        setEmail("");
-        setPassword("");
-        setRole("user");
-      } else if (response.status === 400 || data.id === null) {
-        // Caso de datos incorrectos o bad request
+          // Limpiar campos
+          setEmail('');
+          setPassword('');
+          setRole("user");
+        }
+      } else {
+        // Error en las credenciales
         openSignInModal(
           "Error de Inicio de Sesión :(",
-          "Ocurrio un error al iniciar sesión, verifica que tus datos sean correctos."
+          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
         );
       }
     } catch (error) {
@@ -353,67 +238,61 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
       );
     }
-  };  
+  };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  // Función para manejar la verificación del código 2FA
+  const handle2FASubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+
+    if (!entered2FA) {
+      setTwoFAError(true);
+      setTwoFAErrorMessage("Por favor, ingresa el código 2FA.");
+      return;
+    }
+
+    if (received2FA === null) {
+      setTwoFAError(true);
+      setTwoFAErrorMessage("No se ha recibido un código 2FA válido.");
+      return;
+    }
+
+    if (entered2FA !== received2FA.toString()) {
+      setTwoFAError(true);
+      setTwoFAErrorMessage("El código de verificación es incorrecto.");
+      return;
+    }
+
+    // Verificación exitosa de 2FA
+    openSignInModal(
+      "Autenticación Exitosa",
+      "Has ingresado correctamente el código de verificación."
+    );
+
+    setShowTutorial(true);
+
+    // Limpiar campos y estados de 2FA
+    setEmail('');
+    setPassword('');
+    setEntered2FA('');
+    setIs2FA(false);
+    setReceived2FA(null);
+    setRole("user");
+  };
+
+  // Función para manejar el envío del formulario de inicio de sesión de Supervisor
+  const handleSupervisorClick = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     let hasError = false;
 
-    if (!validateName(name)) {
-      setNameError(true);
-      setNameErrorMessage("El nombre solo debe contener letras y espacios.");
+    // Validaciones
+    if (!validateId(id)) {
+      setIdError(true);
       hasError = true;
     } else {
-      setNameError(false);
-      setNameErrorMessage("");
+      setIdError(false);
     }
-    
-    if (!validateName(lastname_pat)) {
-      setLastnamePatError(true);
-      setLastnamePatErrorMessage("El apellido paterno solo debe contener letras y espacios.");
-      hasError = true;
-    } else {
-      setLastnamePatError(false);
-      setLastnamePatErrorMessage("");
-    }
-    
-    if (!validateName(lastname_mat)) {
-      setLastnameMatError(true);
-      setLastnameMatErrorMessage("El apellido materno solo debe contener letras y espacios.");
-      hasError = true;
-    } else {
-      setLastnameMatError(false);
-      setLastnameMatErrorMessage("");
-    }
-    
-    if (!validateCurp(curp)) {
-      setCurpError(true);
-      setCurpErrorMessage("La CURP no es válida.");
-      hasError = true;
-    } else {
-      setCurpError(false);
-      setCurpErrorMessage("");
-    }
-    
-    if (!validatePhone(phone)) {
-      setPhoneError(true);
-      setPhoneErrorMessage("El número de teléfono no es válido.");
-      hasError = true;
-    } else {
-      setPhoneError(false);
-      setPhoneErrorMessage("");
-    }
-    
-    if (!validateEmail(email)) {
-      setEmailError(true);
-      setEmailErrorMessage("El correo electrónico no es válido.");
-      hasError = true;
-    } else {
-      setEmailError(false);
-      setEmailErrorMessage("");
-    }
-    
+
     if (!validatePassword(password)) {
       setPasswordError(true);
       setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
@@ -422,8 +301,197 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       setPasswordError(false);
       setPasswordErrorMessage("");
     }
-    
-    if (!validateOccupation(ocuparion)) {
+
+    if (hasError) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
+      return;
+    }
+
+    // Guardar el ID en localStorage
+    localStorage.setItem("id", id);
+
+    // Solicitud a la API
+    try {
+      const response = await fetch("/api/supervisor/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+          // Inicio de sesión exitoso sin 2FA
+          openSignInModal(
+            "Inicio de Sesión Exitoso",
+            "Bienvenido, Supervisor."
+          );
+
+          setShowTutorial(true);
+
+          // Limpiar campos
+          setId('');
+          setPassword('');
+          setRole("supervisor");
+      } else {
+        // Error en las credenciales
+        openSignInModal(
+          "Error de Inicio de Sesión :(",
+          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
+        );
+      }
+    } catch (error) {
+      openSignInModal(
+        "Error de Conexión",
+        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+      );
+    }
+  };
+
+  // Función para manejar el envío del formulario de inicio de sesión de Administrador
+  const handleAdminClick = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+
+    let hasError = false;
+
+    // Validaciones
+    if (!validateId(id)) {
+      setIdError(true);
+      hasError = true;
+    } else {
+      setIdError(false);
+    }
+
+    if (!validatePassword(password)) {
+      setPasswordError(true);
+      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
+      hasError = true;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+
+    if (hasError) {
+      openSignInModal("Campos requeridos", "Por favor, completa todos los campos correctamente.");
+      return;
+    }
+
+    // Guardar el ID en localStorage
+    localStorage.setItem("id", id);
+
+    // Solicitud a la API
+    try {
+      const response = await fetch("/api/administrator/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+          // Inicio de sesión exitoso sin 2FA
+          openSignInModal(
+            "Inicio de Sesión Exitoso",
+            "Bienvenido, Administrador."
+          );
+
+          setShowTutorial(true);
+
+          // Limpiar campos
+          setId('');
+          setPassword('');
+          setRole("admin");
+      } else {
+        // Error en las credenciales
+        openSignInModal(
+          "Error de Inicio de Sesión :(",
+          "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
+        );
+      }
+    } catch (error) {
+      openSignInModal(
+        "Error de Conexión",
+        "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+      );
+    }
+  };
+
+  // Función para manejar el envío del formulario de registro
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+
+    let hasError = false;
+
+    // Validaciones
+    if (!validateName(name)) {
+      setNameError(true);
+      setNameErrorMessage("El nombre solo debe contener letras y espacios.");
+      hasError = true;
+    } else {
+      setNameError(false);
+      setNameErrorMessage("");
+    }
+
+    if (!validateName(lastname_pat)) {
+      setLastnamePatError(true);
+      setLastnamePatErrorMessage("El apellido paterno solo debe contener letras y espacios.");
+      hasError = true;
+    } else {
+      setLastnamePatError(false);
+      setLastnamePatErrorMessage("");
+    }
+
+    if (!validateName(lastname_mat)) {
+      setLastnameMatError(true);
+      setLastnameMatErrorMessage("El apellido materno solo debe contener letras y espacios.");
+      hasError = true;
+    } else {
+      setLastnameMatError(false);
+      setLastnameMatErrorMessage("");
+    }
+
+    if (!validateCurp(curp)) {
+      setCurpError(true);
+      setCurpErrorMessage("La CURP no es válida.");
+      hasError = true;
+    } else {
+      setCurpError(false);
+      setCurpErrorMessage("");
+    }
+
+    if (!validatePhone(phone)) {
+      setPhoneError(true);
+      setPhoneErrorMessage("El número de teléfono no es válido.");
+      hasError = true;
+    } else {
+      setPhoneError(false);
+      setPhoneErrorMessage("");
+    }
+
+    if (!validateEmail(email)) {
+      setEmailError(true);
+      setEmailErrorMessage("El correo electrónico no es válido.");
+      hasError = true;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage("");
+    }
+
+    if (!validatePassword(password)) {
+      setPasswordError(true);
+      setPasswordErrorMessage("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
+      hasError = true;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+
+    if (!validateOccupation(occupation)) {
       setOccupationError(true);
       setOccupationErrorMessage("La ocupación no es válida.");
       hasError = true;
@@ -431,11 +499,11 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       setOccupationError(false);
       setOccupationErrorMessage("");
     }
-    
-      
-    const termsAccepted = (document.getElementById("terms-checkbox") as HTMLInputElement).checked;
-    const privacyAccepted = (document.getElementById("privacy-checkbox") as HTMLInputElement).checked;
-  
+
+    // Validar aceptación de términos y políticas
+    const termsAccepted = (document.getElementById("terms-checkbox") as HTMLInputElement)?.checked;
+    const privacyAccepted = (document.getElementById("privacy-checkbox") as HTMLInputElement)?.checked;
+
     if (!termsAccepted || !privacyAccepted) {
       openSignInModal("Campos requeridos", "Por favor, completa todos los campos y acepta los términos.");
       return;
@@ -446,7 +514,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       return;
     }
 
-    // Continuar con la solicitud a la API
+    // Solicitud a la API
     try {
       const response = await fetch("/api/sign-up", {
         method: "POST",
@@ -459,7 +527,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           lastname_mat,
           email,
           curp,
-          ocuparion,
+          occupation,
           password,
           phone,
         }),
@@ -467,34 +535,33 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
 
       const data = await response.json();
 
-      if (response.ok && data.id !== null) {
-        if(data == true){
+      if (response.ok) {
+        if (data === true) {
           openSignInModal(
-            "Te has registrado con éxito :)", 
-            `Inicia sesión para empezar a utilizar Mobility Time Saver`
+            "Te has registrado con éxito :)",
+            "Inicia sesión para empezar a utilizar Mobility Time Saver."
           );
 
-          // Limpiar los campos después del éxito
-          setName("");
-          setLastnamePat("");
-          setLastnameMat("");
-          setCurp("");
-          setOccupation("");
-          setPhone("");
-          setEmail("");
-          setPassword("");
-        }
-        else{
+          // Limpiar campos después del éxito
+          setName('');
+          setLastnamePat('');
+          setLastnameMat('');
+          setCurp('');
+          setOccupation('');
+          setPhone('');
+          setEmail('');
+          setPassword('');
+        } else {
           openSignInModal(
             "El registro ha fallado :(",
-            "Ocurrió un error al realizar tu registro, verifica que tus datos sean correctos y sea una cuenta nueva."
-        );
-      }
-      } else if (response.status === 400 || data.id === null) {
-        // Caso de datos incorrectos o bad request
+            "Ocurrió un error al realizar tu registro, verifica que tus datos sean correctos y que sea una cuenta nueva."
+          );
+        }
+      } else {
+        // Error en el registro
         openSignInModal(
           "El registro ha fallado :(",
-          "Ocurrió un error al realizar tu registro, verifica que tus datos sean correctos y sea una cuenta nueva."
+          "Ocurrió un error al realizar tu registro, verifica que tus datos sean correctos y que sea una cuenta nueva."
         );
       }
     } catch (error) {
@@ -503,11 +570,12 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
       );
     }
-  }; 
+  };
 
+  // Estilos condicionales para el contenedor
   const inputStyle = isRegister
-  ? "flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100"
-  : "flex flex-col items-center justify-center h-[93vh] sm:h-screen p-4 bg-gray-100";
+    ? "flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100"
+    : "flex flex-col items-center justify-center h-[93vh] sm:h-screen p-4 bg-gray-100";
 
   return (
     <>
@@ -515,12 +583,14 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         <Tutorial />
       ) : (
         <div className={inputStyle}>
-          <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-lg"> {/* Cambié max-w-sm a max-w-md */}
+          <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
             {/* Título dinámico */}
             <h1 className="text-2xl font-bold text-center text-gray-800">
               Bienvenido a MTS, <br />
               {isRegister ? 'Regístrate ahora :)' : 'Inicia sesión ;)'}
             </h1>
+
+            {/* Botones para cambiar entre Registro e Iniciar Sesión */}
             <div className="flex justify-between mt-4 border-b border-gray-200">
               <button
                 onClick={() => setIsRegister(false)}
@@ -544,46 +614,67 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                 Registro
               </button>
             </div>
+
+            {/* Indicador de Rol */}
             {isUser && (
-                  <div className='text-[#6ABDA6] text-center'>
-                    Usuario
-                  </div>
-                )}
+              <div className='text-[#6ABDA6] text-center mt-2'>
+                Usuario
+              </div>
+            )}
             {!isRegister && (
               <>
                 {isSupervisor && (
-                  <div className='text-[#005aa7] text-center'>
+                  <div className='text-[#005aa7] text-center mt-2'>
                     Supervisor
                   </div>
                 )}
                 {isAdmin && (
-                  <div className='text-[#fe8423] text-center'>
+                  <div className='text-[#fe8423] text-center mt-2'>
                     Administrador
                   </div>
                 )}
               </>
             )}
-            <form className="space-y-4" onSubmit={isRegister ? handleSignUp : handleSignIn}>
+
+            {/* Formulario */}
+            <form
+              className="space-y-4"
+              onSubmit={
+                isRegister
+                  ? handleSignUp
+                  : is2FA
+                  ? handle2FASubmit
+                  : isUser
+                  ? handleSignIn
+                  : isSupervisor
+                  ? handleSupervisorClick
+                  : handleAdminClick
+              }
+            >
               {isRegister && (
                 <>
-                    <div
-                      className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                        nameError ? 'border-red-500' : 'border-gray-300'
-                      } focus-within:border-green-500`}
-                    >
+                  {/* Campos de Registro */}
+                  {/* Nombre */}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      nameError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
                     <span className="material-icons text-black mr-2">person</span>
                     <input
                       type="text"
                       placeholder="Nombre"
                       value={name}
                       onChange={(e) => {
-                        setName(e.target.value)
-                        setNameError(false); // Resetea el error al escribir
+                        setName(e.target.value);
+                        setNameError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
                   {nameError && <p className="text-red-500">{nameErrorMessage}</p>}
+
+                  {/* Apellido Paterno */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
                       lastnamePatError ? 'border-red-500' : 'border-gray-300'
@@ -595,13 +686,15 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                       placeholder="Apellido Paterno"
                       value={lastname_pat}
                       onChange={(e) => {
-                        setLastnamePat(e.target.value)
-                        setLastnamePatError(false); // Resetea el error al escribir
+                        setLastnamePat(e.target.value);
+                        setLastnamePatError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
                   {lastnamePatError && <p className="text-red-500">{lastnamePatErrorMessage}</p>}
+
+                  {/* Apellido Materno */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
                       lastnameMatError ? 'border-red-500' : 'border-gray-300'
@@ -612,14 +705,16 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                       type="text"
                       placeholder="Apellido Materno"
                       value={lastname_mat}
-                      onChange={(e) =>{
-                        setLastnameMat(e.target.value)
-                        setLastnameMatError(false); // Resetea el error al escribir
+                      onChange={(e) => {
+                        setLastnameMat(e.target.value);
+                        setLastnameMatError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
-                  {lastnamePatError && <p className="text-red-500">{lastnameMatErrorMessage}</p>}
+                  {lastnameMatError && <p className="text-red-500">{lastnameMatErrorMessage}</p>}
+
+                  {/* CURP */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
                       curpError ? 'border-red-500' : 'border-gray-300'
@@ -631,13 +726,15 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                       placeholder="CURP"
                       value={curp}
                       onChange={(e) => {
-                        setCurp(e.target.value)
-                        setCurpError(false); // Resetea el error al escribir
+                        setCurp(e.target.value);
+                        setCurpError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
                   {curpError && <p className="text-red-500">{curpErrorMessage}</p>}
+
+                  {/* Ocupación */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
                       occupationError ? 'border-red-500' : 'border-gray-300'
@@ -645,10 +742,10 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                   >
                     <span className="material-icons text-black mr-2">work</span>
                     <select
-                      value={ocuparion}
+                      value={occupation}
                       onChange={(e) => {
-                        setOccupation(e.target.value)
-                        setOccupationError(false); // Resetea el error al escribir
+                        setOccupation(e.target.value);
+                        setOccupationError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     >
@@ -666,6 +763,8 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                     </select>
                   </div>
                   {occupationError && <p className="text-red-500">{occupationErrorMessage}</p>}
+
+                  {/* Teléfono */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
                       phoneError ? 'border-red-500' : 'border-gray-300'
@@ -677,17 +776,15 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                       placeholder="Teléfono celular"
                       value={phone}
                       onChange={(e) => {
-                        setPhone(e.target.value)
-                        setPhoneError(false); // Resetea el error al escribir
+                        setPhone(e.target.value);
+                        setPhoneError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
                   {phoneError && <p className="text-red-500">{phoneErrorMessage}</p>}
-                </>
-              )}
-              {isUser ? (
-                <>
+
+                  {/* Correo Electrónico */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
                       emailError ? 'border-red-500' : 'border-gray-300'
@@ -696,187 +793,223 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                     <span className="material-icons text-black mr-2">email</span>
                     <input
                       type="email"
-                      placeholder="Correo"
+                      placeholder="Correo Electrónico"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
-                        setEmailError(false); // Resetea el error al escribir
+                        setEmailError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
                   {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
-                </>
-              ) : (
-                <>
+
+                  {/* Contraseña */}
                   <div
                     className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                      idError ? 'border-red-500' : 'border-gray-300'
+                      passwordError ? 'border-red-500' : 'border-gray-300'
                     } focus-within:border-green-500`}
                   >
-                    <span className="material-icons text-black mr-2">badge</span>
+                    <span className="material-icons text-black mr-2">lock</span>
                     <input
-                      type="text"
-                      placeholder="ID"
-                      value={id}
+                      type="password"
+                      placeholder="Contraseña"
+                      value={password}
                       onChange={(e) => {
-                        setId(e.target.value);
-                        setIdError(false); // Resetea el error al escribir
+                        setPassword(e.target.value);
+                        setPasswordError(false);
                       }}
                       className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
                     />
                   </div>
-                  {idError && <p className="text-red-500">{idErrorMessage}</p>}
+                  {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
+
+                  {/* Checkboxes de Términos y Condiciones y Política de Privacidad */}
+                  <div className="flex items-center space-x-2 mt-4">
+                    <input type="checkbox" id="terms-checkbox" className="h-4 w-4 text-[#6ABDA6] focus:ring-[#6ABDA6] border-gray-300 rounded" />
+                    <label htmlFor="terms-checkbox" className="text-sm text-gray-700">
+                      Acepto los <span className="text-blue-500 cursor-pointer" onClick={() => openModal("Términos y Condiciones")}>Términos y Condiciones</span>
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <input type="checkbox" id="privacy-checkbox" className="h-4 w-4 text-[#6ABDA6] focus:ring-[#6ABDA6] border-gray-300 rounded" />
+                    <label htmlFor="privacy-checkbox" className="text-sm text-gray-700">
+                      He leído y acepto la <span className="text-blue-500 cursor-pointer" onClick={() => openModal("Política de Privacidad Web")}>Política de Privacidad</span>
+                    </label>
+                  </div>
                 </>
               )}
-              <div
-                className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
-                  passwordError ? 'border-red-500' : 'border-gray-300'
-                } focus-within:border-green-500`}
-              >
-                <span className="material-icons text-black mr-2">lock</span>
-                <input
-                  type="password"
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setPasswordError(false); // Resetea el error al escribir
-                  }}
-                  className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                />
-              </div>
-              {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
-              {isRegister && (
-              <>
-                <div className="flex items-start mt-4">
-                  <input
-                    id="terms-checkbox"
-                    type="checkbox"
-                    className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-                  />
-                  <label className="ml-2 text-sm text-gray-700 leading-tight">
-                    He leído y acepto los{" "}
-                    <a
-                      href="#"
-                      className="text-[#6ABDA6] underline"
-                      onClick={() => openModal("Términos y Condiciones")}
-                    >
-                      Términos y Condiciones
-                    </a>.
-                  </label>
-                </div>
 
-                <div className="flex items-start mt-4">
-                  <input
-                    id="privacy-checkbox"
-                    type="checkbox"
-                    className="w-4 h-4 text-[#6ABDA6] border-gray-300 rounded focus:ring-[#6ABDA6] mt-1"
-                  />
-                  <label className="ml-2 text-sm text-gray-700 leading-tight">
-                    ¿Usted ha leído y acepta los términos y condiciones para el tratamiento
-                    de sus datos personales contenidos en la{" "}
-                    <a
-                      href="#"
-                      className="text-[#6ABDA6] underline"
-                      onClick={() => openModal("Política de Privacidad Web")}
-                    >
-                      Política de Privacidad Web
-                    </a>?
-                  </label>
-                </div>
-              </>
-            )}
+              {!isRegister && !is2FA && (
+                <>
+                  {/* Campos de Inicio de Sesión */}
+                  {isUser ? (
+                    <>
+                      {/* Correo Electrónico */}
+                      <div
+                        className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                          emailError ? 'border-red-500' : 'border-gray-300'
+                        } focus-within:border-green-500`}
+                      >
+                        <span className="material-icons text-black mr-2">email</span>
+                        <input
+                          type="email"
+                          placeholder="Correo"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setEmailError(false);
+                          }}
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                        />
+                      </div>
+                      {emailError && <p className="text-red-500">{emailErrorMessage}</p>}
+                    </>
+                  ) : (
+                    <>
+                      {/* ID para Supervisor y Administrador */}
+                      <div
+                        className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                          idError ? 'border-red-500' : 'border-gray-300'
+                        } focus-within:border-green-500`}
+                      >
+                        <span className="material-icons text-black mr-2">badge</span>
+                        <input
+                          type="text"
+                          placeholder="ID"
+                          value={id}
+                          onChange={(e) => {
+                            setId(e.target.value);
+                            setIdError(false);
+                          }}
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                        />
+                      </div>
+                      {idError && <p className="text-red-500">{idErrorMessage}</p>}
+                    </>
+                  )}
 
-            {isUser && (
-              <button
-                type="submit"
-                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
-              >
-                {isRegister ? 'Regístrate aquí' : 'Iniciar sesión'}
-              </button>
-            )}
+                  {/* Contraseña */}
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      passwordError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">lock</span>
+                    <input
+                      type="password"
+                      placeholder="Contraseña"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setPasswordError(false);
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
+                </>
+              )}
 
-            {isSupervisor && (
-              <button
-                type="submit"
-                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
-                onClick={handleSupervisorClick}
-              >
-                Iniciar sesión
-              </button>
-            )}
+              {/* Campo para 2FA */}
+              {is2FA && (
+                <>
+                  <div
+                    className={`flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2] ${
+                      twoFAError ? 'border-red-500' : 'border-gray-300'
+                    } focus-within:border-green-500`}
+                  >
+                    <span className="material-icons text-black mr-2">verified_user</span>
+                    <input
+                      type="text"
+                      placeholder="Código 2FA"
+                      value={entered2FA}
+                      onChange={(e) => {
+                        setEntered2FA(e.target.value);
+                        setTwoFAError(false);
+                      }}
+                      className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                    />
+                  </div>
+                  {twoFAError && <p className="text-red-500">{twoFAErrorMessage}</p>}
+                </>
+              )}
 
-            {isAdmin && (
-              <button
-                type="submit"
-                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
-                onClick={handleAdminClick}
-              >
-                Iniciar sesión
-              </button>
-            )}
-
-            {!isRegister && !isUser && (
-              <button
-                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
-                onClick={() => {
-                  setIsUser(true);
-                  setIsSupervisor(false);
-                  setIsAdmin(false);
-                }}
-              >
-                ¿Eres Usuario?
-              </button>
-            )}
-
-            {!isRegister && !isSupervisor && (
-              <button
-                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
-                onClick={() => {
-                  setIsUser(false);
-                  setIsSupervisor(true);
-                  setIsAdmin(false);
-                }}
-              >
-                ¿Eres Supervisor?
-              </button>
-            )}
-
-            {!isRegister && !isAdmin && (
-              <button
-                className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
-                onClick={() => {
-                  setIsUser(false);
-                  setIsSupervisor(false);
-                  setIsAdmin(true);
-                }}
-              >
-                ¿Eres Administrador?
-              </button>
-            )}
-            </form>
-          </div>
-
-          {/* Modal */}
-          {showModal && (
-            <div
-              id="modal-overlay"
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-              onClick={handleClickOutside}
-            >
-              <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg h-96 overflow-y-auto relative">
-              <button
-                className="fixed top-2 right-2 bg-[#6ABDA6] text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
-                onClick={closeModal}
+              {/* Botón de Envío */}
+              {!is2FA && (
+                <button
+                  type="submit"
+                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
                 >
-                <span className="material-icons">close</span>
+                  {isRegister ? 'Regístrate aquí' : 'Iniciar sesión'}
                 </button>
-                <h2 className="text-xl font-bold mb-4 text-gray-900">{modalContent.title}</h2>
-                <p className="text-gray-700 whitespace-pre-wrap">{modalContent.description}</p>
+              )}
+              {is2FA && (
+                <button
+                  type="submit"
+                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+                >
+                  Verificar Código
+                </button>
+              )}
+            </form>
+
+            {/* Botones para cambiar de rol en inicio de sesión */}
+            {!isRegister && !is2FA && isUser && (
+              <div className="space-y-2">
+                <button
+                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+                  onClick={() => {
+                    setIsUser(true);
+                    setIsSupervisor(false);
+                    setIsAdmin(false);
+                  }}
+                >
+                  ¿Eres Usuario?
+                </button>
+                <button
+                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
+                  onClick={() => {
+                    setIsUser(false);
+                    setIsSupervisor(true);
+                    setIsAdmin(false);
+                  }}
+                >
+                  ¿Eres Supervisor?
+                </button>
+                <button
+                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
+                  onClick={() => {
+                    setIsUser(false);
+                    setIsSupervisor(false);
+                    setIsAdmin(true);
+                  }}
+                >
+                  ¿Eres Administrador?
+                </button>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Modal */}
+            {showModal && (
+              <div
+                id="modal-overlay"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                onClick={handleClickOutside}
+              >
+                <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg h-auto overflow-y-auto relative max-h-[80vh] sm:max-h-[90vh]">
+                  <button
+                    className="absolute top-2 right-2 bg-[#6ABDA6] text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                    onClick={closeModal}
+                  >
+                    <span className="material-icons">close</span>
+                  </button>
+                  <h2 className="text-xl font-bold mb-4 text-gray-900">{modalContent.title}</h2>
+                  <p className="text-gray-700 whitespace-pre-wrap">{modalContent.description}</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>
