@@ -195,7 +195,9 @@ const RoutesMap: React.FC = () => {
           }
         }
       `;
-      const response = await fetch("http://localhost:8080/otp/routers/default/index/graphql", {
+      
+      const otpUrl = process.env.NEXT_PUBLIC_OTP_API_BASE_URL;
+      const response = await fetch(`${otpUrl}otp/routers/default/index/graphql`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +212,8 @@ const RoutesMap: React.FC = () => {
     }
 
     async function fetchStations(): Promise<Station[]> {
-      const response = await fetch("http://3.140.252.96/api/stations", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const response = await fetch(`${apiUrl}api/stations`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -224,7 +227,8 @@ const RoutesMap: React.FC = () => {
     }
 
     async function fetchLines(): Promise<Line[]> {
-      const response = await fetch("http://3.140.252.96/api/lines", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const response = await fetch(`${apiUrl}api/lines`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -238,7 +242,8 @@ const RoutesMap: React.FC = () => {
     }
 
     async function fetchApiRoutes(): Promise<ApiRoute[]> {
-      const response = await fetch("http://3.140.252.96/api/routes", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const response = await fetch(`${apiUrl}api/routes`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
