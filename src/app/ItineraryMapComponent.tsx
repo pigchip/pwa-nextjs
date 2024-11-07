@@ -18,6 +18,7 @@ import { Itinerary, ItineraryMapComponentProps, PlanResponse, Leg } from '@/type
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
 import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import { ITINERARY_QUERY } from '@/queries/queries';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -124,68 +125,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     const currentDate = new Date().toISOString().split('T')[0];
     const currentTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
 
-    const query = `
-      query {
-        plan(
-          from: { lat: ${fromLat}, lon: ${fromLon} }
-          to: { lat: ${toLat}, lon: ${toLon} }
-          date: "${currentDate}"
-          time: "${currentTime}"
-          numItineraries: 10
-          maxTransfers: ${maxTransfers}
-          transportModes: [
-            { mode: TRANSIT },
-            { mode: WALK },
-            { mode: BUS },
-            { mode: SUBWAY },
-            { mode: TRAM },
-            { mode: RAIL },
-            { mode: FERRY },
-            { mode: GONDOLA },
-            { mode: CABLE_CAR },
-            { mode: FUNICULAR }
-          ]
-        ) {
-          itineraries {
-            startTime
-            endTime
-            duration
-            numberOfTransfers
-            walkTime
-            walkDistance
-            legs {
-              mode
-              startTime
-              endTime
-              from {
-                name
-                lat
-                lon
-              }
-              to {
-                name
-                lat
-                lon
-              }
-              distance
-              duration
-              legGeometry {
-                points
-              }
-              route {
-                shortName
-                color
-                agency {
-                  id
-                  name
-                  url
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
+    const query = ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers);
 
     try {
       const otpUrl = process.env.NEXT_PUBLIC_OTP_API_BASE_URL;
