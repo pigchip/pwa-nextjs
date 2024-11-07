@@ -6,8 +6,9 @@ import NavigationIcon from "@mui/icons-material/Navigation";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import SettingsIcon from "@mui/icons-material/Settings";
+import MapIcon from "@mui/icons-material/Map";
 import { useRole } from "@/contexts/RoleContext";
-import { AdminPanelSettings } from "@mui/icons-material";
+import { AdminPanelSettings, TouchApp } from "@mui/icons-material";
 
 const FooterComponent: React.FC = () => {
   const router = useRouter();
@@ -59,6 +60,28 @@ const FooterComponent: React.FC = () => {
               )}`}
             >
               <AssignmentIcon className="mt-2" />
+            </button>
+          </div>
+
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation("/interactive-map")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                "/interactive-map"
+              )}`}
+            >
+              <TouchApp className="mt-2" />
+            </button>
+          </div>
+
+          <div className="flex-1 relative">
+            <button
+              onClick={() => handleNavigation("/listed-map")}
+              className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+                "/listed-map"
+              )}`}
+            >
+              <MapIcon className="mt-2" />
             </button>
           </div>
         </>
