@@ -762,6 +762,7 @@ const RoutesMap: React.FC = () => {
       <div className="relative w-full h-50vh">
         <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
 
+        
         <div className="flex flex-wrap justify-center mb-4 space-x-4 z-20 relative">
           <div>
             {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
@@ -823,6 +824,7 @@ const RoutesMap: React.FC = () => {
         </div>
 
         <div>
+        {typeof window !== "undefined" && (
         <MapContainer center={[19.432608, -99.133209]} zoom={12} style={{ height: '64vh', width: '100vw', zIndex: 0}}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {selectedRoutes.length > 0 && displayedRoutes.map((route) =>
@@ -874,7 +876,7 @@ const RoutesMap: React.FC = () => {
               })
             )}
           </MapContainer>
-
+        )}
           {/* Ventana emergente para la estación */}
           {selectedStation && (
             <div className="absolute top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
