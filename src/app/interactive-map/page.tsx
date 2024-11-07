@@ -212,7 +212,7 @@ const RoutesMap: React.FC = () => {
     }
 
     async function fetchStations(): Promise<Station[]> {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
       const response = await fetch(`${apiUrl}api/stations`, {
         method: "GET",
         headers: {
@@ -227,7 +227,7 @@ const RoutesMap: React.FC = () => {
     }
 
     async function fetchLines(): Promise<Line[]> {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
       const response = await fetch(`${apiUrl}api/lines`, {
         method: "GET",
         headers: {
@@ -242,7 +242,7 @@ const RoutesMap: React.FC = () => {
     }
 
     async function fetchApiRoutes(): Promise<ApiRoute[]> {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
       const response = await fetch(`${apiUrl}api/routes`, {
         method: "GET",
         headers: {
