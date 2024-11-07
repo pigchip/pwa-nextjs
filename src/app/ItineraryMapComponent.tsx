@@ -17,7 +17,7 @@ import MapIcon from '@mui/icons-material/Map';
 import { Itinerary, ItineraryMapComponentProps, PlanResponse, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
-import { saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import { formatDuration, generateRandomETA, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -46,16 +46,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   // State for custom marker
   const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
-
-  // Function to generate random ETA
-  const generateRandomETA = () => {
-    const baseMinutes = 5;
-    const randomSeconds = Math.floor(Math.random() * 121) - 60; // Random number between -60 and 60
-    const eta = new Date();
-    eta.setMinutes(eta.getMinutes() + baseMinutes);
-    eta.setSeconds(eta.getSeconds() + randomSeconds);
-    return eta.toLocaleTimeString();
-  };
 
   useEffect(() => {
     console.log('Received startLocation from AutoComplete:', startLocation);
@@ -112,12 +102,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       );
     }
   }, [startLocation]);
-
-  const formatDuration = (durationInSeconds: number) => {
-    const hours = Math.floor(durationInSeconds / 3600);
-    const minutes = Math.floor((durationInSeconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
-  };
 
   const getTransportIcon = (mode: string) => {
     switch (mode) {
