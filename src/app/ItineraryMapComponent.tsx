@@ -14,7 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MapIcon from '@mui/icons-material/Map';
-import { Itinerary, ItineraryMapComponentProps, PlanResponse, Leg } from '@/types/map';
+import { Itinerary, ItineraryMapComponentProps, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
 import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
@@ -129,7 +129,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     const query = ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers);
 
     const itinerary = await fetchItineraries(query);
-    
+
     return itinerary;
   }, [fromLat, fromLon, toLat, toLon]);
 
