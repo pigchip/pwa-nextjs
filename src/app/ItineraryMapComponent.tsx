@@ -17,6 +17,7 @@ import MapIcon from '@mui/icons-material/Map';
 import { Itinerary, ItineraryMapComponentProps, PlanResponse, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
+import { saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -298,33 +299,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     setIsExpanded(true);
   };
 
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const saveRouteToLocalStorage = () => {
-    if (selectedItinerary) {
-      const existingRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-
-      console.log('startName:', startName);
-      console.log('endName:', endName);
-
-      const itineraryToSave = {
-        ...selectedItinerary,
-        startNameIti: startName,
-        endNameIti: endName,
-      };
-
-      existingRoutes.push(itineraryToSave);
-
-      localStorage.setItem('savedRoutes', JSON.stringify(existingRoutes));
-      alert('Ruta guardada exitosamente');
-      console.log('Ruta guardada:', itineraryToSave);
-    } else {
-      alert('No hay ruta seleccionada para guardar');
-    }
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className={`flex-grow min-h-[100px] z-10 ${isExpanded ? 'h-[145px]' : 'h-[420px]'}`}>
@@ -389,7 +363,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       <div className={`overflow-y-auto bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg flex-none ${isExpanded ? 'h-[454px]' : 'h-[180px]'}`}>
         <div
           className="flex justify-center items-center cursor-pointer bg-gray-200"
-          onClick={toggleExpand}
+          onClick={() => toggleExpand(isExpanded, setIsExpanded)}
         >
           {isExpanded ? (
             <ExpandLessIcon className="text-gray-500" />
@@ -653,7 +627,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                             {/* Botón "Guardar Ruta" */}
                             <button
                               className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                              onClick={() => saveRouteToLocalStorage()}
+                              onClick={() => saveRouteToLocalStorage(
+                                selectedItinerary,
+                                startName,
+                                endName
+                              )}
                             >
                               Guardar Ruta
                             </button>
