@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L, { PathOptions } from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import polyline from '@mapbox/polyline';
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
@@ -14,9 +14,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MapIcon from '@mui/icons-material/Map';
-import { Itinerary, ItineraryMapComponentProps, PlanResponse, Leg } from '@/types/map';
+import { Itinerary, ItineraryMapComponentProps, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
+import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import { ITINERARY_QUERY } from '@/queries/queries';
+import { fetchItineraries } from '@/utils/fetchItineraries';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -45,16 +48,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   // State for custom marker
   const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
-
-  // Function to generate random ETA
-  const generateRandomETA = () => {
-    const baseMinutes = 5;
-    const randomSeconds = Math.floor(Math.random() * 121) - 60; // Random number between -60 and 60
-    const eta = new Date();
-    eta.setMinutes(eta.getMinutes() + baseMinutes);
-    eta.setSeconds(eta.getSeconds() + randomSeconds);
-    return eta.toLocaleTimeString();
-  };
 
   useEffect(() => {
     console.log('Received startLocation from AutoComplete:', startLocation);
@@ -112,12 +105,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   }, [startLocation]);
 
-  const formatDuration = (durationInSeconds: number) => {
-    const hours = Math.floor(durationInSeconds / 3600);
-    const minutes = Math.floor((durationInSeconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
-  };
-
   const getTransportIcon = (mode: string) => {
     switch (mode) {
       case 'WALK':
@@ -135,126 +122,15 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   };
 
-  const getColorForLeg = (leg: Leg) => {
-    return leg.route?.color ? `#${leg.route.color}` : leg.mode === 'WALK' ? '#00BFFF' : 'gray';
-  };
-
-  const getPolylineStyle = (leg: Leg): PathOptions => {
-    if (leg.mode === 'WALK') {
-      return {
-        color: '#00BFFF',
-        weight: 5,
-        dashArray: '5, 10',
-      };
-    }
-
-    let color = 'gray';
-
-    if (leg.route && leg.route.color) {
-      color = `#${leg.route.color}`;
-    }
-
-    return {
-      color,
-      weight: 5,
-    };
-  };
-
   const fetchFastestItinerary = useCallback(async (maxTransfers: number): Promise<Itinerary | null> => {
     const currentDate = new Date().toISOString().split('T')[0];
     const currentTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
 
-    const query = `
-      query {
-        plan(
-          from: { lat: ${fromLat}, lon: ${fromLon} }
-          to: { lat: ${toLat}, lon: ${toLon} }
-          date: "${currentDate}"
-          time: "${currentTime}"
-          numItineraries: 10
-          maxTransfers: ${maxTransfers}
-          transportModes: [
-            { mode: TRANSIT },
-            { mode: WALK },
-            { mode: BUS },
-            { mode: SUBWAY },
-            { mode: TRAM },
-            { mode: RAIL },
-            { mode: FERRY },
-            { mode: GONDOLA },
-            { mode: CABLE_CAR },
-            { mode: FUNICULAR }
-          ]
-        ) {
-          itineraries {
-            startTime
-            endTime
-            duration
-            numberOfTransfers
-            walkTime
-            walkDistance
-            legs {
-              mode
-              startTime
-              endTime
-              from {
-                name
-                lat
-                lon
-              }
-              to {
-                name
-                lat
-                lon
-              }
-              distance
-              duration
-              legGeometry {
-                points
-              }
-              route {
-                shortName
-                color
-                agency {
-                  id
-                  name
-                  url
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
+    const query = ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers);
 
-    try {
-      const otpUrl = process.env.NEXT_PUBLIC_OTP_API_BASE_URL;
+    const itinerary = await fetchItineraries(query);
 
-      const response = await fetch(`${otpUrl}otp/routers/default/index/graphql`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data: PlanResponse = await response.json();
-      console.log("API response data:", data);
-
-      if (data.errors || !data.data?.plan?.itineraries) {
-        console.error('Invalid data or errors:', data.errors);
-        return null;
-      }
-
-      return data.data.plan.itineraries.reduce((prev, current) =>
-        prev.duration < current.duration ? prev : current
-      );
-    } catch (error) {
-      console.error('Error fetching itineraries:', error);
-      return null;
-    }
+    return itinerary;
   }, [fromLat, fromLon, toLat, toLon]);
 
   const fetchAllItineraries = useCallback(async () => {
@@ -296,33 +172,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     setExpandedLegIndex(index === expandedLegIndex ? null : index);
     setCurrentLegIndex(0);
     setIsExpanded(true);
-  };
-
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const saveRouteToLocalStorage = () => {
-    if (selectedItinerary) {
-      const existingRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-
-      console.log('startName:', startName);
-      console.log('endName:', endName);
-
-      const itineraryToSave = {
-        ...selectedItinerary,
-        startNameIti: startName,
-        endNameIti: endName,
-      };
-
-      existingRoutes.push(itineraryToSave);
-
-      localStorage.setItem('savedRoutes', JSON.stringify(existingRoutes));
-      alert('Ruta guardada exitosamente');
-      console.log('Ruta guardada:', itineraryToSave);
-    } else {
-      alert('No hay ruta seleccionada para guardar');
-    }
   };
 
   return (
@@ -389,7 +238,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       <div className={`overflow-y-auto bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg flex-none ${isExpanded ? 'h-[454px]' : 'h-[180px]'}`}>
         <div
           className="flex justify-center items-center cursor-pointer bg-gray-200"
-          onClick={toggleExpand}
+          onClick={() => toggleExpand(isExpanded, setIsExpanded)}
         >
           {isExpanded ? (
             <ExpandLessIcon className="text-gray-500" />
@@ -653,7 +502,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                             {/* Botón "Guardar Ruta" */}
                             <button
                               className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                              onClick={() => saveRouteToLocalStorage()}
+                              onClick={() => saveRouteToLocalStorage(
+                                selectedItinerary,
+                                startName,
+                                endName
+                              )}
                             >
                               Guardar Ruta
                             </button>

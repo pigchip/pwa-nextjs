@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
+import ShareLocationIcon from '@mui/icons-material/ShareLocation';
 import AutoComplete from '../AutoComplete';
 import 'leaflet/dist/leaflet.css';
 import '../globals.css';
@@ -128,6 +129,27 @@ const NavigationComponent: React.FC = () => {
             />
           </div>
           <ItineraryMapComponent startLocation={startLocation} endLocation={endLocation} />
+        </div>
+        {/* Floating Share Location Button */}
+        <div className="absolute bottom-4 right-4 z-50">
+          <button
+            className="bg-[#6ABDA6] text-white p-3 rounded-full shadow-lg hover:bg-[#5aa18e] focus:outline-none transition duration-300 ease-in-out transform hover:scale-105"
+            onClick={() => {
+              if (navigator.share) {
+                navigator
+                  .share({
+                    title: "Mi Ubicación Actual",
+                    text: "Aquí me encuentro",
+                    url: `https://www.google.com/maps?q=${startLocation?.lat},${startLocation?.lon}`,
+                  })
+                  .catch((error) => console.error("Error compartiendo", error));
+              } else {
+                alert("Compartir no es soportado en este dispositivo");
+              }
+            }}
+          >
+            <ShareLocationIcon />
+          </button>
         </div>
       </div>
     </Layout>
