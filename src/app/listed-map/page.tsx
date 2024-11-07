@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout'; // Importamos el Layout
 import Image from 'next/image'; // Si necesitas usar imágenes en el componente
+import { Close } from '@mui/icons-material';
 
 interface Station {
   id: number;
@@ -597,7 +598,7 @@ const TransportPage: React.FC = () => {
                 }}
                 className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-700 transition"
               >
-                X
+                <Close />
               </button>
               <h3 className="text-xl font-bold mb-4">Mis comentarios</h3>
 

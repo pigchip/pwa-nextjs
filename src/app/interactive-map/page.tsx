@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Tooltip } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import Layout from '@/components/Layout'; // Importamos el Layout
+import dynamic from 'next/dynamic';
+import Layout from '@/components/Layout';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 interface Geometry {
   lat: number;
@@ -86,6 +85,10 @@ interface Opinion {
   body: string;
   type: string;
 }
+
+const InteractiveMapComponent = dynamic(() => import('@/components/InteractiveMapComponent'), {
+  ssr: false,
+});
 
 const RoutesMap: React.FC = () => {
   // Estados y variables
@@ -824,59 +827,15 @@ const RoutesMap: React.FC = () => {
         </div>
 
         <div>
-        {typeof window !== "undefined" && (
-        <MapContainer center={[19.432608, -99.133209]} zoom={12} style={{ height: '64vh', width: '100vw', zIndex: 0}}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {selectedRoutes.length > 0 && displayedRoutes.map((route) =>
-              route.patterns.map((pattern, patternIndex) => {
-                const routePositions = pattern.geometry.map(
-                  (coord) => [coord.lat, coord.lon] as [number, number]
-                );
-                const stopPositions = pattern.stops;
+        <InteractiveMapComponent
+            selectedRoutes={selectedRoutes}
+            displayedRoutes={filteredRoutes.filter(route => selectedRoutes.includes(route.shortName))}
+            handlePolylineClick={handlePolylineClick}
+            handleMarkerClick={handleMarkerClick}
+            findStationInfo={findStationInfo}
+            getStationLogo={getStationLogo}
+          />
 
-                return (
-                  <React.Fragment key={`fragment-${route.shortName}-${patternIndex}`}>
-                    <Polyline
-                      positions={routePositions}
-                      pathOptions={{ color: `#${route.color}`, weight: 4 }}
-                      smoothFactor={0}
-                      eventHandlers={{
-                        click: () => handlePolylineClick(route),
-                      }}
-                    />
-                    {stopPositions.map((stop, stopIdx) => {
-                      const stationInfo = findStationInfo(
-                        stop.name,
-                        stop.lat,
-                        stop.lon,
-                        route.agency.name
-                      );
-
-                      return (
-                        <Marker
-                          key={`marker-${route.shortName}-${patternIndex}-stop-${stopIdx}`}
-                          position={[stop.lat, stop.lon]}
-                          icon={L.icon({
-                            iconUrl: getStationLogo(route.agency.name),
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12],
-                          })}
-                          eventHandlers={{
-                            click: () => handleMarkerClick(stationInfo, stop, route),
-                          }}
-                        >
-                          <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                            {`${route.shortName} - ${stop.name}`}
-                          </Tooltip>
-                        </Marker>
-                      );
-                    })}
-                  </React.Fragment>
-                );
-              })
-            )}
-          </MapContainer>
-        )}
           {/* Ventana emergente para la estación */}
           {selectedStation && (
             <div className="absolute top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
@@ -890,7 +849,7 @@ const RoutesMap: React.FC = () => {
                 }}
                 className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-700 transition"
               >
-                X
+                <CloseIcon />
               </button>
               <div className="flex items-center">
                 <img src={getStationLogo(selectedStation.transport)} alt={selectedStation.transport} className="w-6 h-6 mr-2" />
@@ -1006,7 +965,7 @@ const RoutesMap: React.FC = () => {
                 }}
                 className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-700 transition"
               >
-                X
+                <CloseIcon />
               </button>
               <div className="flex items-center">
                 <img src={getStationLogo(selectedLine.transport)} alt={selectedLine.transport} className="w-6 h-6 mr-2" />
@@ -1101,7 +1060,7 @@ const RoutesMap: React.FC = () => {
                   }}
                   className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-700 transition"
                 >
-                  X
+                  <CloseIcon />
                 </button>
                 <h3 className="text-xl font-bold mb-4">Mis comentarios</h3>
 
