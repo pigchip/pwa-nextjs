@@ -8,13 +8,22 @@ import TrainIcon from "@mui/icons-material/Train";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MapIcon from "@mui/icons-material/Map";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ShareIcon from "@mui/icons-material/Share";
-import { Button, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import Layout from "@/components/Layout";
 import { useRouter } from "next/navigation";
 import { SelectedItineraryContext } from "@/contexts/SelectedItineraryContext";
 import { Itinerary } from "@/types/map";
 import MostFrequentedRoutes from "@/components/MostFrequentedRoutes";
+import DownloadRouteButton from "@/components/DownloadRouteButton";
 
 const SavedRoutesComponent: React.FC = () => {
   const [savedRoutes, setSavedRoutes] = useState<Itinerary[]>([]);
@@ -22,6 +31,8 @@ const SavedRoutesComponent: React.FC = () => {
     SelectedItineraryContext
   );
   const router = useRouter();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuIndex, setMenuIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const existingRoutes = JSON.parse(
@@ -81,12 +92,24 @@ const SavedRoutesComponent: React.FC = () => {
     if (navigator.share) {
       navigator.share(shareData).catch(console.error);
     } else {
-      // Fallback for browsers that do not support the Web Share API
       navigator.clipboard.writeText(
         `${shareData.title}\n${shareData.text}\n${shareData.url}`
       );
       alert("Detalles de la ruta copiados al portapapeles.");
     }
+  };
+
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    index: number
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setMenuIndex(index);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setMenuIndex(null);
   };
 
   return (
@@ -155,15 +178,34 @@ const SavedRoutesComponent: React.FC = () => {
                     >
                       Mapear Ruta
                     </Button>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<ShareIcon />}
-                      onClick={() => shareRoute(itinerary)}
-                      className="w-1/3 bg-green-500 hover:bg-green-600"
+                    <IconButton
+                      aria-label="more"
+                      aria-controls="long-menu"
+                      aria-haspopup="true"
+                      onClick={(event) => handleMenuClick(event, index)}
+                      className="w-1/3"
                     >
-                      Compartir
-                    </Button>
+                      <MoreVertIcon />
+                    </IconButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      keepMounted
+                      open={Boolean(anchorEl) && menuIndex === index}
+                      onClose={handleMenuClose}
+                    >
+                      <MenuItem
+                        onClick={() => {
+                          shareRoute(itinerary);
+                          handleMenuClose();
+                        }}
+                      >
+                        <ShareIcon className="mr-2 text-blue-500" />
+                        <span className="text-blue-500">Compartir</span>
+                      </MenuItem>
+                      <MenuItem onClick={handleMenuClose}>
+                        <DownloadRouteButton itinerary={itinerary} />
+                      </MenuItem>
+                    </Menu>
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap items-center space-x-4 md:space-x-6">
