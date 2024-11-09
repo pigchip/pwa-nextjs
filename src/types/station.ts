@@ -1,3 +1,5 @@
+import { Opinion } from "./opinion";
+
 export interface Station {
     id: number;
     name: string;
@@ -5,4 +7,7 @@ export interface Station {
     incident: string;
     services: string;
     information: string;
+    transport: string;
+    transfers?: Station[];
+    opinions?: Opinion[];
 }
