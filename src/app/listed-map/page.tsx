@@ -4,52 +4,10 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout'; // Importamos el Layout
 import Image from 'next/image'; // Si necesitas usar imágenes en el componente
 import { Close } from '@mui/icons-material';
-
-interface Station {
-  id: number;
-  name: string;
-  line: number | string;
-  transport: string;
-  incident: string;
-  services: string;
-  information: string;
-  transfers?: Station[];
-  opinions?: Opinion[];
-}
-
-interface Line {
-  id: number;
-  name: string;
-  transport: string;
-  incident: string;
-  speed: number;
-  information: string;
-  routes?: ApiRoute[];
-  opinions?: Opinion[];
-}
-
-interface ApiRoute {
-  id: number;
-  name: string;
-  price: number;
-  schedules?: Schedule[];
-}
-
-interface Schedule {
-  id: number;
-  day: string;
-  open: string;
-  close: string;
-}
-
-interface Opinion {
-  id: number;
-  user: number;
-  date: string;
-  time: string;
-  body: string;
-  type: string;
-}
+import { Opinion } from '@/types/opinion';
+import { Line, Station } from '@/types';
+import { Schedule } from '@/types/schedule';
+import { ApiRoute } from '@/types/line';
 
 const TransportPage: React.FC = () => {
   const [agencies, setAgencies] = useState<string[]>([]);
@@ -453,7 +411,7 @@ const TransportPage: React.FC = () => {
           {selectedLine && (
             <>
               <h2 className="text-xl font-bold mb-3">Detalles de la Línea</h2>
-              <img src={getAgencyIcon(selectedLine.transport)} alt={selectedLine.transport} className="w-10 h-10 mb-2" />
+              <Image src={getAgencyIcon(selectedLine.transport)} alt={selectedLine.transport} width={40} height={40} className="mb-2" />
               <p><strong>Nombre:</strong> {selectedLine.name}</p>
               <p><strong>Transporte:</strong> {selectedLine.transport}</p>
               <p><strong>Incidente:</strong> {selectedLine.incident || 'No hay incidentes reportados'}</p>
@@ -525,7 +483,7 @@ const TransportPage: React.FC = () => {
           {selectedLineStation && (
             <>
               <h2 className="text-xl font-bold mt-5 mb-3">Detalles de la Estación de Línea</h2>
-              <img src={getAgencyIcon(selectedLineStation.transport)} alt={selectedLineStation.transport} className="w-10 h-10 mb-2" />
+              <Image src={getAgencyIcon(selectedLineStation.transport)} alt={selectedLineStation.transport} width={40} height={40} className="mb-2" />
               <p><strong>Nombre:</strong> {selectedLineStation.name}</p>
               <p><strong>Línea:</strong> {selectedLineStation.line}</p>
               <p><strong>Incidente:</strong> {selectedLineStation.incident || 'No hay incidentes reportados'}</p>
