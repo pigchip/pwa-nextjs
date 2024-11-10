@@ -11,7 +11,6 @@ const IncidentsPage: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Incidentes</h1>
         <div className="flex justify-center mb-4">
           <button
             className={`px-4 py-2 mx-2 ${
