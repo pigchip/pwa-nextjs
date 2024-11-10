@@ -3,11 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import polyline from '@mapbox/polyline';
-import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
-import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import SubwayIcon from '@mui/icons-material/Subway';
-import TrainIcon from '@mui/icons-material/Train';
-import DirectionsBoatIcon from '@mui/icons-material/DirectionsBoat';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -20,6 +15,7 @@ import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
 import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
 import { ITINERARY_QUERY } from '@/queries/queries';
 import { fetchItineraries } from '@/utils/fetchItineraries';
+import { getTransportIcon } from '@/utils/getTransportIcon';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -104,23 +100,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       );
     }
   }, [startLocation]);
-
-  const getTransportIcon = (mode: string) => {
-    switch (mode) {
-      case 'WALK':
-        return <DirectionsWalkIcon className="text-white" />;
-      case 'BUS':
-        return <DirectionsBusIcon className="text-white" />;
-      case 'SUBWAY':
-        return <SubwayIcon className="text-white" />;
-      case 'RAIL':
-        return <TrainIcon className="text-white" />;
-      case 'FERRY':
-        return <DirectionsBoatIcon className="text-white" />;
-      default:
-        return <DirectionsWalkIcon className="text-white" />;
-    }
-  };
 
   const fetchFastestItinerary = useCallback(async (maxTransfers: number): Promise<Itinerary | null> => {
     const currentDate = new Date().toISOString().split('T')[0];
