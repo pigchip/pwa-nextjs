@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import NavigationIcon from "@mui/icons-material/Navigation";
@@ -7,6 +5,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MapIcon from "@mui/icons-material/Map";
+import WarningIcon from "@mui/icons-material/Warning"; // Import the new icon
 import { useRole } from "@/contexts/RoleContext";
 import { AdminPanelSettings, TouchApp } from "@mui/icons-material";
 
@@ -116,6 +115,17 @@ const FooterComponent: React.FC = () => {
           </div>
         </>
       )}
+
+      <div className="flex-1 relative">
+        <button
+          onClick={() => handleNavigation("/incidents")}
+          className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
+            "/incidents"
+          )}`}
+        >
+          <WarningIcon className="mt-2" /> {/* Use the new icon */}
+        </button>
+      </div>
 
       <div className="flex-1 relative">
         <button
