@@ -7,6 +7,8 @@ const StationIncidents: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const recordsPerPage = 5;
 
   useEffect(() => {
     const fetchIncidents = async () => {
@@ -38,7 +40,25 @@ const StationIncidents: React.FC = () => {
         incident.name.toLowerCase().includes(search.toLowerCase())
       )
     );
+    setCurrentPage(1); // Reset to first page on search
   }, [search, incidents]);
+
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredIncidents.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(filteredIncidents.length / recordsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   if (loading) {
     return <p className="text-center text-gray-500">Cargando...</p>;
@@ -58,11 +78,11 @@ const StationIncidents: React.FC = () => {
         onChange={(e) => setSearch(e.target.value)}
         className="mb-4 p-2 border rounded w-full"
       />
-      {filteredIncidents.length === 0 ? (
+      {currentRecords.length === 0 ? (
         <p className="text-center text-gray-500">No se encontraron resultados.</p>
       ) : (
         <ul className="space-y-4">
-          {filteredIncidents.map((incident) => (
+          {currentRecords.map((incident) => (
             <li key={incident.id} className="p-4 border rounded-lg shadow-md bg-white">
               <div className="flex items-center mb-2">
                 <h3 className="text-xl font-semibold">{incident.name}</h3>
@@ -95,6 +115,22 @@ const StationIncidents: React.FC = () => {
           ))}
         </ul>
       )}
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded ${currentPage === 1 ? 'bg-gray-300' : 'bg-[#6ABDA6] text-white'}`}
+        >
+          Anterior
+        </button>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded ${currentPage === totalPages ? 'bg-gray-300' : 'bg-[#6ABDA6] text-white'}`}
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
   );
 };
