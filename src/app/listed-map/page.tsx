@@ -91,17 +91,18 @@ const TransportPage: React.FC = () => {
     if (line) {
       try {
         // Obtener estaciones de la línea
-        const stationsResponse = await fetch(`http://3.140.252.96/api/lines/${lineId}/stations`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+        const stationsResponse = await fetch(`${apiUrl}api/lines/${lineId}/stations`);
         const stationsData: Station[] = await stationsResponse.json();
         setLineStations(stationsData);
 
         // Obtener rutas de la línea
-        const routesResponse = await fetch(`http://3.140.252.96/api/lines/${lineId}/routes`);
+        const routesResponse = await fetch(`${apiUrl}/api/lines/${lineId}/routes`);
         const routesData: ApiRoute[] = await routesResponse.json();
 
         // Obtener horarios de las rutas
         for (const route of routesData) {
-          const schedulesResponse = await fetch(`http://3.140.252.96/api/routes/${route.id}/schedules`);
+          const schedulesResponse = await fetch(`${apiUrl}/api/routes/${route.id}/schedules`);
           const schedulesData: Schedule[] = await schedulesResponse.json();
           route.schedules = schedulesData;
         }
@@ -109,7 +110,7 @@ const TransportPage: React.FC = () => {
         line.routes = routesData;
 
         // Obtener opiniones de la línea
-        const opinionsResponse = await fetch(`http://3.140.252.96/api/lines/${lineId}/opinions`);
+        const opinionsResponse = await fetch(`${apiUrl}/api/lines/${lineId}/opinions`);
         const opinionsData: Opinion[] = await opinionsResponse.json();
         line.opinions = opinionsData;
 
@@ -124,13 +125,14 @@ const TransportPage: React.FC = () => {
     setSelectedLineStation(station);
     if (station) {
       try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
         // Obtener transbordos de la estación
-        const transfersResponse = await fetch(`http://3.140.252.96/api/stations/${stationId}/transfers`);
+        const transfersResponse = await fetch(`${apiUrl}/api/stations/${stationId}/transfers`);
         const transfersData: Station[] = await transfersResponse.json();
         station.transfers = transfersData;
 
         // Obtener opiniones de la estación
-        const opinionsResponse = await fetch(`http://3.140.252.96/api/stations/${stationId}/opinions`);
+        const opinionsResponse = await fetch(`${apiUrl}/api/stations/${stationId}/opinions`);
         const opinionsData: Opinion[] = await opinionsResponse.json();
         station.opinions = opinionsData;
 
@@ -201,7 +203,8 @@ const TransportPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`http://3.140.252.96/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -244,7 +247,8 @@ const TransportPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://3.140.252.96/api/user/${userId}/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/user/${userId}/opinions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -269,7 +273,8 @@ const TransportPage: React.FC = () => {
 
   const handleDeleteOpinion = async (opinionId: number) => {
     try {
-      const response = await fetch(`http://3.140.252.96/api/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/opinions`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -314,7 +319,8 @@ const TransportPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`http://3.140.252.96/api/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/opinions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
