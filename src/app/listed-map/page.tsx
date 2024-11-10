@@ -61,11 +61,12 @@ const TransportPage: React.FC = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const stationsResponse = await fetch("http://3.140.252.96/api/stations");
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const stationsResponse = await fetch(`${apiUrl}/api/stations`);
       const stationsData: Station[] = await stationsResponse.json();
       setStations(stationsData);
 
-      const linesResponse = await fetch("http://3.140.252.96/api/lines");
+      const linesResponse = await fetch(`${apiUrl}/api/lines`);
       const linesData: Line[] = await linesResponse.json();
       setLines(linesData);
 

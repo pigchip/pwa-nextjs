@@ -398,7 +398,8 @@ const RoutesMap: React.FC = () => {
 
       const fetchAdditionalData = async () => {
         try {
-          const transfersResponse = await fetch(`http://3.140.252.96/api/stations/${station.id}/transfers`, {
+          const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+          const transfersResponse = await fetch(`${apiUrl}/api/stations/${station.id}/transfers`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -410,7 +411,7 @@ const RoutesMap: React.FC = () => {
           const transfersData: Station[] = await transfersResponse.json();
           setStationTransfers(transfersData);
 
-          const routesResponse = await fetch(`http://3.140.252.96/api/lines/${line.id}/routes`, {
+          const routesResponse = await fetch(`${apiUrl}/api/lines/${line.id}/routes`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -424,7 +425,7 @@ const RoutesMap: React.FC = () => {
 
           const schedulesResults: { [key: number]: any } = {};
           for (const routeItem of routesData) {
-            const scheduleResponse = await fetch(`http://3.140.252.96/api/routes/${routeItem.id}/schedules`, {
+            const scheduleResponse = await fetch(`${apiUrl}/api/routes/${routeItem.id}/schedules`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -438,7 +439,7 @@ const RoutesMap: React.FC = () => {
           }
           setStationSchedules(schedulesResults);
 
-          const opinionsResponse = await fetch(`http://3.140.252.96/api/stations/${station.id}/opinions`, {
+          const opinionsResponse = await fetch(`${apiUrl}/api/stations/${station.id}/opinions`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -494,7 +495,8 @@ const RoutesMap: React.FC = () => {
       });
 
       try {
-        const routesResponse = await fetch(`http://3.140.252.96/api/lines/${line.id}/routes`, {
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+        const routesResponse = await fetch(`${apiUrl}/api/lines/${line.id}/routes`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -508,7 +510,7 @@ const RoutesMap: React.FC = () => {
 
         const schedulesResults: { [key: number]: any } = {};
         for (const routeItem of routesData) {
-          const scheduleResponse = await fetch(`http://3.140.252.96/api/routes/${routeItem.id}/schedules`, {
+          const scheduleResponse = await fetch(`${apiUrl}/api/routes/${routeItem.id}/schedules`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -522,7 +524,7 @@ const RoutesMap: React.FC = () => {
         }
         setLineSchedules(schedulesResults);
 
-        const opinionsResponse = await fetch(`http://3.140.252.96/api/lines/${line.id}/opinions`, {
+        const opinionsResponse = await fetch(`${apiUrl}/api/lines/${line.id}/opinions`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -636,7 +638,8 @@ const RoutesMap: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`http://3.140.252.96/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -673,7 +676,8 @@ const RoutesMap: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://3.140.252.96/api/user/${userId}/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/user/${userId}/opinions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -698,7 +702,8 @@ const RoutesMap: React.FC = () => {
 
   const handleDeleteOpinion = async (opinionId: number) => {
     try {
-      const response = await fetch(`http://3.140.252.96/api/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/opinions`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -743,7 +748,8 @@ const RoutesMap: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`http://3.140.252.96/api/opinions`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}/api/opinions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
