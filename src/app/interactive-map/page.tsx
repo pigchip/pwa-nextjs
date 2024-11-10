@@ -930,7 +930,7 @@ const RoutesMap: React.FC = () => {
                   <ul className="list-disc list-inside">
                     {stationOpinions.map((opinion) => (
                       <li key={opinion.id} className="mt-1">
-                        <p><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</p>
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
                         <p>{opinion.body}</p>
                       </li>
                     ))}
@@ -1025,7 +1025,7 @@ const RoutesMap: React.FC = () => {
                   <ul className="list-disc list-inside">
                     {lineOpinions.map((opinion) => (
                       <li key={opinion.id} className="mt-1">
-                        <p><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</p>
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
                         <p>{opinion.body}</p>
                       </li>
                     ))}

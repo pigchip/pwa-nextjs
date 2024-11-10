@@ -454,7 +454,7 @@ const TransportPage: React.FC = () => {
                   <ul className="list-disc list-inside">
                     {selectedLine.opinions.map(opinion => (
                       <li key={opinion.id} className="mt-2">
-                        <p><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</p>
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
                         <p>{opinion.body}</p>
                       </li>
                     ))}
@@ -518,7 +518,7 @@ const TransportPage: React.FC = () => {
                   <ul className="list-disc list-inside">
                     {selectedLineStation.opinions.map(opinion => (
                       <li key={opinion.id} className="mt-2">
-                        <p><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</p>
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
                         <p>{opinion.body}</p>
                       </li>
                     ))}
