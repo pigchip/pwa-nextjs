@@ -8,9 +8,21 @@ const MostVisited: React.FC = () => {
   useEffect(() => {
     const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
     const lines = savedRoutes.filter((route: any) => route.type === 'line');
-    const stations = savedRoutes.filter((route: any) => route.type === 'station');
+    const stations = savedRoutes.flatMap((route: any) => 
+      route.legs.map((leg: any) => leg.to.name)
+    );
 
-    setMostVisited({ lines, stations });
+    const stationFrequency = stations.reduce((acc: any, station: string) => {
+      acc[station] = (acc[station] || 0) + 1;
+      return acc;
+    }, {});
+
+    const uniqueStations = Object.keys(stationFrequency).map(station => ({
+      name: station,
+      frequency: stationFrequency[station]
+    }));
+
+    setMostVisited({ lines, stations: uniqueStations });
   }, []);
 
   return (
@@ -29,7 +41,7 @@ const MostVisited: React.FC = () => {
           <h3 className="text-lg font-semibold">Estaciones</h3>
           <ul>
             {mostVisited.stations.map((station, index) => (
-              <li key={index}>{station.startNameIti} - {station.endNameIti} (Frecuencia: {station.frequency})</li>
+              <li key={index}>{station.name} (Frecuencia: {station.frequency})</li>
             ))}
           </ul>
         </div>
