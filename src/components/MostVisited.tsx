@@ -14,7 +14,7 @@ const MostVisited: React.FC = () => {
     const stations = savedRoutes.flatMap((route: any) => 
       route.legs.map((leg: any) => ({
         name: leg.to.name,
-        agency: leg.route!.agency!.name
+        agency: leg.route && leg.route.agency ? leg.route.agency.name : 'Unknown'
       }))
     );
 
