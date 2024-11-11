@@ -39,23 +39,6 @@ const MostVisited: React.FC = () => {
         <h2 className="text-2xl font-bold mb-6 text-center">Líneas y Estaciones Más Visitadas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-xl font-semibold mb-4">Líneas</h3>
-            {mostVisited.lines.length > 0 ? (
-              <ul className="space-y-4">
-                {mostVisited.lines.map((line, index) => (
-                  <li key={index} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                    <div className="flex items-center justify-between">
-                      <span>{line.startNameIti} - {line.endNameIti}</span>
-                      <span className="text-sm text-gray-500">Frecuencia: {line.frequency}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No hay información disponible</p>
-            )}
-          </div>
-          <div>
             <h3 className="text-xl font-semibold mb-4">Estaciones</h3>
             {mostVisited.stations.length > 0 ? (
               <ul className="space-y-4">
@@ -70,6 +53,23 @@ const MostVisited: React.FC = () => {
                       agency={station.agency}
                       getAgencyIcon={getAgencyIcon}
                     />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No hay información disponible</p>
+            )}
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-4">Líneas</h3>
+            {mostVisited.lines.length > 0 ? (
+              <ul className="space-y-4">
+                {mostVisited.lines.map((line, index) => (
+                  <li key={index} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <span>{line.startNameIti} - {line.endNameIti}</span>
+                      <span className="text-sm text-gray-500">Frecuencia: {line.frequency}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
