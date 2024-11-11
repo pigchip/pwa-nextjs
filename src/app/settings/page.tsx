@@ -1,3 +1,4 @@
+// FILE: page.tsx-1
 'use client';
 
 import React, { useState } from 'react';
@@ -92,6 +93,12 @@ const SettingsComponent: React.FC = () => {
               onClick={() => setShowLocationModal(true)} // Open location modal
             >
               Compartir ubicación en vivo
+            </button>
+            <button
+              className="w-64 py-2 bg-purple-500 text-white font-semibold rounded-lg"
+              onClick={() => router.push('/most-visited')}
+            >
+              Ver líneas y estaciones más visitadas
             </button>
           </div>
           <Image src="/icon-512.png" alt="Logo" width={64} height={64} className="mt-4" />
