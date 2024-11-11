@@ -1,5 +1,7 @@
 // FILE: components/MostVisited.tsx
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Layout from '@/components/Layout';
 import StationDetails from '@/components/StationDetails';
 import { Station } from '@/types';
@@ -7,6 +9,7 @@ import { getAgencyIcon } from '@/utils/agency';
 
 const MostVisited: React.FC = () => {
   const [mostVisited, setMostVisited] = useState<{ lines: any[], stations: any[] }>({ lines: [], stations: [] });
+  const router = useRouter();
 
   useEffect(() => {
     const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
@@ -33,10 +36,19 @@ const MostVisited: React.FC = () => {
     setMostVisited({ lines, stations: uniqueStations });
   }, []);
 
+  const handleBackClick = () => {
+    router.push('/settings');
+  };
+
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-bold mb-6 text-center">Líneas y Estaciones Más Visitadas</h2>
+        <div className="flex items-center mb-6">
+          <button onClick={handleBackClick} className="mr-2">
+            <ArrowBackIcon style={{ color: "#6ABDA6" }} />
+          </button>
+          <h2 className="text-2xl font-bold text-left">Líneas y Estaciones Más Visitadas</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <h3 className="text-xl font-semibold mb-4">Estaciones</h3>

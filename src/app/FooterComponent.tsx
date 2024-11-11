@@ -131,7 +131,7 @@ const FooterComponent: React.FC = () => {
         <button
           onClick={() => handleNavigation("/settings")}
           className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
-            "/settings"
+            ["/settings", "/most-visited"]
           )}`}
         >
           <SettingsIcon className="mt-2" />
