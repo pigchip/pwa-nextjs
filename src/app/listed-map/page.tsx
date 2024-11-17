@@ -24,6 +24,8 @@ const TransportPage: React.FC = () => {
   const [showUserOpinionsModal, setShowUserOpinionsModal] = useState<boolean>(false);
   const [editingOpinion, setEditingOpinion] = useState<Opinion | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lineStationsMap, setLineStationsMap] = useState<{ [key: number]: Station[] }>({});
+
 
   // Función para validar email
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -67,6 +69,16 @@ const TransportPage: React.FC = () => {
       const stationsData: Station[] = await stationsResponse.json();
       setStations(stationsData);
 
+      // Construir lineStationsMap
+      const lineStationsMap = stationsData.reduce((map, station) => {
+        if (!map[station.line]) {
+          map[station.line] = [];
+        }
+        map[station.line].push(station);
+        return map;
+      }, {} as { [key: number]: Station[] });
+      setLineStationsMap(lineStationsMap);
+  
       const linesResponse = await fetch(`${apiUrl}/api/lines`);
       const linesData: Line[] = await linesResponse.json();
       setLines(linesData);
@@ -333,7 +345,7 @@ const TransportPage: React.FC = () => {
               className="border rounded px-3 py-2 mt-1"
             >
               <option value="">Seleccionar agencia</option>
-              {agencies.map((agency, index) => (
+              {agencies.slice(1).map((agency, index) => (
                 <option key={index} value={agency}>{agency}</option>
               ))}
             </select>
@@ -351,9 +363,23 @@ const TransportPage: React.FC = () => {
                 <option value="">Seleccionar línea</option>
                 {lines
                   .filter(line => line.transport === selectedAgency)
-                  .map(line => (
-                    <option key={line.id} value={line.id}>{line.name}</option>
-                  ))}
+                  .map(line => {
+                    const stations = lineStationsMap[line.id] || [];
+                    let optionText = line.name;
+
+                    if (stations.length > 0) {
+                      // Las estaciones ya están ordenadas, tomamos la primera y última
+                      const firstStationName = stations[0].name;
+                      const lastStationName = stations[stations.length - 1].name;
+                      optionText += ` - ${firstStationName} ↔ ${lastStationName}`;
+                    }
+          
+                    return (
+                      <option key={line.id} value={line.id}>
+                        {optionText}
+                      </option>
+                    );
+                  })}
               </select>
             </label>
           )}

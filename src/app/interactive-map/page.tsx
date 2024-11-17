@@ -69,6 +69,7 @@ interface SelectedStation {
 }
 
 interface SelectedLine {
+  longName: string;
   id: number;
   name: string;
   transport: string;
@@ -303,6 +304,22 @@ const RoutesMap: React.FC = () => {
   };
 
   const toggleRoutesDropdown = () => {
+    // Cerrar ventanas abiertas al abrir el menú de rutas
+    setSelectedStation(null);
+    setStationTransfers([]);
+    setStationRoutes([]);
+    setStationSchedules({});
+    setStationOpinions([]);
+
+    setSelectedLine(null);
+    setLineRoutes([]);
+    setLineSchedules({});
+    setLineOpinions([]);
+
+    setShowUserOpinionsModal(false);
+    setUserOpinions([]);
+    setEditingOpinion(null);
+
     setIsRoutesDropdownOpen(!isRoutesDropdownOpen);
   };
 
@@ -398,6 +415,10 @@ const RoutesMap: React.FC = () => {
     setLineRoutes([]);
     setLineSchedules({});
     setLineOpinions([]);
+
+    // Cerrar ventana de "Mis comentarios" y menú de rutas
+    setShowUserOpinionsModal(false);
+    setIsRoutesDropdownOpen(false);
 
     if (stationInfo) {
       const { station, line } = stationInfo;
@@ -499,10 +520,15 @@ const RoutesMap: React.FC = () => {
     setStationSchedules({});
     setStationOpinions([]);
 
+    // Cerrar ventana de "Mis comentarios" y menú de rutas
+    setShowUserOpinionsModal(false);
+    setIsRoutesDropdownOpen(false);
+
     const line = findLineInfo(route);
 
     if (line) {
       setSelectedLine({
+        longName: route.longName,
         id: line.id,
         name: line.name,
         transport: line.transport,
@@ -692,6 +718,20 @@ const RoutesMap: React.FC = () => {
       return;
     }
 
+    // Cerrar ventanas abiertas
+    setSelectedStation(null);
+    setStationTransfers([]);
+    setStationRoutes([]);
+    setStationSchedules({});
+    setStationOpinions([]);
+
+    setSelectedLine(null);
+    setLineRoutes([]);
+    setLineSchedules({});
+    setLineOpinions([]);
+
+    setIsRoutesDropdownOpen(false);
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
       const response = await fetch(`${apiUrl}/api/user/${userId}/opinions`, {
@@ -845,7 +885,19 @@ const RoutesMap: React.FC = () => {
 
           <div>
             <button
-              onClick={() => setShowUserOpinionsModal(true)}
+              onClick={() => {
+                setShowUserOpinionsModal(true);
+                setSelectedStation(null);
+                setSelectedLine(null);
+                setStationTransfers([]);
+                setStationRoutes([]);
+                setStationSchedules({});
+                setStationOpinions([]);
+                setLineRoutes([]);
+                setLineSchedules({});
+                setLineOpinions([]);
+                setIsRoutesDropdownOpen(false);
+              }}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
             >
               Mis comentarios
@@ -1009,7 +1061,7 @@ const RoutesMap: React.FC = () => {
               </button>
               <div className="flex items-center">
                 <img src={getStationLogo(selectedLine.transport)} alt={selectedLine.transport} className="w-6 h-6 mr-2" />
-                <h3 className="text-lg font-semibold">Línea {selectedLine.name}</h3>
+                <h3 className="text-lg font-semibold">Línea {selectedLine.name} {selectedLine.longName}</h3>
               </div>
               <p><strong>Transporte:</strong> {selectedLine.transport}</p>
               {selectedLine.id !== 0 && (
