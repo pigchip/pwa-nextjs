@@ -262,12 +262,25 @@ const RoutesMap: React.FC = () => {
   // Funciones de manejo de eventos y lógica
   const handleAgencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const agencyName = event.target.value;
-    setSelectedAgencies((prevAgencies) =>
-      prevAgencies.includes(agencyName)
-        ? prevAgencies.filter((name) => name !== agencyName)
-        : [...prevAgencies, agencyName]
-    );
+    const isChecked = event.target.checked;
+  
+    setSelectedAgencies((prevAgencies) => {
+      if (!isChecked) {
+        // Si se deselecciona la agencia, eliminar también sus rutas de selectedRoutes
+        setSelectedRoutes((prevSelectedRoutes) =>
+          prevSelectedRoutes.filter(
+            (routeValue) => !filteredRoutes
+              .filter((route) => route.agency.name === agencyName)
+              .some((route) => `${route.shortName}-${agencyName}` === routeValue)
+          )
+        );
+      }
+      return isChecked
+        ? [...prevAgencies, agencyName]
+        : prevAgencies.filter((name) => name !== agencyName);
+    });
   };
+  
 
   useEffect(() => {
     const sortedRoutes = routes
@@ -812,8 +825,8 @@ const RoutesMap: React.FC = () => {
                           <label key={`${route.shortName}-${agency}-${index}`} className="block">
                             <input
                               type="checkbox"
-                              value={route.shortName}
-                              checked={selectedRoutes.includes(route.shortName)}
+                              value={`${route.shortName}-${agency}`}
+                              checked={selectedRoutes.includes(`${route.shortName}-${agency}`)}
                               onChange={handleRouteSelection}
                               className="mr-2"
                             />
@@ -840,7 +853,10 @@ const RoutesMap: React.FC = () => {
         <div>
         <InteractiveMapComponent
             selectedRoutes={selectedRoutes}
-            displayedRoutes={filteredRoutes.filter(route => selectedRoutes.includes(route.shortName))}
+            displayedRoutes={filteredRoutes.filter(route =>
+              selectedRoutes.includes(`${route.shortName}-${route.agency.name}`)
+            )}
+            
             handlePolylineClick={handlePolylineClick}
             handleMarkerClick={handleMarkerClick}
             findStationInfo={findStationInfo}
