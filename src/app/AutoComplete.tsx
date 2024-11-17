@@ -45,7 +45,7 @@ export default function AutoComplete({ placeholder, onSelect, value }: AutoCompl
       try {
         const { data } = await axios.get('https://nominatim.openstreetmap.org/search', {
           params: {
-            q: debouncedQuery,
+            q: `${debouncedQuery}, Ciudad de México`,
             format: 'json',
             addressdetails: 1,
             limit: 5,
