@@ -63,7 +63,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       } else {
         console.error("startLocation.display_name no está definido");
       }
-    } else if (userLocation) {
+    } else if (userLocation && !startLocation) {
       setFromLat(userLocation.lat.toString());
       setFromLon(userLocation.lon.toString());
       setStartName("Mi Ubicación");
@@ -141,7 +141,14 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   }, [fromLat, fromLon, toLat, toLon, fetchAllItineraries]);
 
   const handlePlotItinerary = (itinerary: Itinerary) => {
+    if(!itinerary) {
     setSelectedItinerary(itinerary);
+    } else {
+      itinerary.startNameIti = startName;
+      itinerary.endNameIti = endName;
+
+      setSelectedItinerary(itinerary);
+    }  
     console.log("Itinerario seleccionado para trazar:", itinerary);
     setTimeout(() => {
       setIsExpanded(false);

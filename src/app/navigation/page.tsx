@@ -21,6 +21,19 @@ const NavigationComponent: React.FC = () => {
   const [startLocation, setStartLocation] = useState<{ lat: number; lon: number; name: string; display_name: string } | null>(null);
   const [endLocation, setEndLocation] = useState<{ lat: number; lon: number; name: string; display_name: string } | null>(null);
 
+  const [startName, setStartName] = useState<string>('');
+  const [endName, setEndName] = useState<string>('');
+
+  useEffect(() => {
+    if (startLocation) {
+      setStartName(startLocation.display_name || '');
+    }
+    if (endLocation) {
+      setEndName(endLocation.display_name || '');
+    }
+  }, [startLocation, endLocation]);
+  
+
   useEffect(() => {
     if (selectedItinerary) {
       const newStart = {
@@ -73,36 +86,42 @@ const NavigationComponent: React.FC = () => {
   const handleSelectStart = (location: { lat: number; lon: number; display_name: string } | null) => {
     if (location) {
       setStartLocation({ ...location, name: location.display_name });
-      setSelectedItinerary(null);
+      setStartName(location.display_name || '');
+      setSelectedItinerary(null); // Reset selected itinerary if needed
     } else {
       setStartLocation(null);
+      setStartName('');
     }
   };
-
+  
   const handleSelectEnd = (location: { lat: number; lon: number; display_name: string } | null) => {
     if (location) {
       setEndLocation({ ...location, name: location.display_name });
-      setSelectedItinerary(null);
+      setEndName(location.display_name || '');
+      setSelectedItinerary(null); // Reset selected itinerary if needed
+    } else {
+      setEndLocation(null);
+      setEndName('');
     }
-  };
+  }; 
 
   return (
     <Layout>
       <div className="relative flex flex-col h-full bg-gray-100" style={{ height: '100%' }}>
         <div className="relative flex-grow">
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 bg-opacity-50 shadow-md rounded-md backdrop-blur-sm max-w-64 w-full">
-            <AutoComplete
-              value={selectedItinerary?.startNameIti === "Mi Ubicación" ? '' : selectedItinerary?.startNameIti || ''}
-              placeholder="Mi Ubicación"
-              onSelect={handleSelectStart}
-            />
+          <AutoComplete
+  value={startName || ''}
+  placeholder="Mi Ubicación"
+  onSelect={handleSelectStart}
+/>
           </div>
           <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-20 bg-opacity-50 shadow-md rounded-md backdrop-blur-sm max-w-64 w-full">
-            <AutoComplete
-              value={selectedItinerary?.endNameIti || ''}
-              placeholder="Destino"
-              onSelect={handleSelectEnd}
-            />
+          <AutoComplete
+  value={endName || ''}
+  placeholder="Destino"
+  onSelect={handleSelectEnd}
+/>
           </div>
           <ItineraryMapComponent startLocation={startLocation} endLocation={endLocation} />
         </div>
