@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Layout from '@/components/Layout';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Lock, Map } from '@mui/icons-material';
 
 interface Geometry {
   lat: number;
@@ -114,7 +114,11 @@ const RoutesMap: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const [showUserOpinionsModal, setShowUserOpinionsModal] = useState<boolean>(false);
   const [editingOpinion, setEditingOpinion] = useState<Opinion | null>(null);
+  const [isMapInteractive, setIsMapInteractive] = useState(false);
 
+  const toggleMapInteraction = () => {
+    setIsMapInteractive((prev) => !prev);
+  };
   // Función para validar email
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -788,8 +792,7 @@ const RoutesMap: React.FC = () => {
     <Layout>
       <div className="relative w-full h-50vh">
         <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
-
-        
+ 
         <div className="flex flex-wrap justify-center mb-4 space-x-4 z-20 relative">
           <div>
             {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
@@ -851,17 +854,27 @@ const RoutesMap: React.FC = () => {
         </div>
 
         <div>
-        <InteractiveMapComponent
-            selectedRoutes={selectedRoutes}
-            displayedRoutes={filteredRoutes.filter(route =>
-              selectedRoutes.includes(`${route.shortName}-${route.agency.name}`)
+          {/* Contenedor del mapa */}
+          <div className="relative w-full h-4/5">
+            {!isMapInteractive && (
+              <div className="absolute inset-0 bg-black bg-opacity-40 z-10 flex items-center justify-center">
+                <p className="text-white font-bold text-lg">
+                  Toca el botón azul para interactuar con el mapa
+                </p>
+              </div>
             )}
-            
-            handlePolylineClick={handlePolylineClick}
-            handleMarkerClick={handleMarkerClick}
-            findStationInfo={findStationInfo}
-            getStationLogo={getStationLogo}
-          />
+          <InteractiveMapComponent
+              selectedRoutes={selectedRoutes}
+              displayedRoutes={filteredRoutes.filter(route =>
+                selectedRoutes.includes(`${route.shortName}-${route.agency.name}`)
+              )}
+              
+              handlePolylineClick={handlePolylineClick}
+              handleMarkerClick={handleMarkerClick}
+              findStationInfo={findStationInfo}
+              getStationLogo={getStationLogo}
+            />
+          </div>
 
           {/* Ventana emergente para la estación */}
           {selectedStation && (
@@ -1165,6 +1178,19 @@ const RoutesMap: React.FC = () => {
               </div>
             </div>
           )}
+          
+          {/* Botón flotante */}
+          <button
+            onClick={toggleMapInteraction}
+            className={`fixed bottom-28 left-5 z-20 w-14 h-14 flex items-center justify-center rounded-full 
+              ${isMapInteractive ? "bg-green-500" : "bg-blue-500"} shadow-lg transition`}
+          >
+            {isMapInteractive ? (
+              <Lock className="text-white" />
+            ) : (
+              <Map className="text-white" />
+            )}
+          </button>
         </div>
       </div>
     </Layout>
