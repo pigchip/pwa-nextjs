@@ -17,7 +17,7 @@ const Page = () => {
     return null; // Render nothing on the server
   }
 
-  if (role !== 'supervisor') {
+  if (role !== 'supervisor' && role !== 'admin') {
     return null; // Render nothing if not a supervisor
   }
 

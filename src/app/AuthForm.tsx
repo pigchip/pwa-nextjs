@@ -213,10 +213,12 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           );
         } else {
           // Inicio de sesión exitoso sin 2FA
-          openSignInModal(
-            "Inicio de Sesión Exitoso",
-            `Bienvenido, ${data.usuario.name} ${data.usuario.lastname_pat} ${data.usuario.lastname_mat}.`
-          );
+          if (data.usuario) {
+            openSignInModal(
+              "Inicio de Sesión Exitoso",
+              `Bienvenido, ${data.usuario.name} ${data.usuario.lastname_pat} ${data.usuario.lastname_mat}.`
+            );
+          }
 
           setShowTutorial(true);
 
@@ -234,7 +236,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       }
     } catch (error) {
       openSignInModal(
-        "Error de Conexión",
+        (error instanceof Error ? error.message : 'Unknown error'),
         "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
       );
     }

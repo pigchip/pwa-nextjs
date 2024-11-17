@@ -179,18 +179,18 @@ const RegisterList: React.FC = () => {
           <li key={register.id} className="p-4 border border-gray-300 rounded shadow">
             <div className="flex flex-col md:flex-row justify-between">
               <div>
-                <p><strong>User:</strong> {register.user}</p>
-                <p><strong>Transport:</strong> {register.transport}</p>
-                <p><strong>Line:</strong> {register.line}</p>
-                <p><strong>Route:</strong> {register.route}</p>
-                <p><strong>Station:</strong> {register.station}</p>
-                <p><strong>Date:</strong> {register.date}</p>
-                <p><strong>Status:</strong> {register.status}</p>
+                <p><strong>Usuario:</strong> {register.user}</p>
+                <p><strong>Transporte:</strong> {register.transport}</p>
+                <p><strong>Línea:</strong> {register.line}</p>
+                <p><strong>Ruta:</strong> {register.route}</p>
+                <p><strong>Estación:</strong> {register.station}</p>
+                <p><strong>Fecha:</strong> {register.date}</p>
+                <p><strong>Estado:</strong> {register.status}</p>
               </div>
               <div className="mt-4 md:mt-0">
-                <p><strong>Time:</strong> {register.time}</p>
-                <p><strong>Body:</strong> {register.body}</p>
-                <p><strong>Coordinates:</strong> ({register.x}, {register.y})</p>
+                <p><strong>Hora:</strong> {register.time}</p>
+                <p><strong>Descripción:</strong> {register.body}</p>
+                <p><strong>Coordenadas:</strong> ({register.x}, {register.y})</p>
                 <button
                   onClick={() => handleViewMore(register)}
                   className="mt-2 p-2 bg-[#6ABDA6] text-white rounded"
