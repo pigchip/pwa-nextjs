@@ -86,7 +86,7 @@ const FooterComponent: React.FC = () => {
         </>
       )}
 
-      {role === "supervisor" && (
+      {role === "supervisor" || role === "admin" && (
         <>
           <div className="flex-1 relative">
             <button

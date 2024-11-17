@@ -10,12 +10,12 @@ const SupervisorLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (role !== "supervisor") {
-      router.push("/"); // Redirect to home page if not a supervisor
+    if (role !== "supervisor" && role !== "admin") {
+      router.push("/"); // Redirect to home page if not a supervisor or admin
     }
   }, [role, router]);
 
-  if (role !== "supervisor") {
+  if (role !== "supervisor" && role !== "admin") {
     return null; // Render nothing while redirecting
   }
 
