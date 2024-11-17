@@ -143,7 +143,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const handlePlotItinerary = (itinerary: Itinerary) => {
     setSelectedItinerary(itinerary);
     console.log("Itinerario seleccionado para trazar:", itinerary);
-    setIsExpanded(false);
+    setTimeout(() => {
+      setIsExpanded(false);
+    }, 50); // Ajusta el tiempo según sea necesario
     setExpandedLegIndex(null);
   };
 

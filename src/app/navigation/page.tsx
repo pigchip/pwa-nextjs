@@ -37,7 +37,6 @@ const NavigationComponent: React.FC = () => {
       };
       setStartLocation(newStart);
       setEndLocation(newEnd);
-      saveRouteToLocalStorage(selectedItinerary);
     }
   }, [selectedItinerary]);
 
@@ -85,29 +84,6 @@ const NavigationComponent: React.FC = () => {
       setEndLocation({ ...location, name: location.display_name });
       setSelectedItinerary(null);
     }
-  };
-
-  const saveRouteToLocalStorage = (itinerary: any) => {
-    const existingRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-
-    const itineraryToSave = {
-      ...itinerary,
-      frequency: 1, // Initialize frequency
-    };
-
-    const existingRouteIndex = existingRoutes.findIndex(
-      (route: any) =>
-        route.startNameIti === itineraryToSave.startNameIti &&
-        route.endNameIti === itineraryToSave.endNameIti
-    );
-
-    if (existingRouteIndex !== -1) {
-      existingRoutes[existingRouteIndex].frequency += 1; // Increment frequency if route exists
-    } else {
-      existingRoutes.push(itineraryToSave);
-    }
-
-    localStorage.setItem('savedRoutes', JSON.stringify(existingRoutes));
   };
 
   return (

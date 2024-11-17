@@ -35,6 +35,7 @@ const SavedRoutesComponent: React.FC = () => {
   const [menuIndex, setMenuIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    setSelectedItinerary(null);
     const existingRoutes = JSON.parse(
       localStorage.getItem("savedRoutes") || "[]"
     );
