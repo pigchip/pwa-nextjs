@@ -426,6 +426,12 @@ const RoutesMap: React.FC = () => {
     setShowUserOpinionsModal(false);
     setIsRoutesDropdownOpen(false);
 
+    // Restablecer variables de estado relacionadas con la estación
+    setStationTransfers([]);
+    setStationRoutes([]);
+    setStationSchedules({});
+    setStationOpinions([]);
+
     if (stationInfo) {
       const { station, line } = stationInfo;
 
@@ -513,7 +519,11 @@ const RoutesMap: React.FC = () => {
         services: '',
         information: 'Información no disponible',
       });
-      // Agregar esta línea para inicializar stationOpinions
+
+      // Restablecer variables de estado aquí también
+      setStationTransfers([]);
+      setStationRoutes([]);
+      setStationSchedules({});
       setStationOpinions([]);
     }
   };
@@ -529,6 +539,11 @@ const RoutesMap: React.FC = () => {
     // Cerrar ventana de "Mis comentarios" y menú de rutas
     setShowUserOpinionsModal(false);
     setIsRoutesDropdownOpen(false);
+
+    // Restablecer variables de estado relacionadas con la línea
+    setLineRoutes([]);
+    setLineSchedules({});
+    setLineOpinions([]);
 
     const line = findLineInfo(route);
 
@@ -945,7 +960,7 @@ const RoutesMap: React.FC = () => {
 
           {/* Ventana emergente para la estación */}
           {selectedStation && (
-            <div className="absolute top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
+            <div className="fixed top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
               <button
                 onClick={() => {
                   setSelectedStation(null);
@@ -1062,7 +1077,7 @@ const RoutesMap: React.FC = () => {
 
           {/* Ventana emergente para la línea */}
           {selectedLine && (
-            <div className="absolute top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
+            <div className="fixed top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
               <button
                 onClick={() => {
                   setSelectedLine(null);
@@ -1207,47 +1222,46 @@ const RoutesMap: React.FC = () => {
                   </div>
                 )}
 
-      {editingOpinion && (
-        <div className="mt-4">
-          <h4 className="text-lg font-semibold mb-2">Editando comentario ID {editingOpinion.id}</h4>
-          <form onSubmit={handleUpdateOpinion} className="space-y-3">
-            <div>
-              <label className="block font-semibold">Mensaje (máx. 60 caracteres):</label>
-              <input
-                type="text"
-                name="body"
-                maxLength={60}
-                defaultValue={editingOpinion.body}
-                required
-                className="w-full border rounded px-3 py-2"
-              />
+                {editingOpinion && (
+                  <div className="mt-4">
+                    <h4 className="text-lg font-semibold mb-2">Editando comentario ID {editingOpinion.id}</h4>
+                    <form onSubmit={handleUpdateOpinion} className="space-y-3">
+                      <div>
+                        <label className="block font-semibold">Mensaje (máx. 60 caracteres):</label>
+                        <input
+                          type="text"
+                          name="body"
+                          maxLength={60}
+                          defaultValue={editingOpinion.body}
+                          required
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-semibold">Tipo:</label>
+                        <select
+                          name="type"
+                          defaultValue={editingOpinion.type}
+                          className="w-full border rounded px-3 py-2"
+                        >
+                          <option value="Sugerencia">Sugerencia</option>
+                          <option value="Queja">Queja</option>
+                          <option value="Agradecimiento">Agradecimiento</option>
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                      >
+                        Actualizar comentario
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="block font-semibold">Tipo:</label>
-              <select
-                name="type"
-                defaultValue={editingOpinion.type}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="Sugerencia">Sugerencia</option>
-                <option value="Queja">Queja</option>
-                <option value="Agradecimiento">Agradecimiento</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-            >
-              Actualizar comentario
-            </button>
-          </form>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+          )}
 
-          
           {/* Botón flotante */}
           <button
             onClick={toggleMapInteraction}
