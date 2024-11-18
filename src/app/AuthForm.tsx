@@ -28,7 +28,7 @@ export default function AuthForm({
   const [lastname_pat, setLastnamePat] = useState<string>('');
   const [lastname_mat, setLastnameMat] = useState<string>('');
   const [curp, setCurp] = useState<string>('');
-  const [ocuparion, setOccupation] = useState<string>('');
+  const [occupation, setOccupation] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -203,29 +203,36 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       const data = await response.json();
 
       if (response.ok) {
-        if (data._2fa) {
-          // Se requiere 2FA
-          setReceived2FA(data._2fa);
-          setIs2FA(true);
-          openSignInModal(
-            "Autenticación de Dos Factores",
-            "Se ha enviado un código de verificación a tu dispositivo. Por favor, ingresa el código para continuar."
-          );
-        } else {
-          // Inicio de sesión exitoso sin 2FA
-          if (data.usuario) {
+        // Verificar si el usuario es válido
+        if (data.usuario && data.usuario.id !== null) {
+          if (data._2fa) {
+            // Se requiere 2FA
+            setReceived2FA(data._2fa);
+            setIs2FA(true);
+            openSignInModal(
+              "Autenticación de Dos Factores",
+              "Se ha enviado un código de verificación a tu dispositivo. Por favor, ingresa el código para continuar."
+            );
+          } else {
+            // Inicio de sesión exitoso sin 2FA
             openSignInModal(
               "Inicio de Sesión Exitoso",
               `Bienvenido, ${data.usuario.name} ${data.usuario.lastname_pat} ${data.usuario.lastname_mat}.`
             );
+
+            setShowTutorial(true);
+
+            // Limpiar campos
+            setEmail('');
+            setPassword('');
+            setRole("user");
           }
-
-          setShowTutorial(true);
-
-          // Limpiar campos
-          setEmail('');
-          setPassword('');
-          setRole("user");
+        } else {
+          // Error en las credenciales
+          openSignInModal(
+            "Error de Inicio de Sesión :(",
+            "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
+          );
         }
       } else {
         // Error en las credenciales
@@ -236,7 +243,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       }
     } catch (error) {
       openSignInModal(
-        (error instanceof Error ? error.message : 'Unknown error'),
+        "Error de Conexión",
         "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
       );
     }
@@ -249,18 +256,27 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     if (!entered2FA) {
       setTwoFAError(true);
       setTwoFAErrorMessage("Por favor, ingresa el código 2FA.");
+      // Regresar a la vista inicial si hay error
+      setIs2FA(false);
+      setEntered2FA('');
       return;
     }
 
     if (received2FA === null) {
       setTwoFAError(true);
       setTwoFAErrorMessage("No se ha recibido un código 2FA válido.");
+      // Regresar a la vista inicial si hay error
+      setIs2FA(false);
+      setEntered2FA('');
       return;
     }
 
     if (entered2FA !== received2FA.toString()) {
       setTwoFAError(true);
       setTwoFAErrorMessage("El código de verificación es incorrecto.");
+      // Regresar a la vista inicial si hay error
+      setIs2FA(false);
+      setEntered2FA('');
       return;
     }
 
@@ -278,7 +294,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     setEntered2FA('');
     setIs2FA(false);
     setReceived2FA(null);
-    setRole("user");
+    setRole(isSupervisor ? "supervisor" : isAdmin ? "admin" : "user");
   };
 
   // Función para manejar el envío del formulario de inicio de sesión de Supervisor
@@ -325,18 +341,37 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       const data = await response.json();
 
       if (response.ok) {
-          // Inicio de sesión exitoso sin 2FA
+        // Verificar si el usuario es válido
+        if (data.usuario && data.usuario.id !== null) {
+          if (data._2fa) {
+            // Se requiere 2FA
+            setReceived2FA(data._2fa);
+            setIs2FA(true);
+            openSignInModal(
+              "Autenticación de Dos Factores",
+              "Se ha enviado un código de verificación a tu dispositivo. Por favor, ingresa el código para continuar."
+            );
+          } else {
+            // Inicio de sesión exitoso sin 2FA
+            openSignInModal(
+              "Inicio de Sesión Exitoso",
+              "Bienvenido, Supervisor."
+            );
+
+            setShowTutorial(true);
+
+            // Limpiar campos
+            setId('');
+            setPassword('');
+            setRole("supervisor");
+          }
+        } else {
+          // Error en las credenciales
           openSignInModal(
-            "Inicio de Sesión Exitoso",
-            "Bienvenido, Supervisor."
+            "Error de Inicio de Sesión :(",
+            "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
           );
-
-          setShowTutorial(true);
-
-          // Limpiar campos
-          setId('');
-          setPassword('');
-          setRole("supervisor");
+        }
       } else {
         // Error en las credenciales
         openSignInModal(
@@ -396,18 +431,37 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       const data = await response.json();
 
       if (response.ok) {
-          // Inicio de sesión exitoso sin 2FA
+        // Verificar si el usuario es válido
+        if (data.usuario && data.usuario.id !== null) {
+          if (data._2fa) {
+            // Se requiere 2FA
+            setReceived2FA(data._2fa);
+            setIs2FA(true);
+            openSignInModal(
+              "Autenticación de Dos Factores",
+              "Se ha enviado un código de verificación a tu dispositivo. Por favor, ingresa el código para continuar."
+            );
+          } else {
+            // Inicio de sesión exitoso sin 2FA
+            openSignInModal(
+              "Inicio de Sesión Exitoso",
+              "Bienvenido, Administrador."
+            );
+
+            setShowTutorial(true);
+
+            // Limpiar campos
+            setId('');
+            setPassword('');
+            setRole("admin");
+          }
+        } else {
+          // Error en las credenciales
           openSignInModal(
-            "Inicio de Sesión Exitoso",
-            "Bienvenido, Administrador."
+            "Error de Inicio de Sesión :(",
+            "Ocurrió un error al iniciar sesión, verifica que tus datos sean correctos."
           );
-
-          setShowTutorial(true);
-
-          // Limpiar campos
-          setId('');
-          setPassword('');
-          setRole("admin");
+        }
       } else {
         // Error en las credenciales
         openSignInModal(
@@ -493,7 +547,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       setPasswordErrorMessage("");
     }
 
-    if (!validateOccupation(ocuparion)) {
+    if (!validateOccupation(occupation)) {
       setOccupationError(true);
       setOccupationErrorMessage("La ocupación no es válida.");
       hasError = true;
@@ -529,7 +583,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           lastname_mat,
           email,
           curp,
-          ocuparion,
+          occupation,
           password,
           phone,
         }),
@@ -593,29 +647,31 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             </h1>
 
             {/* Botones para cambiar entre Registro e Iniciar Sesión */}
-            <div className="flex justify-between mt-4 border-b border-gray-200">
-              <button
-                onClick={() => setIsRegister(false)}
-                className={`text-lg font-semibold pb-2 transition-colors ${
-                  !isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
-                }`}
-              >
-                Iniciar sesión
-              </button>
-              <button
-                onClick={() => {
-                  setIsRegister(true);
-                  setIsUser(true);
-                  setIsSupervisor(false);
-                  setIsAdmin(false);
-                }}
-                className={`text-lg font-semibold pb-2 transition-colors ${
-                  isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
-                }`}
-              >
-                Registro
-              </button>
-            </div>
+            {!is2FA && (
+              <div className="flex justify-between mt-4 border-b border-gray-200">
+                <button
+                  onClick={() => setIsRegister(false)}
+                  className={`text-lg font-semibold pb-2 transition-colors ${
+                    !isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
+                  }`}
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  onClick={() => {
+                    setIsRegister(true);
+                    setIsUser(true);
+                    setIsSupervisor(false);
+                    setIsAdmin(false);
+                  }}
+                  className={`text-lg font-semibold pb-2 transition-colors ${
+                    isRegister ? 'text-[#6ABDA6] border-b-2 border-[#6ABDA6]' : 'text-gray-500'
+                  }`}
+                >
+                  Registro
+                </button>
+              </div>
+            )}
 
             {/* Indicador de Rol */}
             {isUser && (
@@ -744,7 +800,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                   >
                     <span className="material-icons text-black mr-2">work</span>
                     <select
-                      value={ocuparion}
+                      value={occupation}
                       onChange={(e) => {
                         setOccupation(e.target.value);
                         setOccupationError(false);
@@ -957,38 +1013,44 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             </form>
 
             {/* Botones para cambiar de rol en inicio de sesión */}
-            {!isRegister && !is2FA && isUser && (
+            {!isRegister && !is2FA && (
               <div className="space-y-2">
-                <button
-                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
-                  onClick={() => {
-                    setIsUser(true);
-                    setIsSupervisor(false);
-                    setIsAdmin(false);
-                  }}
-                >
-                  ¿Eres Usuario?
-                </button>
-                <button
-                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
-                  onClick={() => {
-                    setIsUser(false);
-                    setIsSupervisor(true);
-                    setIsAdmin(false);
-                  }}
-                >
-                  ¿Eres Supervisor?
-                </button>
-                <button
-                  className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
-                  onClick={() => {
-                    setIsUser(false);
-                    setIsSupervisor(false);
-                    setIsAdmin(true);
-                  }}
-                >
-                  ¿Eres Administrador?
-                </button>
+                {!isUser && (
+                  <button
+                    className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+                    onClick={() => {
+                      setIsUser(true);
+                      setIsSupervisor(false);
+                      setIsAdmin(false);
+                    }}
+                  >
+                    ¿Eres Usuario?
+                  </button>
+                )}
+                {!isSupervisor && (
+                  <button
+                    className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#2f72ac] rounded-lg hover:bg-[#005aa7]"
+                    onClick={() => {
+                      setIsUser(false);
+                      setIsSupervisor(true);
+                      setIsAdmin(false);
+                    }}
+                  >
+                    ¿Eres Supervisor?
+                  </button>
+                )}
+                {!isAdmin && (
+                  <button
+                    className="w-full px-4 py-2 mt-4 font-semibold text-white bg-[#fea35a] rounded-lg hover:bg-[#fe8423]"
+                    onClick={() => {
+                      setIsUser(false);
+                      setIsSupervisor(false);
+                      setIsAdmin(true);
+                    }}
+                  >
+                    ¿Eres Administrador?
+                  </button>
+                )}
               </div>
             )}
 
