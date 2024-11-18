@@ -4,11 +4,67 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout'; // Importamos el Layout
 import Image from 'next/image'; // Si necesitas usar imágenes en el componente
 import { Close } from '@mui/icons-material';
-import { Opinion } from '@/types/opinion';
-import { Line, Station } from '@/types';
-import { Schedule } from '@/types/schedule';
-import { ApiRoute } from '@/types/line';
 import { getAgencyIcon } from '@/utils/agency';
+
+// Definición de interfaces
+interface Opinion {
+  id: number;
+  user: number;
+  date: string;
+  time: string;
+  body: string;
+  type: string;
+  place?: string;
+}
+
+interface Station {
+  id: number;
+  name: string;
+  line: number;
+  incident?: string;
+  services?: string;
+  information?: string;
+  transport?: string;
+  lineName?: string;
+  firstStationName?: string; // Añadido
+  lastStationName?: string;  // Añadido
+  transfers?: Station[];
+  opinions?: Opinion[];
+}
+
+
+
+interface Line {
+  id: number;
+  name: string;
+  transport?: string;
+  incident?: string;
+  speed?: number;
+  information?: string;
+  routes?: ApiRoute[];
+  opinions?: Opinion[];
+  firstStationName?: string; // Añadido
+  lastStationName?: string;  // Añadido
+}
+
+interface ApiRoute {
+  id: number;
+  name: string;
+  price: number;
+  schedules?: Schedule[];
+}
+
+interface Schedule {
+  id: number;
+  day: string;
+  open: string;
+  close: string;
+}
+
+interface UserOpinionResponseItem {
+  opinions: Opinion;
+  v: Station | Line;
+}
 
 const TransportPage: React.FC = () => {
   const [agencies, setAgencies] = useState<string[]>([]);
@@ -25,7 +81,6 @@ const TransportPage: React.FC = () => {
   const [editingOpinion, setEditingOpinion] = useState<Opinion | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lineStationsMap, setLineStationsMap] = useState<{ [key: number]: Station[] }>({});
-
 
   // Función para validar email
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -78,13 +133,13 @@ const TransportPage: React.FC = () => {
         return map;
       }, {} as { [key: number]: Station[] });
       setLineStationsMap(lineStationsMap);
-  
+
       const linesResponse = await fetch(`${apiUrl}/api/lines`);
       const linesData: Line[] = await linesResponse.json();
       setLines(linesData);
 
       const uniqueAgencies = Array.from(new Set([...stationsData, ...linesData].map(item => item.transport)));
-      setAgencies(uniqueAgencies);
+      setAgencies(uniqueAgencies.filter(agency => agency !== undefined) as string[]);
     }
     fetchData();
   }, []);
@@ -98,64 +153,146 @@ const TransportPage: React.FC = () => {
   };
 
   const handleLineChange = async (lineId: number) => {
-    const line = lines.find(line => line.id === lineId) || null;
-    setSelectedLine(line);
-    setSelectedStation(null);
-    setSelectedLineStation(null);
-    if (line) {
+    const lineFromList = lines.find(line => line.id === lineId);
+    if (lineFromList) {
+      const line = { ...lineFromList }; // Clonar el objeto
       try {
-        // Obtener estaciones de la línea
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-        const stationsResponse = await fetch(`${apiUrl}api/lines/${lineId}/stations`);
+        // Obtener estaciones de la línea
+        const stationsResponse = await fetch(`${apiUrl}/api/lines/${lineId}/stations`);
         const stationsData: Station[] = await stationsResponse.json();
         setLineStations(stationsData);
 
+        // **Añadir nombres de estaciones terminales a la línea**
+        if (stationsData.length > 0) {
+          line.firstStationName = stationsData[0].name;
+          line.lastStationName = stationsData[stationsData.length - 1].name;
+        }
+  
         // Obtener rutas de la línea
         const routesResponse = await fetch(`${apiUrl}/api/lines/${lineId}/routes`);
         const routesData: ApiRoute[] = await routesResponse.json();
-
+  
         // Obtener horarios de las rutas
         for (const route of routesData) {
           const schedulesResponse = await fetch(`${apiUrl}/api/routes/${route.id}/schedules`);
           const schedulesData: Schedule[] = await schedulesResponse.json();
           route.schedules = schedulesData;
         }
-
+  
         line.routes = routesData;
-
+  
         // Obtener opiniones de la línea
         const opinionsResponse = await fetch(`${apiUrl}/api/lines/${lineId}/opinions`);
-        const opinionsData: Opinion[] = await opinionsResponse.json();
-        line.opinions = opinionsData;
-
+        const opinionsData = await opinionsResponse.json();
+  
+        console.log('Opinions Data:', opinionsData);
+  
+        // Procesar el arreglo para extraer opiniones
+        let opinions: Opinion[] = [];
+  
+        if (Array.isArray(opinionsData)) {
+          opinions = opinionsData.map((item: any) => item.opinions || item).filter(Boolean);
+        } else if (opinionsData) {
+          opinions = [opinionsData];
+        }
+  
+        console.log('Processed Opinions:', opinions);
+  
+        line.opinions = opinions;
+  
+        // Actualizar el estado con la línea modificada
+        setSelectedLine(line);
+  
       } catch (error) {
         console.error("Error al obtener datos de la línea:", error);
       }
+    } else {
+      setSelectedLine(null);
     }
+  
+    setSelectedStation(null);
+    setSelectedLineStation(null);
   };
 
   const handleLineStationChange = async (stationId: number) => {
-    const station = lineStations.find(station => station.id === stationId) || null;
-    setSelectedLineStation(station);
-    if (station) {
+    const stationFromList = lineStations.find(station => station.id === stationId);
+    if (stationFromList) {
+      const station = { ...stationFromList }; // Clonar el objeto
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+
+        // Obtener el transporte de la estación
+        const lineResponseForStation = await fetch(`${apiUrl}/api/lines/${station.line}`);
+        const lineDataForStation = await lineResponseForStation.json();
+        station.transport = lineDataForStation.transport;
+        station.lineName = lineDataForStation.name;
+
         // Obtener transbordos de la estación
         const transfersResponse = await fetch(`${apiUrl}/api/stations/${stationId}/transfers`);
         const transfersData: Station[] = await transfersResponse.json();
-        station.transfers = transfersData;
-
+  
+        // Obtener el nombre de la línea para cada transbordo
+        const transfersWithLineNames = await Promise.all(
+          transfersData.map(async (transfer) => {
+            const lineResponse = await fetch(`${apiUrl}/api/lines/${transfer.line}`);
+            const lineData = await lineResponse.json();
+        
+            // Obtener las estaciones de la línea para obtener las terminales
+            const lineStationsResponse = await fetch(`${apiUrl}/api/lines/${transfer.line}/stations`);
+            const lineStationsData: Station[] = await lineStationsResponse.json();
+        
+            let firstStationName = '';
+            let lastStationName = '';
+            if (lineStationsData.length > 0) {
+              firstStationName = lineStationsData[0].name;
+              lastStationName = lineStationsData[lineStationsData.length - 1].name;
+            }
+        
+            return {
+              ...transfer,
+              lineName: lineData.name,
+              transport: lineData.transport,
+              firstStationName,
+              lastStationName,
+            };
+          })
+        );
+        
+  
+        station.transfers = transfersWithLineNames;
+  
         // Obtener opiniones de la estación
         const opinionsResponse = await fetch(`${apiUrl}/api/stations/${stationId}/opinions`);
-        const opinionsData: Opinion[] = await opinionsResponse.json();
-        station.opinions = opinionsData;
-
+        const opinionsData = await opinionsResponse.json();
+  
+        console.log('Station Opinions Data:', opinionsData);
+  
+        // Procesar el arreglo para extraer opiniones
+        let opinions: Opinion[] = [];
+  
+        if (Array.isArray(opinionsData)) {
+          opinions = opinionsData.map((item: any) => item.opinions || item).filter(Boolean);
+        } else if (opinionsData) {
+          opinions = [opinionsData];
+        }
+  
+        console.log('Processed Station Opinions:', opinions);
+  
+        station.opinions = opinions;
+  
+        // Actualizar el estado con la estación modificada
+        setSelectedLineStation(station);
+  
       } catch (error) {
         console.error("Error al obtener datos de la estación:", error);
       }
+    } else {
+      setSelectedLineStation(null);
     }
   };
-
+  
+  
   // Función para manejar el envío de opiniones
   const handleOpinionSubmit = async (event: React.FormEvent<HTMLFormElement>, isStation: boolean, id: number) => {
     event.preventDefault();
@@ -243,8 +380,16 @@ const TransportPage: React.FC = () => {
         throw new Error('Error al obtener las opiniones del usuario.');
       }
 
-      const data: Opinion[] = await response.json();
-      setUserOpinions(data);
+      const data = await response.json();
+
+      // Procesar el arreglo para extraer opiniones y lugares
+      const opinions = data.map((item: any) => {
+        const opinion: Opinion = item.opinions;
+        const place = item.v.name; // Nombre de la estación o línea
+        return { ...opinion, place };
+      });
+
+      setUserOpinions(opinions);
 
     } catch (err) {
       console.error('Error al obtener las opiniones del usuario:', err);
@@ -345,7 +490,7 @@ const TransportPage: React.FC = () => {
               className="border rounded px-3 py-2 mt-1"
             >
               <option value="">Seleccionar agencia</option>
-              {agencies.slice(1).map((agency, index) => (
+              {agencies.map((agency, index) => (
                 <option key={index} value={agency}>{agency}</option>
               ))}
             </select>
@@ -373,7 +518,7 @@ const TransportPage: React.FC = () => {
                       const lastStationName = stations[stations.length - 1].name;
                       optionText += ` - ${firstStationName} ↔ ${lastStationName}`;
                     }
-          
+
                     return (
                       <option key={line.id} value={line.id}>
                         {optionText}
@@ -412,11 +557,15 @@ const TransportPage: React.FC = () => {
 
         <div className="text-left p-5 border border-gray-300 rounded-lg">
           {/* Detalles de la Línea Seleccionada */}
-          {selectedLine && (
+            {selectedLine && (
+            console.log('Selected Line:', selectedLine),
+            console.log('Selected Line Opinions:', selectedLine?.opinions),
             <>
               <h2 className="text-xl font-bold mb-3">Detalles de la Línea</h2>
-              <Image src={getAgencyIcon(selectedLine.transport)} alt={selectedLine.transport} width={40} height={40} className="mb-2" />
-              <p><strong>Nombre:</strong> {selectedLine.name}</p>
+              <Image src={getAgencyIcon(selectedLine.transport || '')} alt={selectedLine.transport || ''} width={40} height={40} className="mb-2" />
+              <p><strong>Nombre:</strong> {selectedLine.name}
+              {selectedLine.firstStationName && selectedLine.lastStationName && ` - ${selectedLine.firstStationName} ↔ ${selectedLine.lastStationName}`}
+              </p>
               <p><strong>Transporte:</strong> {selectedLine.transport}</p>
               <p><strong>Incidente:</strong> {selectedLine.incident || 'No hay incidentes reportados'}</p>
               <p><strong>Velocidad:</strong> {selectedLine.speed} km/h</p>
@@ -449,11 +598,13 @@ const TransportPage: React.FC = () => {
                 <>
                   <h3 className="text-lg font-semibold mt-4">Opiniones:</h3>
                   <ul className="list-disc list-inside">
-                    {selectedLine.opinions.map(opinion => (
-                      <li key={opinion.id} className="mt-2">
-                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                        <p>{opinion.body}</p>
-                      </li>
+                    {selectedLine.opinions.map((opinion, index) => (
+                      opinion ? (
+                        <li key={opinion.id || index} className="mt-2">
+                          <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                          <p>{opinion.body}</p>
+                        </li>
+                      ) : null
                     ))}
                   </ul>
                 </>
@@ -486,10 +637,9 @@ const TransportPage: React.FC = () => {
           {/* Detalles de la Estación de Línea Seleccionada */}
           {selectedLineStation && (
             <>
-              <h2 className="text-xl font-bold mt-5 mb-3">Detalles de la Estación de Línea</h2>
-              <Image src={getAgencyIcon(selectedLineStation.transport)} alt={selectedLineStation.transport} width={40} height={40} className="mb-2" />
+              <h2 className="text-xl font-bold mt-5 mb-3">Detalles de la Estación</h2>
+              <Image src={getAgencyIcon(selectedLineStation.transport || '')} alt={selectedLineStation.transport || ''} width={40} height={40} className="mb-2" />
               <p><strong>Nombre:</strong> {selectedLineStation.name}</p>
-              <p><strong>Línea:</strong> {selectedLineStation.line}</p>
               <p><strong>Incidente:</strong> {selectedLineStation.incident || 'No hay incidentes reportados'}</p>
               <p><strong>Servicios:</strong> {selectedLineStation.services || 'No disponible'}</p>
               <p><strong>Información:</strong> {selectedLineStation.information || 'No disponible'}</p>
@@ -500,8 +650,15 @@ const TransportPage: React.FC = () => {
                   <h3 className="text-lg font-semibold mt-4">Transbordos:</h3>
                   <ul className="list-disc list-inside">
                     {selectedLineStation.transfers.map(transfer => (
-                      <li key={transfer.id}>
-                        {transfer.name} - Línea {transfer.line}
+                      <li key={transfer.id} className="flex items-center">
+                        <Image
+                          src={getAgencyIcon(transfer.transport || '')}
+                          alt={transfer.transport || ''}
+                          width={20}
+                          height={20}
+                          className="mr-2"
+                        />
+                        {transfer.name} - Línea {transfer.lineName} ({transfer.firstStationName} ↔ {transfer.lastStationName})
                       </li>
                     ))}
                   </ul>
@@ -513,11 +670,13 @@ const TransportPage: React.FC = () => {
                 <>
                   <h3 className="text-lg font-semibold mt-4">Opiniones:</h3>
                   <ul className="list-disc list-inside">
-                    {selectedLineStation.opinions.map(opinion => (
-                      <li key={opinion.id} className="mt-2">
-                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                        <p>{opinion.body}</p>
-                      </li>
+                    {selectedLineStation.opinions.map((opinion, index) => (
+                      opinion ? (
+                        <li key={opinion.id || index} className="mt-2">
+                          <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                          <p>{opinion.body}</p>
+                        </li>
+                      ) : null
                     ))}
                   </ul>
                 </>
@@ -578,6 +737,7 @@ const TransportPage: React.FC = () => {
                     {userOpinions.map((opinion) => (
                       <li key={opinion.id} className="border p-3 rounded-lg">
                         <p><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</p>
+                        <p><strong>Lugar:</strong> {opinion.place}</p>
                         <p>{opinion.body}</p>
                         <div className="flex space-x-2 mt-2">
                           <button
