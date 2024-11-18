@@ -68,6 +68,11 @@ interface SelectedStation {
   information: string;
 }
 
+interface UserOpinionResponseItem {
+  opinions: Opinion;
+  v: Station | Line;
+}
+
 interface SelectedLine {
   longName: string;
   id: number;
@@ -85,6 +90,7 @@ interface Opinion {
   time: string;
   body: string;
   type: string;
+  place: string;
 }
 
 const InteractiveMapComponent = dynamic(() => import('@/components/InteractiveMapComponent'), {
@@ -745,9 +751,18 @@ const RoutesMap: React.FC = () => {
         throw new Error('Error al obtener las opiniones del usuario.');
       }
 
-      const data: Opinion[] = await response.json();
-      setUserOpinions(data);
+      const data: UserOpinionResponseItem[] = await response.json();
 
+      // Procesar opiniones y asociar lugar (nombre de la estación o línea)
+      const opinions = data.map((item) => {
+        const opinion: Opinion = item.opinions;
+        const place = item.v.name; // Nombre de la estación o línea
+        return { ...opinion, place };
+      });
+  
+      setUserOpinions(opinions);
+      setShowUserOpinionsModal(true);
+  
     } catch (err) {
       console.error('Error al obtener las opiniones del usuario:', err);
     }
@@ -1170,6 +1185,7 @@ const RoutesMap: React.FC = () => {
                       {userOpinions.map((opinion) => (
                         <li key={opinion.id} className="border p-3 rounded-lg">
                           <p><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</p>
+                          <p><strong>Lugar:</strong> {opinion.place}</p>
                           <p>{opinion.body}</p>
                           <div className="flex space-x-2 mt-2">
                             <button
@@ -1191,45 +1207,46 @@ const RoutesMap: React.FC = () => {
                   </div>
                 )}
 
-                {editingOpinion && (
-                  <div className="mt-4">
-                    <h4 className="text-lg font-semibold mb-2">Editando comentario ID {editingOpinion.id}</h4>
-                    <form onSubmit={handleUpdateOpinion} className="space-y-3">
-                      <div>
-                        <label className="block font-semibold">Mensaje (máx. 60 caracteres):</label>
-                        <input
-                          type="text"
-                          name="body"
-                          maxLength={60}
-                          defaultValue={editingOpinion.body}
-                          required
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-semibold">Tipo:</label>
-                        <select
-                          name="type"
-                          defaultValue={editingOpinion.type}
-                          className="w-full border rounded px-3 py-2"
-                        >
-                          <option value="Sugerencia">Sugerencia</option>
-                          <option value="Queja">Queja</option>
-                          <option value="Agradecimiento">Agradecimiento</option>
-                        </select>
-                      </div>
-                      <button
-                        type="submit"
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-                      >
-                        Actualizar comentario
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </div>
+      {editingOpinion && (
+        <div className="mt-4">
+          <h4 className="text-lg font-semibold mb-2">Editando comentario ID {editingOpinion.id}</h4>
+          <form onSubmit={handleUpdateOpinion} className="space-y-3">
+            <div>
+              <label className="block font-semibold">Mensaje (máx. 60 caracteres):</label>
+              <input
+                type="text"
+                name="body"
+                maxLength={60}
+                defaultValue={editingOpinion.body}
+                required
+                className="w-full border rounded px-3 py-2"
+              />
             </div>
-          )}
+            <div>
+              <label className="block font-semibold">Tipo:</label>
+              <select
+                name="type"
+                defaultValue={editingOpinion.type}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="Sugerencia">Sugerencia</option>
+                <option value="Queja">Queja</option>
+                <option value="Agradecimiento">Agradecimiento</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+            >
+              Actualizar comentario
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
           
           {/* Botón flotante */}
           <button
