@@ -12,11 +12,12 @@ import { useRouter } from "next/navigation";
 import Layout from "@/components/Layout";
 import { Transport, Line, Station, Register, Status } from "@/types";
 import { getMexicoCityDateTime } from "@/utils/date";
+import { useTransportLinesStore } from "@/stores/useTransportLinesStore";
+import { TransportName } from "@/types/transport";
 
 const CreateEvidenceComponent: React.FC = () => {
   const router = useRouter();
   const [transports, setTransports] = useState<Transport[]>([]);
-  const [lines, setLines] = useState<Line[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedTransport, setSelectedTransport] = useState<string | null>(
     null
@@ -29,6 +30,8 @@ const CreateEvidenceComponent: React.FC = () => {
     description: string;
   } | null>(null);
   const [stationsDisabled, setStationsDisabled] = useState<boolean>(false);
+
+  const { lines, fetchTransportLines } = useTransportLinesStore();
 
   const incidents = [
     {
@@ -71,29 +74,6 @@ const CreateEvidenceComponent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchLines = () => {
-      if (selectedTransport) {
-        fetch("/api/lines", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            const filteredLines = data.filter(
-              (line: Line) => line.transport === selectedTransport
-            );
-            setLines(filteredLines);
-          })
-          .catch((error) => console.error("Error fetching lines:", error));
-      }
-    };
-
-    fetchLines();
-  }, [selectedTransport]);
-
-  useEffect(() => {
     const fetchStations = () => {
       if (selectedLine && stations.length === 0) {
         fetch(`/api/lines/${selectedLine.id}/stations`)
@@ -106,11 +86,10 @@ const CreateEvidenceComponent: React.FC = () => {
     fetchStations();
   }, [selectedLine, stations.length]);
 
-  const handleTransportSelect = (transportName: string) => {
+  const handleTransportSelect = async (transportName: string) => {
     setSelectedTransport(transportName);
     setSelectedLine(null);
     setSelectedStation(null);
-    setLines([]);
     setStations([]);
     setStationsDisabled(
       [
@@ -122,6 +101,8 @@ const CreateEvidenceComponent: React.FC = () => {
         "Nochebús",
       ].includes(transportName)
     );
+
+    await fetchTransportLines(transportName as TransportName);
   };
 
   const handleBackClick = () => {
@@ -189,7 +170,6 @@ const CreateEvidenceComponent: React.FC = () => {
     setSelectedLine(null);
     setSelectedStation(null);
     setSelectedIncident(null);
-    setLines([]);
     setStations([]);
   };
 
@@ -235,7 +215,7 @@ const CreateEvidenceComponent: React.FC = () => {
             <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
               <SubwayIcon className="ml-2" />
               <span className="flex-grow text-left pl-2 text-gray-400">
-                {selectedLine ? selectedLine.name : "Línea"}
+                {selectedLine ? `${selectedLine.name} - ${selectedLine.information}` : "Línea"}
               </span>
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
@@ -249,7 +229,7 @@ const CreateEvidenceComponent: React.FC = () => {
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                       onClick={() => setSelectedLine(line)}
                     >
-                      {line.name}
+                      {line.name} - {line.information}
                     </button>
                   )}
                 </MenuItem>
