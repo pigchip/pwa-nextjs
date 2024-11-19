@@ -24,6 +24,7 @@ import { SelectedItineraryContext } from "@/contexts/SelectedItineraryContext";
 import { Itinerary } from "@/types/map";
 import MostFrequentedRoutes from "@/components/MostFrequentedRoutes";
 import DownloadRouteButton from "@/components/DownloadRouteButton";
+import { DirectionsRailwayFilled } from "@mui/icons-material";
 
 const SavedRoutesComponent: React.FC = () => {
   const [savedRoutes, setSavedRoutes] = useState<Itinerary[]>([]);
@@ -332,6 +333,10 @@ const getTransportIcon = (mode: string) => {
       return <TrainIcon className="text-white" />;
     case "FERRY":
       return <DirectionsBoatIcon className="text-white" />;
+    case 'TRAM':
+      return <DirectionsRailwayFilled className="text-white" />;
+    case 'GONDOLA':
+      return <img src="/icons/cablebus.svg" alt="Gondola Icon" className="w-6 h-6" />;
     default:
       return <DirectionsWalkIcon className="text-white" />;
   }
