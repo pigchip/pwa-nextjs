@@ -46,7 +46,7 @@ async function getTransportLines(name: string): Promise<Line[]> {
   }
 
   const response = await fetch(`${apiUrl}/api/transports/lines`, {
-    method: 'GET',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
