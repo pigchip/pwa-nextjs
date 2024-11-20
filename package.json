@@ -12,6 +12,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@headlessui/react": "^2.1.8",
+    "@knocklabs/node": "^0.6.15",
     "@knocklabs/react": "^0.2.31",
     "@mapbox/polyline": "^1.2.1",
     "@mui/icons-material": "^6.1.1",
