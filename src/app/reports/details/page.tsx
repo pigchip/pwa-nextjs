@@ -91,7 +91,7 @@ const EvidenceDetails: React.FC = () => {
       }
 
       await knockNode.workflows.trigger("mts", {
-        recipients: ["iespinosas1700@alumno.ipn.mx"],
+        recipients: ["iespinosas1700@alumno.ipn.mx", "jangeles1700@alumno.ipn.mx", "aguzman1702@alumno.ipn.mx", "agarciaz1703@alumno.ipn.mx"],
         data: {
           incident: {
             value: incident,
