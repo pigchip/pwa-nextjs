@@ -1,4 +1,6 @@
+// src/app/station-incidents/page.tsx
 import React, { useState, useEffect } from 'react';
+import { fetchIncidents } from '@/lib/fetchIncidents';
 import { Station } from '@/types/station';
 
 const StationIncidents: React.FC = () => {
@@ -11,13 +13,9 @@ const StationIncidents: React.FC = () => {
   const recordsPerPage = 5;
 
   useEffect(() => {
-    const fetchIncidents = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/stations/incidents');
-        if (!response.ok) {
-          throw new Error('Failed to fetch station incidents');
-        }
-        const data = await response.json();
+        const data = await fetchIncidents();
         setIncidents(data);
         setFilteredIncidents(data);
       } catch (err) {
@@ -31,7 +29,7 @@ const StationIncidents: React.FC = () => {
       }
     };
 
-    fetchIncidents();
+    fetchData();
   }, []);
 
   useEffect(() => {
