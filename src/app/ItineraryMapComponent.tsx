@@ -9,10 +9,23 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MapIcon from '@mui/icons-material/Map';
+import Checkbox from '@mui/material/Checkbox';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { Itinerary, ItineraryMapComponentProps, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
-import { formatDistance, formatDuration, formatTimeWithAmPm, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import {
+  formatDistance,
+  formatDuration,
+  formatTimeWithAmPm,
+  generateRandomETA,
+  getColorForLeg,
+  getPolylineStyle,
+  saveRouteToLocalStorage,
+  toggleExpand,
+} from '@/utils/itineraryUtils';
 import {
   ITINERARY_QUERY,
   ITINERARY_QUERY_WALK_ONLY,
@@ -26,10 +39,11 @@ import {
   ITINERARY_QUERY_FUNICULAR_WALK,
   ITINERARY_QUERY_BUS_SUBWAY_WALK,
   ITINERARY_QUERY_SUBWAY_TRAM_WALK,
-  ITINERARY_QUERY_ALL_MODES_WALK
+  ITINERARY_QUERY_ALL_MODES_WALK,
 } from '@/queries/queries';
 import { fetchItineraries } from '@/utils/fetchItineraries';
 import { getTransportIcon } from '@/utils/getTransportIcon';
+import { DoneOutline } from '@mui/icons-material';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -41,8 +55,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const startIcon = createStartIcon();
   const endIcon = createEndIcon();
 
-  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; name: string } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; name: string } | null>(
+    null
+  );
   const [itineraryData, setItineraryData] = useState<Itinerary[]>([]);
+  const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [expandedLegIndex, setExpandedLegIndex] = useState<number | null>(null);
@@ -58,6 +75,37 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   // State for custom marker
   const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
+
+  // State for agency filtering
+  const [agencyList, setAgencyList] = useState([
+    { id: 'QWdlbmN5OjE6U1VC', name: 'Ferrocarriles Suburbanos' },
+    { id: 'QWdlbmN5OjE6Q0M', name: 'Corredores Concesionados' },
+    { id: 'QWdlbmN5OjE6SU5URVJVUkJBTk8', name: 'Tren El Insurgente' },
+    { id: 'QWdlbmN5OjE6Q0JC', name: 'Cablebus' },
+    { id: 'QWdlbmN5OjE6TUI', name: 'Metrobús' },
+    { id: 'QWdlbmN5OjE6TUVUUk8', name: 'Sistema de Transporte Colectivo Metro' },
+    { id: 'QWdlbmN5OjE6VEw', name: 'Servicio de Tren Ligero' },
+    { id: 'QWdlbmN5OjE6UFVNQUJVUw', name: 'Pumabús' },
+    { id: 'QWdlbmN5OjE6VFJPTEU', name: 'Trolebús' },
+    { id: 'QWdlbmN5OjE6UlRQ', name: 'Red de Transporte de Pasajeros' },
+  ]);
+
+  const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Update filtered itineraries based on selected agencies
+    if (selectedAgencies.length === 0) {
+      setFilteredItineraries(itineraryData);
+    } else {
+      const filtered = itineraryData.filter(
+        (itinerary) =>
+          !itinerary.legs.some(
+            (leg) => leg.route?.agency?.id && selectedAgencies.includes(leg.route.agency.id)
+          )
+      );
+      setFilteredItineraries(filtered);
+    }
+  }, [selectedAgencies, itineraryData]);
 
   useEffect(() => {
     // Update start and end locations
@@ -101,12 +149,14 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   function generateSimplifiedItineraryKey(itinerary: Itinerary): string {
     // Clave simplificada basada en el modo de transporte y las ubicaciones de origen y destino
-    return `${itinerary.legs.map((leg) => `${leg.mode}-${leg.from.name}-${leg.to.name}`).join('|')}`;
+    return `${itinerary.legs
+      .map((leg) => `${leg.mode}-${leg.from.name}-${leg.to.name}`)
+      .join('|')}`;
   }
-  
+
   function removeDuplicateItineraries(itineraries: Itinerary[]) {
     const seen = new Set();
-    return itineraries.filter(itinerary => {
+    return itineraries.filter((itinerary) => {
       const key = generateSimplifiedItineraryKey(itinerary);
       if (seen.has(key)) {
         return false; // Itinerario repetido
@@ -116,55 +166,170 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       }
     });
   }
-  
 
   const fetchAllItineraries = useCallback(async () => {
     if (!fromLat || !fromLon || !toLat || !toLon) {
       return;
     }
-  
+
     setLoading(true);
     setIsExpanded(true);
-  
+
     const currentDate = new Date().toLocaleDateString('en-US'); // Formato ISO (YYYY-MM-DD)
     console.log('Current Local Date:', currentDate);
     const currentTime = new Date().toLocaleTimeString('en-US', { hour12: true });
-    console.log('Current Local Time:', currentTime);    
-       
-  
+    console.log('Current Local Time:', currentTime);
+
     const maxTransfers = 10; // Increase to allow more transfers
     const numItineraries = 30; // Fetch more itineraries
-  
+
     try {
       // Fetch itineraries for different transport modes
       const queries = [
-        ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_WALK_ONLY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_BUS_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_SUBWAY_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_TRAM_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_RAIL_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_FERRY_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_GONDOLA_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_CABLE_CAR_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_FUNICULAR_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_BUS_SUBWAY_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_SUBWAY_TRAM_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
-        ITINERARY_QUERY_ALL_MODES_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_WALK_ONLY(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_BUS_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_SUBWAY_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_TRAM_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_RAIL_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_FERRY_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_GONDOLA_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_CABLE_CAR_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_FUNICULAR_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_BUS_SUBWAY_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_SUBWAY_TRAM_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
+        ITINERARY_QUERY_ALL_MODES_WALK(
+          Number(fromLat),
+          Number(fromLon),
+          Number(toLat),
+          Number(toLon),
+          currentDate,
+          currentTime,
+          maxTransfers,
+          numItineraries
+        ),
       ];
-  
+
       // Execute all queries and collect responses
       const results = await Promise.all(queries.map((query) => fetchItineraries(query)));
-  
+
       // Combine all itineraries
       let allItineraries = results.flat();
-  
+
       // Filtrar itinerarios únicos
       const uniqueItineraries = removeDuplicateItineraries(allItineraries);
-  
+
       // Sort itineraries by duration (fastest to longest)
       const sortedItineraries = uniqueItineraries.sort((a, b) => a.duration - b.duration);
-  
+
       setItineraryData(sortedItineraries);
     } catch (error) {
       console.error('Error fetching itineraries:', error);
@@ -285,17 +450,51 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
             <ExpandMoreIcon className="text-gray-500" />
           )}
         </div>
+
+        {/* Combobox de agencias */}
+        <div className="p-4 bg-white shadow-md">
+          <Autocomplete
+            multiple
+            options={agencyList}
+            disableCloseOnSelect
+            getOptionLabel={(option) => option.name}
+            onChange={(event, value) => {
+              setSelectedAgencies(value.map((agency) => agency.id));
+            }}
+            renderOption={(props, option, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                  checkedIcon={<DoneOutline fontSize="small" />}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.name}
+              </li>
+            )}
+            style={{ width: '100%' }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="outlined"
+                label="Filtrar por Agencia"
+                placeholder="Selecciona agencias"
+              />
+            )}
+          />
+        </div>
+
         <div className="p-4 flex flex-col">
           {/* Menu Content */}
           {loading ? (
             <p className="text-center">Cargando itinerarios...</p>
           ) : (
             <>
-              {itineraryData.length > 0 ? (
+              {filteredItineraries.length > 0 ? (
                 <div className="space-y-4 overflow-y-auto">
                   {/* If the menu is expanded, show all itineraries */}
                   {isExpanded
-                    ? itineraryData.map((itinerary, index) => (
+                    ? filteredItineraries.map((itinerary, index) => (
                         <div key={index} className="bg-green-100 p-3 rounded-lg max-w-full">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                             {/* Visualization of legs with icons */}
@@ -363,28 +562,30 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
                             {/* Buttons for details and mapping */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                            <div className="flex flex-col items-start mb-2 sm:mb-0">
-                              {itinerary.waitingTime > 0 && (
-                                <p className="text-sm font-medium">
-                                  Espera: {formatDuration(itinerary.waitingTime)}
-                                </p>
-                              )}
-                              <div className="flex items-center">
-                                <AccessTimeIcon
-                                  className="text-gray-500 mr-1"
-                                  fontSize="small"
-                                />
-                                <p className="text-sm font-bold">
-                                  {formatDuration(itinerary.duration)}
-                                </p>
+                              <div className="flex flex-col items-start mb-2 sm:mb-0">
+                                {itinerary.waitingTime > 0 && (
+                                  <p className="text-sm font-medium">
+                                    Espera: {formatDuration(itinerary.waitingTime)}
+                                  </p>
+                                )}
+                                <div className="flex items-center">
+                                  <AccessTimeIcon
+                                    className="text-gray-500 mr-1"
+                                    fontSize="small"
+                                  />
+                                  <p className="text-sm font-bold">
+                                    {formatDuration(itinerary.duration)}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
                               <button
                                 className="bg-blue-500 text-white p-2 rounded w-full sm:w-auto mb-2 sm:mb-0 flex items-center justify-center"
                                 onClick={() => handleExpandDetails(index)}
                               >
                                 <InfoOutlinedIcon className="mr-2" />
-                                {expandedLegIndex === index ? 'Ocultar Detalles' : 'Ver Detalles'}
+                                {expandedLegIndex === index
+                                  ? 'Ocultar Detalles'
+                                  : 'Ver Detalles'}
                               </button>
                               <button
                                 className="bg-green-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
@@ -430,35 +631,49 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           {itinerary.legs[currentLegIndex].route!.agency!.name}
                                         </p>
                                       )}
-                                      {itinerary.legs[currentLegIndex].route?.longName && itinerary.legs[currentLegIndex].route?.shortName && (
-                                        <p>
-                                          <strong>Línea/Ruta:</strong>{' '}
-                                          {itinerary.legs[currentLegIndex].route!.shortName} - {itinerary.legs[currentLegIndex].route!.longName}
-                                        </p>
-                                      )}
+                                      {itinerary.legs[currentLegIndex].route?.longName &&
+                                        itinerary.legs[currentLegIndex].route?.shortName && (
+                                          <p>
+                                            <strong>Línea/Ruta:</strong>{' '}
+                                            {itinerary.legs[currentLegIndex].route!.shortName} -{' '}
+                                            {itinerary.legs[currentLegIndex].route!.longName}
+                                          </p>
+                                        )}
                                       <p>
                                         <strong>Desde:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].from.name === 'Origin' ? startLocation?.display_name : itinerary.legs[currentLegIndex].from.name}
+                                        {itinerary.legs[currentLegIndex].from.name === 'Origin'
+                                          ? startLocation?.display_name
+                                          : itinerary.legs[currentLegIndex].from.name}
                                       </p>
                                       <p>
                                         <strong>Hasta:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].to.name === 'Destination' ? endLocation?.display_name : itinerary.legs[currentLegIndex].to.name}
+                                        {itinerary.legs[currentLegIndex].to.name === 'Destination'
+                                          ? endLocation?.display_name
+                                          : itinerary.legs[currentLegIndex].to.name}
                                       </p>
                                       <p>
                                         <strong>Distancia:</strong>{' '}
-                                        {formatDistance(itinerary.legs[currentLegIndex].distance)}
+                                        {formatDistance(
+                                          itinerary.legs[currentLegIndex].distance
+                                        )}
                                       </p>
                                       <p>
                                         <strong>Duración:</strong>{' '}
-                                        {formatDuration(itinerary.legs[currentLegIndex].duration)}
+                                        {formatDuration(
+                                          itinerary.legs[currentLegIndex].duration
+                                        )}
                                       </p>
                                       <p>
                                         <strong>Hora al empezar:</strong>{' '}
-                                        {formatTimeWithAmPm(itinerary.legs[currentLegIndex].startTime)}
+                                        {formatTimeWithAmPm(
+                                          itinerary.legs[currentLegIndex].startTime
+                                        )}
                                       </p>
                                       <p>
                                         <strong>Hora al terminar :</strong>{' '}
-                                        {formatTimeWithAmPm(itinerary.legs[currentLegIndex].endTime)}
+                                        {formatTimeWithAmPm(
+                                          itinerary.legs[currentLegIndex].endTime
+                                        )}
                                       </p>
                                     </div>
                                   )}
@@ -480,9 +695,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   <div
                                     key={idx}
                                     className={`h-2 w-2 rounded-full mx-1 ${
-                                      currentLegIndex === idx
-                                        ? 'bg-blue-500'
-                                        : 'bg-gray-300'
+                                      currentLegIndex === idx ? 'bg-blue-500' : 'bg-gray-300'
                                     }`}
                                   />
                                 ))}
@@ -565,31 +778,27 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
                             {/* Buttons for saving the route */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                            <div className="flex flex-col items-start mb-2 sm:mb-0">
-                              {selectedItinerary.waitingTime > 0 && (
-                                <p className="text-sm font-medium">
-                                  Espera: {formatDuration(selectedItinerary.waitingTime)}
-                                </p>
-                              )}
-                              <div className="flex items-center">
-                                <AccessTimeIcon
-                                  className="text-gray-500 mr-1"
-                                  fontSize="small"
-                                />
-                                <p className="text-sm font-bold">
-                                  {formatDuration(selectedItinerary.duration)}
-                                </p>
+                              <div className="flex flex-col items-start mb-2 sm:mb-0">
+                                {selectedItinerary.waitingTime > 0 && (
+                                  <p className="text-sm font-medium">
+                                    Espera: {formatDuration(selectedItinerary.waitingTime)}
+                                  </p>
+                                )}
+                                <div className="flex items-center">
+                                  <AccessTimeIcon
+                                    className="text-gray-500 mr-1"
+                                    fontSize="small"
+                                  />
+                                  <p className="text-sm font-bold">
+                                    {formatDuration(selectedItinerary.duration)}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
                               {/* "Save Route" Button */}
                               <button
                                 className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
                                 onClick={() =>
-                                  saveRouteToLocalStorage(
-                                    selectedItinerary,
-                                    startName,
-                                    endName
-                                  )
+                                  saveRouteToLocalStorage(selectedItinerary, startName, endName)
                                 }
                               >
                                 Guardar Ruta
@@ -600,9 +809,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                       )}
                 </div>
               ) : (
-                <p className="text-center text-gray-500 mt-4">
-                  Sin itinerarios
-                </p>
+                <p className="text-center text-gray-500 mt-4">Sin itinerarios</p>
               )}
             </>
           )}
