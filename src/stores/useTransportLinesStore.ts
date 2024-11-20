@@ -16,7 +16,7 @@ export const useTransportLinesStore = create<TransportLinesState>((set) => ({
   fetchTransportLines: async (name: TransportName) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/transports/lines/route', {
+      const response = await fetch('/api/transports/lines', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
