@@ -25,6 +25,7 @@ import { Itinerary } from "@/types/map";
 import MostFrequentedRoutes from "@/components/MostFrequentedRoutes";
 import DownloadRouteButton from "@/components/DownloadRouteButton";
 import { DirectionsRailwayFilled } from "@mui/icons-material";
+import { formatDuration } from "@/utils/itineraryUtils";
 
 const SavedRoutesComponent: React.FC = () => {
   const [savedRoutes, setSavedRoutes] = useState<Itinerary[]>([]);
@@ -227,7 +228,13 @@ const SavedRoutesComponent: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-700">
-                          {leg.mode}
+                          {leg.route?.agency?.name === "Sistema de Transporte Colectivo Metro" 
+                            ? "Metro" 
+                            : leg.route?.agency?.name === "Corredores Concesionados" 
+                            ? "CC" 
+                            : leg.route?.agency?.name === "Red de Transporte de Pasajeros" 
+                            ? "RTP" 
+                            : leg.route?.agency?.name || leg.route?.shortName || "Caminar"}
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatDuration(leg.duration)}
@@ -313,12 +320,6 @@ const Page: React.FC = () => {
       </div>
     </Layout>
   );
-};
-
-const formatDuration = (durationInSeconds: number) => {
-  const hours = Math.floor(durationInSeconds / 3600);
-  const minutes = Math.floor((durationInSeconds % 3600) / 60);
-  return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
 };
 
 const getTransportIcon = (mode: string) => {

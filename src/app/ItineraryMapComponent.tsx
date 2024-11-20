@@ -430,13 +430,19 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           {itinerary.legs[currentLegIndex].route!.agency!.name}
                                         </p>
                                       )}
+                                      {itinerary.legs[currentLegIndex].route?.longName && itinerary.legs[currentLegIndex].route?.shortName && (
+                                        <p>
+                                          <strong>Línea/Ruta:</strong>{' '}
+                                          {itinerary.legs[currentLegIndex].route!.shortName} - {itinerary.legs[currentLegIndex].route!.longName}
+                                        </p>
+                                      )}
                                       <p>
                                         <strong>Desde:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].from.name}
+                                        {itinerary.legs[currentLegIndex].from.name === 'Origin' ? startLocation?.display_name : itinerary.legs[currentLegIndex].from.name}
                                       </p>
                                       <p>
                                         <strong>Hasta:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].to.name}
+                                        {itinerary.legs[currentLegIndex].to.name === 'Destination' ? endLocation?.display_name : itinerary.legs[currentLegIndex].to.name}
                                       </p>
                                       <p>
                                         <strong>Distancia:</strong>{' '}

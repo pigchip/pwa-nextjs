@@ -11,6 +11,7 @@ export interface LegGeometry {
 
 export interface Route {
   shortName: string;
+  longName: string;
   color?: string;
   agency?: {
     id: string;

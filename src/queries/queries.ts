@@ -61,6 +61,7 @@ export const ITINERARY_QUERY = (
           }
           route {
             shortName
+            longName
             color
             agency {
               id
@@ -186,6 +187,7 @@ const generateWalkCombinationQuery = (
           }
           route {
             shortName
+            longName
             color
             agency {
               id
@@ -273,6 +275,7 @@ export const ITINERARY_QUERY_BUS_SUBWAY_WALK = (
           }
           route {
             shortName
+            longName
             color
             agency {
               id
@@ -340,6 +343,7 @@ export const ITINERARY_QUERY_SUBWAY_TRAM_WALK = (
           }
           route {
             shortName
+            longName
             color
             agency {
               id
@@ -415,6 +419,7 @@ export const ITINERARY_QUERY_ALL_MODES_WALK = (
           }
           route {
             shortName
+            longName
             color
             agency {
               id
