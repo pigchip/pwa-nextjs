@@ -1,11 +1,15 @@
 import { create } from 'zustand';
 
 interface UserDetails {
-  name: string;
-  lastname_pat: string;
-  lastname_mat: string;
-  ocuparion: string;
-  phone: string;
+  id: number | null;
+  name: string | null;
+  lastname_pat: string | null;
+  lastname_mat: string | null;
+  email: string | null;
+  curp: string | null;
+  ocuparion: string | null;
+  password: string | null;
+  phone: string | null;
 }
 
 interface UserStore {
