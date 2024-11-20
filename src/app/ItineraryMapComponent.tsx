@@ -12,7 +12,7 @@ import MapIcon from '@mui/icons-material/Map';
 import { Itinerary, ItineraryMapComponentProps, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
-import { formatDuration, formatTimeWithAmPm, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import { formatDistance, formatDuration, formatTimeWithAmPm, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
 import {
   ITINERARY_QUERY,
   ITINERARY_QUERY_WALK_ONLY,
@@ -44,7 +44,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; name: string } | null>(null);
   const [itineraryData, setItineraryData] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [expandedLegIndex, setExpandedLegIndex] = useState<number | null>(null);
   const [currentLegIndex, setCurrentLegIndex] = useState<number>(0);
 
@@ -290,209 +290,17 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           {loading ? (
             <p className="text-center">Cargando itinerarios...</p>
           ) : (
-            itineraryData.length > 0 && (
-              <div className="space-y-4 overflow-y-auto">
-                {/* If the menu is expanded, show all itineraries */}
-                {isExpanded
-                  ? itineraryData.map((itinerary, index) => (
-                      <div key={index} className="bg-green-100 p-3 rounded-lg max-w-full">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                          {/* Visualization of legs with icons */}
-                          <div className="flex items-center flex-wrap">
-                            {itinerary.legs.map((leg, legIndex) => {
-                              const color = getColorForLeg(leg);
-                              const Icon = getTransportIcon(leg.mode);
-                              return (
-                                <React.Fragment key={legIndex}>
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      alignItems: 'center',
-                                      marginRight:
-                                        legIndex < itinerary.legs.length - 1 ? '12px' : '0',
-                                    }}
-                                    title={`ETA: ${generateRandomETA()}`}
-                                  >
-                                    {/* Duration above the icon */}
-                                    <span
-                                      style={{
-                                        fontSize: '12px',
-                                        marginBottom: '6px',
-                                        color: 'black',
-                                        fontWeight: 'bold',
-                                      }}
-                                    >
-                                      {formatDuration(leg.duration)}
-                                    </span>
-
-                                    <div
-                                      style={{
-                                        backgroundColor: color,
-                                        borderRadius: '50%',
-                                        color: 'white',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        width: '50px',
-                                        height: '50px',
-                                      }}
-                                    >
-                                      {Icon}
-                                    </div>
-                                    {/* Distance below the icon */}
-                                    <span
-                                      style={{
-                                        fontSize: '12px',
-                                        marginTop: '6px',
-                                        color: 'black',
-                                        fontWeight: 'bold',
-                                      }}
-                                    >
-                                      {Math.round(leg.distance)}m
-                                    </span>
-                                  </div>
-                                  {legIndex < itinerary.legs.length - 1 && (
-                                    <ArrowForwardIcon style={{ color: 'gray' }} />
-                                  )}
-                                </React.Fragment>
-                              );
-                            })}
-                          </div>
-
-                          {/* Buttons for details and mapping */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                          <div className="flex flex-col items-start mb-2 sm:mb-0">
-                            {itinerary.waitingTime > 0 && (
-                              <p className="text-sm font-medium">
-                                Espera: {formatDuration(itinerary.waitingTime)}
-                              </p>
-                            )}
-                            <div className="flex items-center">
-                              <AccessTimeIcon
-                                className="text-gray-500 mr-1"
-                                fontSize="small"
-                              />
-                              <p className="text-sm font-bold">
-                                {formatDuration(itinerary.duration)}
-                              </p>
-                            </div>
-                          </div>
-                            <button
-                              className="bg-blue-500 text-white p-2 rounded w-full sm:w-auto mb-2 sm:mb-0 flex items-center justify-center"
-                              onClick={() => handleExpandDetails(index)}
-                            >
-                              <InfoOutlinedIcon className="mr-2" />
-                              {expandedLegIndex === index ? 'Ocultar Detalles' : 'Ver Detalles'}
-                            </button>
-                            <button
-                              className="bg-green-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                              onClick={() => handlePlotItinerary(itinerary)}
-                            >
-                              <MapIcon className="mr-2" />
-                              Mapear
-                            </button>
-                          </div>
-                        </div>
-                        {/* Show details if expanded */}
-                        {expandedLegIndex === index && (
-                          <div className="mt-2">
-                            {/* Slider controls */}
-                            <div className="flex items-center justify-between">
-                              <button
-                                onClick={() =>
-                                  setCurrentLegIndex(
-                                    currentLegIndex > 0
-                                      ? currentLegIndex - 1
-                                      : itinerary.legs.length - 1
-                                  )
-                                }
-                                className="p-2 bg-gray-300 rounded-full"
-                              >
-                                Anterior
-                              </button>
-                              <div className="flex-1 mx-4">
-                                {/* Show current leg */}
-                                {itinerary.legs[currentLegIndex] && (
-                                  <div
-                                    className="rounded-lg p-4 text-white"
-                                    style={{
-                                      backgroundColor: getColorForLeg(
-                                        itinerary.legs[currentLegIndex]
-                                      ),
-                                    }}
-                                  >
-                                    {/* Leg details */}
-                                    {itinerary.legs[currentLegIndex].route?.agency && (
-                                      <p>
-                                        <strong>Agencia:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].route!.agency!.name}
-                                      </p>
-                                    )}
-                                    <p>
-                                      <strong>Desde:</strong>{' '}
-                                      {itinerary.legs[currentLegIndex].from.name}
-                                    </p>
-                                    <p>
-                                      <strong>Hasta:</strong>{' '}
-                                      {itinerary.legs[currentLegIndex].to.name}
-                                    </p>
-                                    <p>
-                                      <strong>Distancia:</strong>{' '}
-                                      {Math.round(itinerary.legs[currentLegIndex].distance)}{' '}
-                                      metros
-                                    </p>
-                                    <p>
-                                      <strong>Duración:</strong>{' '}
-                                      {formatDuration(itinerary.legs[currentLegIndex].duration)}
-                                    </p>
-                                    <p>
-                                      <strong>Hora al empezar:</strong>{' '}
-                                      {formatTimeWithAmPm(itinerary.legs[currentLegIndex].startTime)}
-                                    </p>
-                                    <p>
-                                      <strong>Hora al terminar :</strong>{' '}
-                                      {formatTimeWithAmPm(itinerary.legs[currentLegIndex].endTime)}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                              <button
-                                onClick={() =>
-                                  setCurrentLegIndex(
-                                    (currentLegIndex + 1) % itinerary.legs.length
-                                  )
-                                }
-                                className="p-2 bg-gray-300 rounded-full"
-                              >
-                                Siguiente
-                              </button>
-                            </div>
-                            {/* Pagination indicator */}
-                            <div className="flex justify-center mt-2">
-                              {itinerary.legs.map((_, idx) => (
-                                <div
-                                  key={idx}
-                                  className={`h-2 w-2 rounded-full mx-1 ${
-                                    currentLegIndex === idx
-                                      ? 'bg-blue-500'
-                                      : 'bg-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  : // If the menu is collapsed, only show the selected itinerary
-                    selectedItinerary && (
-                      <div className="bg-green-100 p-3 rounded-lg max-w-full">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                          {/* Visualization of legs with icons */}
-                          <div className="flex items-center flex-wrap">
-                            {selectedItinerary.legs.map(
-                              (leg: Leg, legIndex: React.Key | null | undefined) => {
+            <>
+              {itineraryData.length > 0 ? (
+                <div className="space-y-4 overflow-y-auto">
+                  {/* If the menu is expanded, show all itineraries */}
+                  {isExpanded
+                    ? itineraryData.map((itinerary, index) => (
+                        <div key={index} className="bg-green-100 p-3 rounded-lg max-w-full">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                            {/* Visualization of legs with icons */}
+                            <div className="flex items-center flex-wrap">
+                              {itinerary.legs.map((leg, legIndex) => {
                                 const color = getColorForLeg(leg);
                                 const Icon = getTransportIcon(leg.mode);
                                 return (
@@ -503,13 +311,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         flexDirection: 'column',
                                         alignItems: 'center',
                                         marginRight:
-                                          (legIndex as number) <
-                                          selectedItinerary.legs.length - 1
-                                            ? '12px'
-                                            : '0',
+                                          legIndex < itinerary.legs.length - 1 ? '12px' : '0',
                                       }}
                                       title={`ETA: ${generateRandomETA()}`}
                                     >
+                                      {/* Duration above the icon */}
                                       <span
                                         style={{
                                           fontSize: '12px',
@@ -525,7 +331,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         style={{
                                           backgroundColor: color,
                                           borderRadius: '50%',
-                                          padding: '8px',
                                           color: 'white',
                                           display: 'flex',
                                           alignItems: 'center',
@@ -536,6 +341,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       >
                                         {Icon}
                                       </div>
+                                      {/* Distance below the icon */}
                                       <span
                                         style={{
                                           fontSize: '12px',
@@ -544,56 +350,255 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           fontWeight: 'bold',
                                         }}
                                       >
-                                        {Math.round(leg.distance)}m
+                                        {formatDistance(leg.distance)}
                                       </span>
                                     </div>
-                                    {typeof legIndex === 'number' &&
-                                      legIndex < selectedItinerary.legs.length - 1 && (
-                                        <ArrowForwardIcon style={{ color: 'gray' }} />
-                                      )}
+                                    {legIndex < itinerary.legs.length - 1 && (
+                                      <ArrowForwardIcon style={{ color: 'gray' }} />
+                                    )}
                                   </React.Fragment>
                                 );
-                              }
-                            )}
-                          </div>
+                              })}
+                            </div>
 
-                          {/* Buttons for saving the route */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                          <div className="flex flex-col items-start mb-2 sm:mb-0">
-                            {selectedItinerary.waitingTime > 0 && (
-                              <p className="text-sm font-medium">
-                                Espera: {formatDuration(selectedItinerary.waitingTime)}
-                              </p>
-                            )}
-                            <div className="flex items-center">
-                              <AccessTimeIcon
-                                className="text-gray-500 mr-1"
-                                fontSize="small"
-                              />
-                              <p className="text-sm font-bold">
-                                {formatDuration(selectedItinerary.duration)}
-                              </p>
+                            {/* Buttons for details and mapping */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
+                            <div className="flex flex-col items-start mb-2 sm:mb-0">
+                              {itinerary.waitingTime > 0 && (
+                                <p className="text-sm font-medium">
+                                  Espera: {formatDuration(itinerary.waitingTime)}
+                                </p>
+                              )}
+                              <div className="flex items-center">
+                                <AccessTimeIcon
+                                  className="text-gray-500 mr-1"
+                                  fontSize="small"
+                                />
+                                <p className="text-sm font-bold">
+                                  {formatDuration(itinerary.duration)}
+                                </p>
+                              </div>
+                            </div>
+                              <button
+                                className="bg-blue-500 text-white p-2 rounded w-full sm:w-auto mb-2 sm:mb-0 flex items-center justify-center"
+                                onClick={() => handleExpandDetails(index)}
+                              >
+                                <InfoOutlinedIcon className="mr-2" />
+                                {expandedLegIndex === index ? 'Ocultar Detalles' : 'Ver Detalles'}
+                              </button>
+                              <button
+                                className="bg-green-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
+                                onClick={() => handlePlotItinerary(itinerary)}
+                              >
+                                <MapIcon className="mr-2" />
+                                Mapear
+                              </button>
                             </div>
                           </div>
-                            {/* "Save Route" Button */}
-                            <button
-                              className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                              onClick={() =>
-                                saveRouteToLocalStorage(
-                                  selectedItinerary,
-                                  startName,
-                                  endName
-                                )
-                              }
-                            >
-                              Guardar Ruta
-                            </button>
+                          {/* Show details if expanded */}
+                          {expandedLegIndex === index && (
+                            <div className="mt-2">
+                              {/* Slider controls */}
+                              <div className="flex items-center justify-between">
+                                <button
+                                  onClick={() =>
+                                    setCurrentLegIndex(
+                                      currentLegIndex > 0
+                                        ? currentLegIndex - 1
+                                        : itinerary.legs.length - 1
+                                    )
+                                  }
+                                  className="p-2 bg-gray-300 rounded-full"
+                                >
+                                  Anterior
+                                </button>
+                                <div className="flex-1 mx-4">
+                                  {/* Show current leg */}
+                                  {itinerary.legs[currentLegIndex] && (
+                                    <div
+                                      className="rounded-lg p-4 text-white"
+                                      style={{
+                                        backgroundColor: getColorForLeg(
+                                          itinerary.legs[currentLegIndex]
+                                        ),
+                                      }}
+                                    >
+                                      {/* Leg details */}
+                                      {itinerary.legs[currentLegIndex].route?.agency && (
+                                        <p>
+                                          <strong>Agencia:</strong>{' '}
+                                          {itinerary.legs[currentLegIndex].route!.agency!.name}
+                                        </p>
+                                      )}
+                                      <p>
+                                        <strong>Desde:</strong>{' '}
+                                        {itinerary.legs[currentLegIndex].from.name}
+                                      </p>
+                                      <p>
+                                        <strong>Hasta:</strong>{' '}
+                                        {itinerary.legs[currentLegIndex].to.name}
+                                      </p>
+                                      <p>
+                                        <strong>Distancia:</strong>{' '}
+                                        {formatDistance(itinerary.legs[currentLegIndex].distance)}
+                                      </p>
+                                      <p>
+                                        <strong>Duración:</strong>{' '}
+                                        {formatDuration(itinerary.legs[currentLegIndex].duration)}
+                                      </p>
+                                      <p>
+                                        <strong>Hora al empezar:</strong>{' '}
+                                        {formatTimeWithAmPm(itinerary.legs[currentLegIndex].startTime)}
+                                      </p>
+                                      <p>
+                                        <strong>Hora al terminar :</strong>{' '}
+                                        {formatTimeWithAmPm(itinerary.legs[currentLegIndex].endTime)}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    setCurrentLegIndex(
+                                      (currentLegIndex + 1) % itinerary.legs.length
+                                    )
+                                  }
+                                  className="p-2 bg-gray-300 rounded-full"
+                                >
+                                  Siguiente
+                                </button>
+                              </div>
+                              {/* Pagination indicator */}
+                              <div className="flex justify-center mt-2">
+                                {itinerary.legs.map((_, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`h-2 w-2 rounded-full mx-1 ${
+                                      currentLegIndex === idx
+                                        ? 'bg-blue-500'
+                                        : 'bg-gray-300'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    : // If the menu is collapsed, only show the selected itinerary
+                      selectedItinerary && (
+                        <div className="bg-green-100 p-3 rounded-lg max-w-full">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                            {/* Visualization of legs with icons */}
+                            <div className="flex items-center flex-wrap">
+                              {selectedItinerary.legs.map(
+                                (leg: Leg, legIndex: React.Key | null | undefined) => {
+                                  const color = getColorForLeg(leg);
+                                  const Icon = getTransportIcon(leg.mode);
+                                  return (
+                                    <React.Fragment key={legIndex}>
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          marginRight:
+                                            (legIndex as number) <
+                                            selectedItinerary.legs.length - 1
+                                              ? '12px'
+                                              : '0',
+                                        }}
+                                        title={`ETA: ${generateRandomETA()}`}
+                                      >
+                                        <span
+                                          style={{
+                                            fontSize: '12px',
+                                            marginBottom: '6px',
+                                            color: 'black',
+                                            fontWeight: 'bold',
+                                          }}
+                                        >
+                                          {formatDuration(leg.duration)}
+                                        </span>
+
+                                        <div
+                                          style={{
+                                            backgroundColor: color,
+                                            borderRadius: '50%',
+                                            padding: '8px',
+                                            color: 'white',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: '50px',
+                                            height: '50px',
+                                          }}
+                                        >
+                                          {Icon}
+                                        </div>
+                                        <span
+                                          style={{
+                                            fontSize: '12px',
+                                            marginTop: '6px',
+                                            color: 'black',
+                                            fontWeight: 'bold',
+                                          }}
+                                        >
+                                          {Math.round(leg.distance)}m
+                                        </span>
+                                      </div>
+                                      {typeof legIndex === 'number' &&
+                                        legIndex < selectedItinerary.legs.length - 1 && (
+                                          <ArrowForwardIcon style={{ color: 'gray' }} />
+                                        )}
+                                    </React.Fragment>
+                                  );
+                                }
+                              )}
+                            </div>
+
+                            {/* Buttons for saving the route */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
+                            <div className="flex flex-col items-start mb-2 sm:mb-0">
+                              {selectedItinerary.waitingTime > 0 && (
+                                <p className="text-sm font-medium">
+                                  Espera: {formatDuration(selectedItinerary.waitingTime)}
+                                </p>
+                              )}
+                              <div className="flex items-center">
+                                <AccessTimeIcon
+                                  className="text-gray-500 mr-1"
+                                  fontSize="small"
+                                />
+                                <p className="text-sm font-bold">
+                                  {formatDuration(selectedItinerary.duration)}
+                                </p>
+                              </div>
+                            </div>
+                              {/* "Save Route" Button */}
+                              <button
+                                className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
+                                onClick={() =>
+                                  saveRouteToLocalStorage(
+                                    selectedItinerary,
+                                    startName,
+                                    endName
+                                  )
+                                }
+                              >
+                                Guardar Ruta
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-              </div>
-            )
+                      )}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 mt-4">
+                  Sin itinerarios
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

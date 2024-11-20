@@ -46,17 +46,25 @@ export const generateRandomETA = () => {
   return eta.toLocaleTimeString();
 };
 
+export function formatDistance(distance: number) {
+  if (distance >= 1000) {
+    return `${(distance / 1000).toFixed(2)} km`;
+  }
+  return `${Math.round(distance)} m`;
+}
+
+
 export const formatDuration = (durationInSeconds: number) => {
   const hours = Math.floor(durationInSeconds / 3600);
   const minutes = Math.floor((durationInSeconds % 3600) / 60);
   const seconds = durationInSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}h ${minutes}min ${seconds}s`;
+    return `${hours} h ${minutes} min ${seconds} s`;
   } else if (minutes > 0) {
-    return `${minutes}min ${seconds}s`;
+    return `${minutes} min ${seconds} s`;
   } else {
-    return `${seconds}s`;
+    return `${seconds} s`;
   }
 };
 
