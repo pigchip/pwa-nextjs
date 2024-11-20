@@ -182,10 +182,10 @@ const EvidenceDetails: React.FC = () => {
             Estás seguro que deseas validar este incidente? La estación se verá afectada.
           </Typography>
           <div className="mt-4 flex justify-end">
-            <Button onClick={handleModalClose} className="mr-2">
+            <Button onClick={handleModalClose} className="mr-2" style={{ backgroundColor: '#6ABDA6', color: 'white' }}>
               Cancelar
             </Button>
-            <Button onClick={handleModalConfirm} variant="contained" color="primary">
+            <Button onClick={handleModalConfirm} variant="contained" style={{ backgroundColor: '#6ABDA6', color: 'white' }}>
               Confirmar
             </Button>
           </div>
