@@ -45,11 +45,19 @@ export const ITINERARY_QUERY = (
           startTime
           endTime
           from {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
           }
           to {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
@@ -112,11 +120,19 @@ export const ITINERARY_QUERY_WALK_ONLY = (
           startTime
           endTime
           from {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
           }
           to {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
@@ -172,11 +188,19 @@ const generateWalkCombinationQuery = (
           startTime
           endTime
           from {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
           }
           to {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
@@ -261,11 +285,19 @@ export const ITINERARY_QUERY_BUS_SUBWAY_WALK = (
           startTime
           endTime
           from {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
           }
           to {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
@@ -330,11 +362,19 @@ export const ITINERARY_QUERY_SUBWAY_TRAM_WALK = (
           startTime
           endTime
           from {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
           }
           to {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
@@ -407,11 +447,19 @@ export const ITINERARY_QUERY_ALL_MODES_WALK = (
           startTime
           endTime
           from {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
           }
           to {
+            stop{
+              id
+              name
+            }
             name
             lat
             lon
@@ -432,6 +480,26 @@ export const ITINERARY_QUERY_ALL_MODES_WALK = (
               url
             }
           }
+        }
+      }
+    }
+  }
+`;
+
+export const GTFS_EXAMPLE_QUERY = `
+  query {
+    agencies {
+      id
+      name
+      routes {
+        id
+        shortName
+        longName
+        stops {
+          id
+          name
+          lat
+          lon
         }
       }
     }

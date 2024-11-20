@@ -3,6 +3,7 @@ export interface Place {
   name: string;
   lat: number;
   lon: number;
+  stop?: Stop;
 }
 
 export interface LegGeometry {
@@ -31,6 +32,11 @@ export interface Leg {
   duration: number;
   legGeometry?: LegGeometry;
   route?: Route;
+}
+
+export interface Stop {
+  id: string;
+  name: string;
 }
 
 export interface Itinerary {
