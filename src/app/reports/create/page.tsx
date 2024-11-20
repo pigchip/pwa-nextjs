@@ -1,25 +1,26 @@
+// pages/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import { useRouter } from "next/navigation";
+import Layout from "@/components/Layout";
+import { Transport, Line, Station, Register, Status } from "@/types";
+import { useTransportLinesStore } from "@/stores/useTransportLinesStore";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import SubwayIcon from "@mui/icons-material/Subway";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useRouter } from "next/navigation";
-import Layout from "@/components/Layout";
-import { Transport, Line, Station, Register, Status } from "@/types";
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { getMexicoCityDateTime } from "@/utils/date";
-import { useTransportLinesStore } from "@/stores/useTransportLinesStore";
-import { TransportName } from "@/types/transport";
 import { incidents } from "@/utils/incidents";
+import { useLineStationsStore } from "@/stores/useLineStations";
+import { TransportName } from "@/types/transport";
 
 const CreateEvidenceComponent: React.FC = () => {
   const router = useRouter();
   const [transports, setTransports] = useState<Transport[]>([]);
-  const [stations, setStations] = useState<Station[]>([]);
   const [selectedTransport, setSelectedTransport] = useState<string | null>(
     null
   );
@@ -33,6 +34,7 @@ const CreateEvidenceComponent: React.FC = () => {
   const [stationsDisabled, setStationsDisabled] = useState<boolean>(false);
 
   const { lines, fetchTransportLines } = useTransportLinesStore();
+  const { lineStations, fetchStationsForLine } = useLineStationsStore();
 
   useEffect(() => {
     fetch("/api/transports")
@@ -42,23 +44,15 @@ const CreateEvidenceComponent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchStations = () => {
-      if (selectedLine && stations.length === 0) {
-        fetch(`/api/lines/${selectedLine.id}/stations`)
-          .then((response) => response.json())
-          .then((data) => setStations(data))
-          .catch((error) => console.error("Error fetching stations:", error));
-      }
-    };
-
-    fetchStations();
-  }, [selectedLine, stations.length]);
+    if (lines.length > 0) {
+      lines.forEach((line) => fetchStationsForLine(line.id));
+    }
+  }, [lines, fetchStationsForLine]);
 
   const handleTransportSelect = async (transportName: string) => {
     setSelectedTransport(transportName);
     setSelectedLine(null);
     setSelectedStation(null);
-    setStations([]);
     setStationsDisabled(
       [
         "Red de Transporte de Pasajeros, Servicio Ordinario",
@@ -76,11 +70,6 @@ const CreateEvidenceComponent: React.FC = () => {
   const handleLineSelect = async (line: Line) => {
     setSelectedLine(line);
     setSelectedStation(null);
-    setStations([]);
-
-    const response = await fetch(`/api/lines/${line.id}/stations`);
-    const data = await response.json();
-    setStations(data);
   };
 
   const handleBackClick = () => {
@@ -148,7 +137,6 @@ const CreateEvidenceComponent: React.FC = () => {
     setSelectedLine(null);
     setSelectedStation(null);
     setSelectedIncident(null);
-    setStations([]);
   };
 
   return (
@@ -207,7 +195,23 @@ const CreateEvidenceComponent: React.FC = () => {
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                       onClick={() => handleLineSelect(line)}
                     >
-                      {line.name}
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">
+                          {line.name}
+                          {lineStations[line.id] &&
+                            lineStations[line.id].length > 0 && (
+                              <span className="text-xs text-gray-500 ml-2">
+                                ({lineStations[line.id][0].name} -{" "}
+                                {
+                                  lineStations[line.id][
+                                    lineStations[line.id].length - 1
+                                  ].name
+                                }
+                                )
+                              </span>
+                            )}
+                        </span>
+                      </div>
                     </button>
                   )}
                 </MenuItem>
@@ -231,20 +235,21 @@ const CreateEvidenceComponent: React.FC = () => {
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
             <MenuItems className="absolute mt-2 w-full bg-white shadow-lg rounded-md z-10">
-              {stations.map((station, index) => (
-                <MenuItem key={index}>
-                  {({ focus }) => (
-                    <button
-                      className={`${
-                        focus ? "bg-gray-200" : ""
-                      } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                      onClick={() => setSelectedStation(station)}
-                    >
-                      {station.name}
-                    </button>
-                  )}
-                </MenuItem>
-              ))}
+              {selectedLine &&
+                lineStations[selectedLine.id]?.map((station, index) => (
+                  <MenuItem key={index}>
+                    {({ focus }) => (
+                      <button
+                        className={`${
+                          focus ? "bg-gray-200" : ""
+                        } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                        onClick={() => setSelectedStation(station)}
+                      >
+                        {station.name}
+                      </button>
+                    )}
+                  </MenuItem>
+                ))}
             </MenuItems>
           </Menu>
 
