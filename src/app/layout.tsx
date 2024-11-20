@@ -29,6 +29,7 @@ export default function RootLayout({
       fetchUserDetails(email);
     } else {
       console.error("Email not found in localStorage");
+      setStoredEmail("iespinosas1700@alumno.ipn.mx");
     }
   }, [fetchUserDetails]);
 
