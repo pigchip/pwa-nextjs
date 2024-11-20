@@ -7,6 +7,8 @@ import "leaflet/dist/leaflet.css";
 import { ReportsProvider } from "@/contexts/ReportsContext";
 import { SelectedItineraryProvider } from "@/contexts/SelectedItineraryContext";
 import { RoleProvider } from "@/contexts/RoleContext";
+import { Knock } from "@knocklabs/node";
+import { useEffect, useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,6 +17,35 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const [storedEmail, setStoredEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const email = localStorage.getItem('email');
+    if (email) {
+      setStoredEmail(email);
+    } else {
+      console.error("Email not found in localStorage");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (storedEmail) {
+      const knockClient = new Knock(process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY);
+      knockClient.users.identify(storedEmail.toString(), {
+        email: storedEmail ?? undefined,
+      }).then(knockUser => {
+        console.log(knockUser);
+      }).catch(error => {
+        console.error("Error identifying user with Knock:", error);
+      });
+    }
+  }, [storedEmail]);
+
+  if (!storedEmail) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <html lang="en" className={inter.className}>
       <head>
