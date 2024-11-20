@@ -32,6 +32,7 @@ export interface Leg {
   duration: number;
   legGeometry?: LegGeometry;
   route?: Route;
+  stops?: Stop[];
 }
 
 export interface Stop {

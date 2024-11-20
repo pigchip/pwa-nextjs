@@ -199,8 +199,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       if (a.agencyName > b.agencyName) return 1;
       if (a.routeName < b.routeName) return -1;
       if (a.routeName > b.routeName) return 1;
-      if (a.name < b.name) return -1;
-      if (a.name > b.name) return 1;
+      if (a.id < b.id) return -1;
+      if (a.id > b.id) return 1;
       return 0;
     });
 
@@ -208,39 +208,94 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   }, [selectedRoutes]);
 
   useEffect(() => {
-    let filtered = itineraryData;
-  
-    // Excluir itinerarios de líneas específicas seleccionadas
-    if (selectedRoutes.length > 0) {
-      filtered = filtered.filter((itinerary) =>
-        itinerary.legs.every(
-          (leg) =>
-            !(
-              leg.route?.id &&
-              selectedRoutes.includes(leg.route.id)
-            )
-        )
-      );
+    if (!routeData) {
+      setFilteredItineraries(itineraryData);
+      return;
     }
   
-    // Excluir itinerarios que pasen por estaciones específicas en las líneas correspondientes
-    if (selectedStations.length > 0) {
-      filtered = filtered.filter((itinerary) =>
-        itinerary.legs.every((leg) => {
-          const isExcludedStation =
-            (leg.from.stop?.id && selectedStations.includes(leg.from.stop.id)) ||
-            (leg.to.stop?.id && selectedStations.includes(leg.to.stop.id));
-          const isAssociatedRoute =
-            leg.route?.id && selectedRoutes.includes(leg.route.id);
+    // Conjuntos para almacenar las agencias y rutas a excluir
+    const agenciesToExclude = new Set<string>();
+    const routesToExclude = new Set<string>();
+    const routesToExcludeWithStation = new Set<string>();
   
-          // Excluir itinerario solo si la estación está en una línea seleccionada
-          return !(isExcludedStation && isAssociatedRoute);
-        })
-      );
-    }
+    // Procesar las agencias seleccionadas
+    selectedAgencies.forEach(agencyId => {
+      const agency = routeData.find(a => a.id === agencyId);
+      const agencyRoutes = agency?.routes.map(r => r.id) || [];
+      
+      // Rutas seleccionadas dentro de la agencia
+      const selectedRoutesForAgency = selectedRoutes.filter(routeId => agencyRoutes.includes(routeId));
+  
+      if (selectedRoutesForAgency.length === 0) {
+        // Si no se seleccionaron rutas dentro de la agencia, excluir toda la agencia
+        agenciesToExclude.add(agencyId);
+      } else {
+        // Si se seleccionaron rutas dentro de la agencia
+        selectedRoutesForAgency.forEach(routeId => {
+          if (selectedStations.length > 0) {
+            // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
+            routesToExcludeWithStation.add(routeId);
+          } else {
+            // Si no se seleccionaron estaciones, excluir completamente esas rutas
+            routesToExclude.add(routeId);
+          }
+        });
+      }
+    });
+  
+    // Procesar las rutas seleccionadas que no están asociadas a ninguna agencia seleccionada
+    const selectedRoutesNotInAgencies = selectedRoutes.filter(routeId => {
+      return !selectedAgencies.some(agencyId => {
+        const agency = routeData.find(a => a.id === agencyId);
+        const agencyRoutes = agency?.routes.map(r => r.id) || [];
+        return agencyRoutes.includes(routeId);
+      });
+    });
+  
+    selectedRoutesNotInAgencies.forEach(routeId => {
+      if (selectedStations.length > 0) {
+        // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
+        routesToExcludeWithStation.add(routeId);
+      } else {
+        // Si no se seleccionaron estaciones, excluir completamente esas rutas
+        routesToExclude.add(routeId);
+      }
+    });
+  
+    // Filtrar los itinerarios
+    const filtered = itineraryData.filter(itinerary => {
+      // Excluir itinerarios que tengan al menos un leg que coincida con los criterios de exclusión
+      return !itinerary.legs.some(leg => {
+        const agencyId = leg.route?.agency?.id;
+        const routeId = leg.route?.id;
+        const stationIds = leg.stops ? leg.stops.map(stop => stop.id) : [];
+  
+        // 1. Excluir itinerarios por agencia completa
+        if (agencyId && agenciesToExclude.has(agencyId)) {
+          return true;
+        }
+  
+        // 2. Excluir itinerarios por rutas completas
+        if (routeId && routesToExclude.has(routeId)) {
+          return true;
+        }
+  
+        // 3. Excluir itinerarios por rutas y estaciones seleccionadas
+        if (routeId && routesToExcludeWithStation.has(routeId)) {
+          // Verificar si el itinerario pasa por alguna de las estaciones seleccionadas
+          if (stationIds.some(id => selectedStations.includes(id))) {
+            return true;
+          }
+        }
+  
+        // Si no coincide con ningún criterio de exclusión
+        return false;
+      });
+    });
   
     setFilteredItineraries(filtered);
-  }, [selectedRoutes, selectedStations, itineraryData]);  
+  }, [selectedAgencies, selectedRoutes, selectedStations, itineraryData, routeData]);
+   
 
   useEffect(() => {
     // Update start and end locations
@@ -585,107 +640,109 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         </div>
 
         {/* Comboboxes */}
-        <div className="p-4 bg-white shadow-md">
-          {/* Combobox de agencias */}
-          <Autocomplete
-            multiple
-            options={agencyList}
-            disableCloseOnSelect
-            getOptionLabel={(option) => option.name}
-            onChange={(event, value) => {
-              setSelectedAgencies(value.map((agency) => agency.id));
-              // Reset selected routes and stations when agencies change
-              setSelectedRoutes([]);
-              setSelectedStations([]);
-            }}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<Check fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+        {isExpanded && (
+          <div className="p-4 bg-white shadow-md">
+            {/* Combobox de agencias */}
+            <Autocomplete
+              multiple
+              options={agencyList}
+              disableCloseOnSelect
+              getOptionLabel={(option) => option.name}
+              onChange={(event, value) => {
+                setSelectedAgencies(value.map((agency) => agency.id));
+                // Reset selected routes and stations when agencies change
+                setSelectedRoutes([]);
+                setSelectedStations([]);
+              }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<Check fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.name}
+                </li>
+              )}
+              style={{ width: '100%', marginBottom: '16px' }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Excluir por Agencia"
+                  placeholder="Selecciona agencias"
                 />
-                {option.name}
-              </li>
-            )}
-            style={{ width: '100%', marginBottom: '16px' }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="outlined"
-                label="Excluir por Agencia"
-                placeholder="Selecciona agencias"
-              />
-            )}
-          />
+              )}
+            />
 
-          {/* Combobox de rutas */}
-          <Autocomplete
-            multiple
-            options={routeList}
-            groupBy={(option) => option.agencyName}
-            disableCloseOnSelect
-            getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
-            onChange={(event, value) => {
-              setSelectedRoutes(value.map((route) => route.id));
-              // Reset selected stations when routes change
-              setSelectedStations([]);
-            }}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<Check fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+            {/* Combobox de rutas */}
+            <Autocomplete
+              multiple
+              options={routeList}
+              groupBy={(option) => option.agencyName}
+              disableCloseOnSelect
+              getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
+              onChange={(event, value) => {
+                setSelectedRoutes(value.map((route) => route.id));
+                // Reset selected stations when routes change
+                setSelectedStations([]);
+              }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<Check fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.shortName} - {option.longName}
+                </li>
+              )}
+              style={{ width: '100%', marginBottom: '16px' }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Excluir por Línea/Ruta"
+                  placeholder="Selecciona rutas"
                 />
-                {option.shortName} - {option.longName}
-              </li>
-            )}
-            style={{ width: '100%', marginBottom: '16px' }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="outlined"
-                label="Excluir por Línea/Ruta"
-                placeholder="Selecciona rutas"
-              />
-            )}
-          />
+              )}
+            />
 
-          {/* Combobox de estaciones */}
-          <Autocomplete
-            multiple
-            options={stationList}
-            groupBy={(option) => `${option.agencyName} - ${option.routeName}`}
-            disableCloseOnSelect
-            getOptionLabel={(option) => option.name}
-            onChange={(event, value) => {
-              setSelectedStations(value.map((station) => station.id));
-            }}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<Check fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+            {/* Combobox de estaciones */}
+            <Autocomplete
+              multiple
+              options={stationList}
+              groupBy={(option) => `${option.agencyName} - ${option.routeName}`}
+              disableCloseOnSelect
+              getOptionLabel={(option) => option.name}
+              onChange={(event, value) => {
+                setSelectedStations(value.map((station) => station.id));
+              }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<Check fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.name}
+                </li>
+              )}
+              style={{ width: '100%' }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Excluir por Estación"
+                  placeholder="Selecciona estaciones"
                 />
-                {option.name}
-              </li>
-            )}
-            style={{ width: '100%' }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="outlined"
-                label="Excluir por Estación"
-                placeholder="Selecciona estaciones"
-              />
-            )}
-          />
-        </div>
+              )}
+            />
+          </div>
+        )}
 
         <div className="p-4 flex flex-col">
           {/* Menu Content */}
