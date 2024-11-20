@@ -10,6 +10,7 @@ export interface LegGeometry {
 }
 
 export interface Route {
+  id: string;
   shortName: string;
   longName: string;
   color?: string;
