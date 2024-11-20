@@ -12,8 +12,22 @@ import MapIcon from '@mui/icons-material/Map';
 import { Itinerary, ItineraryMapComponentProps, Leg } from '@/types/map';
 import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
 import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
-import { formatDuration, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
-import { ITINERARY_QUERY } from '@/queries/queries';
+import { formatDuration, formatTimeWithAmPm, generateRandomETA, getColorForLeg, getPolylineStyle, saveRouteToLocalStorage, toggleExpand } from '@/utils/itineraryUtils';
+import {
+  ITINERARY_QUERY,
+  ITINERARY_QUERY_WALK_ONLY,
+  ITINERARY_QUERY_BUS_WALK,
+  ITINERARY_QUERY_SUBWAY_WALK,
+  ITINERARY_QUERY_TRAM_WALK,
+  ITINERARY_QUERY_RAIL_WALK,
+  ITINERARY_QUERY_FERRY_WALK,
+  ITINERARY_QUERY_GONDOLA_WALK,
+  ITINERARY_QUERY_CABLE_CAR_WALK,
+  ITINERARY_QUERY_FUNICULAR_WALK,
+  ITINERARY_QUERY_BUS_SUBWAY_WALK,
+  ITINERARY_QUERY_SUBWAY_TRAM_WALK,
+  ITINERARY_QUERY_ALL_MODES_WALK
+} from '@/queries/queries';
 import { fetchItineraries } from '@/utils/fetchItineraries';
 import { getTransportIcon } from '@/utils/getTransportIcon';
 
@@ -46,37 +60,21 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
 
   useEffect(() => {
-    console.log('Received startLocation from AutoComplete:', startLocation);
-    console.log('Received endLocation from AutoComplete:');
-    
-    if (endLocation) {
-      Object.entries(endLocation).forEach(([key, value]) => {
-        console.log(`${key}:`, value);
-      });
-    }
-
+    // Update start and end locations
     if (startLocation) {
       setFromLat(startLocation.lat.toString());
       setFromLon(startLocation.lon.toString());
-      if (startLocation.display_name) {
-        setStartName(startLocation.display_name);
-      } else {
-        console.error("startLocation.display_name no está definido");
-      }
+      setStartName(startLocation.display_name || startLocation.name || 'Inicio');
     } else if (userLocation && !startLocation) {
       setFromLat(userLocation.lat.toString());
       setFromLon(userLocation.lon.toString());
-      setStartName("Mi Ubicación");
+      setStartName('Mi Ubicación');
     }
 
     if (endLocation) {
       setToLat(endLocation.lat.toString());
       setToLon(endLocation.lon.toString());
-      if (endLocation.display_name) {
-        setEndName(endLocation.display_name);
-      } else {
-        console.error("endLocation.display_name no está definido");
-      }
+      setEndName(endLocation.display_name || endLocation.name || 'Destino');
     }
   }, [startLocation, endLocation, userLocation]);
 
@@ -101,38 +99,79 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   }, [startLocation]);
 
-  const fetchFastestItinerary = useCallback(async (maxTransfers: number): Promise<Itinerary | null> => {
-    const currentDate = new Date().toISOString().split('T')[0];
-    const currentTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
-
-    const query = ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers);
-
-    const itinerary = await fetchItineraries(query);
-
-    return itinerary;
-  }, [fromLat, fromLon, toLat, toLon]);
+  function generateSimplifiedItineraryKey(itinerary: Itinerary): string {
+    // Clave simplificada basada en el modo de transporte y las ubicaciones de origen y destino
+    return `${itinerary.legs.map((leg) => `${leg.mode}-${leg.from.name}-${leg.to.name}`).join('|')}`;
+  }
+  
+  function removeDuplicateItineraries(itineraries: Itinerary[]) {
+    const seen = new Set();
+    return itineraries.filter(itinerary => {
+      const key = generateSimplifiedItineraryKey(itinerary);
+      if (seen.has(key)) {
+        return false; // Itinerario repetido
+      } else {
+        seen.add(key);
+        return true; // Itinerario único
+      }
+    });
+  }
+  
 
   const fetchAllItineraries = useCallback(async () => {
     if (!fromLat || !fromLon || !toLat || !toLon) {
       return;
     }
-
+  
     setLoading(true);
     setIsExpanded(true);
-
-    const [walkItinerary, oneTransferItinerary, twoTransferItinerary] = await Promise.all([
-      fetchFastestItinerary(0),
-      fetchFastestItinerary(1),
-      fetchFastestItinerary(2),
-    ]);
-
-    const sortedItineraries = [walkItinerary, oneTransferItinerary, twoTransferItinerary]
-      .filter(Boolean)
-      .sort((a, b) => (a && b ? a.duration - b.duration : 0));
-
-    setItineraryData(sortedItineraries as Itinerary[]);
-    setLoading(false);
-  }, [fromLat, fromLon, toLat, toLon, fetchFastestItinerary, setLoading, setIsExpanded, setItineraryData]);
+  
+    const currentDate = new Date().toLocaleDateString('en-US'); // Formato ISO (YYYY-MM-DD)
+    console.log('Current Local Date:', currentDate);
+    const currentTime = new Date().toLocaleTimeString('en-US', { hour12: true });
+    console.log('Current Local Time:', currentTime);    
+       
+  
+    const maxTransfers = 10; // Increase to allow more transfers
+    const numItineraries = 30; // Fetch more itineraries
+  
+    try {
+      // Fetch itineraries for different transport modes
+      const queries = [
+        ITINERARY_QUERY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_WALK_ONLY(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_BUS_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_SUBWAY_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_TRAM_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_RAIL_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_FERRY_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_GONDOLA_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_CABLE_CAR_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_FUNICULAR_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_BUS_SUBWAY_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_SUBWAY_TRAM_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+        ITINERARY_QUERY_ALL_MODES_WALK(Number(fromLat), Number(fromLon), Number(toLat), Number(toLon), currentDate, currentTime, maxTransfers, numItineraries),
+      ];
+  
+      // Execute all queries and collect responses
+      const results = await Promise.all(queries.map((query) => fetchItineraries(query)));
+  
+      // Combine all itineraries
+      let allItineraries = results.flat();
+  
+      // Filtrar itinerarios únicos
+      const uniqueItineraries = removeDuplicateItineraries(allItineraries);
+  
+      // Sort itineraries by duration (fastest to longest)
+      const sortedItineraries = uniqueItineraries.sort((a, b) => a.duration - b.duration);
+  
+      setItineraryData(sortedItineraries);
+    } catch (error) {
+      console.error('Error fetching itineraries:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [fromLat, fromLon, toLat, toLon, setLoading, setIsExpanded, setItineraryData]);
 
   useEffect(() => {
     if (fromLat && fromLon && toLat && toLon) {
@@ -141,18 +180,18 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   }, [fromLat, fromLon, toLat, toLon, fetchAllItineraries]);
 
   const handlePlotItinerary = (itinerary: Itinerary) => {
-    if(!itinerary) {
-    setSelectedItinerary(itinerary);
+    if (!itinerary) {
+      setSelectedItinerary(itinerary);
     } else {
       itinerary.startNameIti = startName;
       itinerary.endNameIti = endName;
 
       setSelectedItinerary(itinerary);
-    }  
-    console.log("Itinerario seleccionado para trazar:", itinerary);
+    }
+    console.log('Itinerario seleccionado para trazar:', itinerary);
     setTimeout(() => {
       setIsExpanded(false);
-    }, 50); // Ajusta el tiempo según sea necesario
+    }, 50); // Adjust the timing as necessary
     setExpandedLegIndex(null);
   };
 
@@ -164,7 +203,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className={`flex-grow min-h-[100px] z-10 ${isExpanded ? 'h-[145px]' : 'h-[420px]'}`}>
+      <div
+        className={`flex-grow min-h-[100px] z-10 ${
+          isExpanded ? 'h-[145px]' : 'h-[420px]'
+        }`}
+      >
         <MapContainer
           center={
             startLocation
@@ -180,7 +223,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
           />
-  
+
           {startLocation && (
             <Marker position={[startLocation.lat, startLocation.lon]} icon={startIcon}>
               <Popup>Inicio</Popup>
@@ -196,34 +239,42 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               <Popup>Ubicación actual</Popup>
             </Marker>
           )}
-  
-          {selectedItinerary && selectedItinerary.legs.map((leg: Leg, legIndex: React.Key | null | undefined) => {
-            console.log("Leg geometry:", leg.legGeometry);
-            if (leg.legGeometry?.points) {
-              const decodedPolyline = polyline.decode(leg.legGeometry.points);
-              return (
-                <Polyline
-                  key={legIndex}
-                  positions={decodedPolyline.map(coord => [coord[0], coord[1]])}
-                  pathOptions={getPolylineStyle(leg)}
-                />
-              );
-            }
-            return null;
-          })}
-  
+
+          {selectedItinerary &&
+            selectedItinerary.legs.map((leg: Leg, legIndex: React.Key | null | undefined) => {
+              if (leg.legGeometry?.points) {
+                const decodedPolyline = polyline.decode(leg.legGeometry.points);
+                return (
+                  <Polyline
+                    key={legIndex}
+                    positions={decodedPolyline.map((coord) => [coord[0], coord[1]])}
+                    pathOptions={getPolylineStyle(leg)}
+                  />
+                );
+              }
+              return null;
+            })}
+
           {/* Custom Marker */}
           {customMarker && (
             <Marker position={[customMarker.lat, customMarker.lon]}>
               <Popup>Custom Marker</Popup>
             </Marker>
           )}
-  
-          <MapView startLocation={startLocation} endLocation={endLocation} userLocation={userLocation} />
+
+          <MapView
+            startLocation={startLocation}
+            endLocation={endLocation}
+            userLocation={userLocation}
+          />
         </MapContainer>
       </div>
-  
-      <div className={`overflow-y-auto bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg flex-none ${isExpanded ? 'h-[454px]' : 'h-[180px]'}`}>
+
+      <div
+        className={`overflow-y-auto bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg flex-none ${
+          isExpanded ? 'h-[454px]' : 'h-[180px]'
+        }`}
+      >
         <div
           className="flex justify-center items-center cursor-pointer bg-gray-200"
           onClick={() => toggleExpand(isExpanded, setIsExpanded)}
@@ -235,18 +286,18 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           )}
         </div>
         <div className="p-4 flex flex-col">
-          {/* Contenido del menú */}
+          {/* Menu Content */}
           {loading ? (
             <p className="text-center">Cargando itinerarios...</p>
           ) : (
             itineraryData.length > 0 && (
               <div className="space-y-4 overflow-y-auto">
-                {/* Si el menú está expandido, mostrar todos los itinerarios */}
+                {/* If the menu is expanded, show all itineraries */}
                 {isExpanded
                   ? itineraryData.map((itinerary, index) => (
                       <div key={index} className="bg-green-100 p-3 rounded-lg max-w-full">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                          {/* Visualización de los tramos con íconos */}
+                          {/* Visualization of legs with icons */}
                           <div className="flex items-center flex-wrap">
                             {itinerary.legs.map((leg, legIndex) => {
                               const color = getColorForLeg(leg);
@@ -258,11 +309,12 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       display: 'flex',
                                       flexDirection: 'column',
                                       alignItems: 'center',
-                                      marginRight: legIndex < itinerary.legs.length - 1 ? '12px' : '0',
+                                      marginRight:
+                                        legIndex < itinerary.legs.length - 1 ? '12px' : '0',
                                     }}
                                     title={`ETA: ${generateRandomETA()}`}
                                   >
-                                    {/* Duración arriba del ícono */}
+                                    {/* Duration above the icon */}
                                     <span
                                       style={{
                                         fontSize: '12px',
@@ -273,7 +325,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                     >
                                       {formatDuration(leg.duration)}
                                     </span>
-  
+
                                     <div
                                       style={{
                                         backgroundColor: color,
@@ -288,7 +340,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                     >
                                       {Icon}
                                     </div>
-                                    {/* Distancia debajo del ícono */}
+                                    {/* Distance below the icon */}
                                     <span
                                       style={{
                                         fontSize: '12px',
@@ -307,16 +359,25 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               );
                             })}
                           </div>
-  
-                          {/* Botones de detalles y mapear */}
+
+                          {/* Buttons for details and mapping */}
                           <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                            <div className="flex items-center mb-2 sm:mb-0">
-                              <AccessTimeIcon className="text-gray-500 mr-1" fontSize="small" />
+                          <div className="flex flex-col items-start mb-2 sm:mb-0">
+                            {itinerary.waitingTime > 0 && (
+                              <p className="text-sm font-medium">
+                                Espera: {formatDuration(itinerary.waitingTime)}
+                              </p>
+                            )}
+                            <div className="flex items-center">
+                              <AccessTimeIcon
+                                className="text-gray-500 mr-1"
+                                fontSize="small"
+                              />
                               <p className="text-sm font-bold">
                                 {formatDuration(itinerary.duration)}
                               </p>
                             </div>
-  
+                          </div>
                             <button
                               className="bg-blue-500 text-white p-2 rounded w-full sm:w-auto mb-2 sm:mb-0 flex items-center justify-center"
                               onClick={() => handleExpandDetails(index)}
@@ -333,10 +394,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                             </button>
                           </div>
                         </div>
-                        {/* Mostrar detalles si está expandido */}
+                        {/* Show details if expanded */}
                         {expandedLegIndex === index && (
                           <div className="mt-2">
-                            {/* Controles del slider */}
+                            {/* Slider controls */}
                             <div className="flex items-center justify-between">
                               <button
                                 onClick={() =>
@@ -351,7 +412,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                 Anterior
                               </button>
                               <div className="flex-1 mx-4">
-                                {/* Mostrar el tramo actual */}
+                                {/* Show current leg */}
                                 {itinerary.legs[currentLegIndex] && (
                                   <div
                                     className="rounded-lg p-4 text-white"
@@ -361,7 +422,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       ),
                                     }}
                                   >
-                                    {/* Detalles del tramo */}
+                                    {/* Leg details */}
                                     {itinerary.legs[currentLegIndex].route?.agency && (
                                       <p>
                                         <strong>Agencia:</strong>{' '}
@@ -378,11 +439,20 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                     </p>
                                     <p>
                                       <strong>Distancia:</strong>{' '}
-                                      {Math.round(itinerary.legs[currentLegIndex].distance)} metros
+                                      {Math.round(itinerary.legs[currentLegIndex].distance)}{' '}
+                                      metros
                                     </p>
                                     <p>
                                       <strong>Duración:</strong>{' '}
                                       {formatDuration(itinerary.legs[currentLegIndex].duration)}
+                                    </p>
+                                    <p>
+                                      <strong>Hora al empezar:</strong>{' '}
+                                      {formatTimeWithAmPm(itinerary.legs[currentLegIndex].startTime)}
+                                    </p>
+                                    <p>
+                                      <strong>Hora al terminar :</strong>{' '}
+                                      {formatTimeWithAmPm(itinerary.legs[currentLegIndex].endTime)}
                                     </p>
                                   </div>
                                 )}
@@ -398,13 +468,15 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                 Siguiente
                               </button>
                             </div>
-                            {/* Indicador de paginación */}
+                            {/* Pagination indicator */}
                             <div className="flex justify-center mt-2">
                               {itinerary.legs.map((_, idx) => (
                                 <div
                                   key={idx}
                                   className={`h-2 w-2 rounded-full mx-1 ${
-                                    currentLegIndex === idx ? 'bg-blue-500' : 'bg-gray-300'
+                                    currentLegIndex === idx
+                                      ? 'bg-blue-500'
+                                      : 'bg-gray-300'
                                   }`}
                                 />
                               ))}
@@ -413,88 +485,106 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                         )}
                       </div>
                     ))
-                  : 
-                  // Si el menú está contraído, solo mostrar el itinerario seleccionado
+                  : // If the menu is collapsed, only show the selected itinerary
                     selectedItinerary && (
                       <div className="bg-green-100 p-3 rounded-lg max-w-full">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                          {/* Visualización de los tramos con íconos */}
+                          {/* Visualization of legs with icons */}
                           <div className="flex items-center flex-wrap">
-                            {selectedItinerary.legs.map((leg: Leg, legIndex: React.Key | null | undefined) => {
-                              const color = getColorForLeg(leg);
-                              const Icon = getTransportIcon(leg.mode);
-                              return (
-                                <React.Fragment key={legIndex}>
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      alignItems: 'center',
-                                      marginRight: (legIndex as number) < selectedItinerary.legs.length - 1 ? '12px' : '0',
-                                    }}
-                                    title={`ETA: ${generateRandomETA()}`}
-                                  >
-                                    <span
-                                      style={{
-                                        fontSize: '12px',
-                                        marginBottom: '6px',
-                                        color: 'black',
-                                        fontWeight: 'bold',
-                                      }}
-                                    >
-                                      {formatDuration(leg.duration)}
-                                    </span>
-  
+                            {selectedItinerary.legs.map(
+                              (leg: Leg, legIndex: React.Key | null | undefined) => {
+                                const color = getColorForLeg(leg);
+                                const Icon = getTransportIcon(leg.mode);
+                                return (
+                                  <React.Fragment key={legIndex}>
                                     <div
                                       style={{
-                                        backgroundColor: color,
-                                        borderRadius: '50%',
-                                        padding: '8px',
-                                        color: 'white',
                                         display: 'flex',
+                                        flexDirection: 'column',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        width: '50px',
-                                        height: '50px',
+                                        marginRight:
+                                          (legIndex as number) <
+                                          selectedItinerary.legs.length - 1
+                                            ? '12px'
+                                            : '0',
                                       }}
+                                      title={`ETA: ${generateRandomETA()}`}
                                     >
-                                      {Icon}
+                                      <span
+                                        style={{
+                                          fontSize: '12px',
+                                          marginBottom: '6px',
+                                          color: 'black',
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {formatDuration(leg.duration)}
+                                      </span>
+
+                                      <div
+                                        style={{
+                                          backgroundColor: color,
+                                          borderRadius: '50%',
+                                          padding: '8px',
+                                          color: 'white',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          width: '50px',
+                                          height: '50px',
+                                        }}
+                                      >
+                                        {Icon}
+                                      </div>
+                                      <span
+                                        style={{
+                                          fontSize: '12px',
+                                          marginTop: '6px',
+                                          color: 'black',
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {Math.round(leg.distance)}m
+                                      </span>
                                     </div>
-                                    <span
-                                      style={{
-                                        fontSize: '12px',
-                                        marginTop: '6px',
-                                        color: 'black',
-                                        fontWeight: 'bold',
-                                      }}
-                                    >
-                                      {Math.round(leg.distance)}m
-                                    </span>
-                                  </div>
-                                  {typeof legIndex === 'number' && legIndex < selectedItinerary.legs.length - 1 && (
-                                    <ArrowForwardIcon style={{ color: 'gray' }} />
-                                  )}
-                                </React.Fragment>
-                              );
-                            })}
+                                    {typeof legIndex === 'number' &&
+                                      legIndex < selectedItinerary.legs.length - 1 && (
+                                        <ArrowForwardIcon style={{ color: 'gray' }} />
+                                      )}
+                                  </React.Fragment>
+                                );
+                              }
+                            )}
                           </div>
-  
-                          {/* Botones de detalles y mapear ruta guardada */}
+
+                          {/* Buttons for saving the route */}
                           <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
-                            <div className="flex items-center mb-2 sm:mb-0">
-                              <AccessTimeIcon className="text-gray-500 mr-1" fontSize="small" />
+                          <div className="flex flex-col items-start mb-2 sm:mb-0">
+                            {selectedItinerary.waitingTime > 0 && (
+                              <p className="text-sm font-medium">
+                                Espera: {formatDuration(selectedItinerary.waitingTime)}
+                              </p>
+                            )}
+                            <div className="flex items-center">
+                              <AccessTimeIcon
+                                className="text-gray-500 mr-1"
+                                fontSize="small"
+                              />
                               <p className="text-sm font-bold">
                                 {formatDuration(selectedItinerary.duration)}
                               </p>
                             </div>
-                            {/* Botón "Guardar Ruta" */}
+                          </div>
+                            {/* "Save Route" Button */}
                             <button
                               className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                              onClick={() => saveRouteToLocalStorage(
-                                selectedItinerary,
-                                startName,
-                                endName
-                              )}
+                              onClick={() =>
+                                saveRouteToLocalStorage(
+                                  selectedItinerary,
+                                  startName,
+                                  endName
+                                )
+                              }
                             >
                               Guardar Ruta
                             </button>
@@ -509,6 +599,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       </div>
     </div>
   );
-}
+};
 
 export default ItineraryMapComponent;

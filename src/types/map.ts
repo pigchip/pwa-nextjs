@@ -41,6 +41,7 @@ export interface Itinerary {
   legs: Leg[];
   startNameIti: string;
   endNameIti: string;
+  waitingTime: number;
 }
 
 export interface PlanResponse {

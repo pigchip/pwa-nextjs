@@ -49,8 +49,31 @@ export const generateRandomETA = () => {
 export const formatDuration = (durationInSeconds: number) => {
   const hours = Math.floor(durationInSeconds / 3600);
   const minutes = Math.floor((durationInSeconds % 3600) / 60);
-  return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+  const seconds = durationInSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}min ${seconds}s`;
+  } else if (minutes > 0) {
+    return `${minutes}min ${seconds}s`;
+  } else {
+    return `${seconds}s`;
+  }
 };
+
+export const formatTimeWithAmPm = (timeInMilliseconds: number) => {
+  const date = new Date(timeInMilliseconds);
+
+  // Convertir a hora local
+  let hours = date.getHours(); // getHours() obtiene la hora local
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+
+  const amPm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12; // Convierte 0 horas en 12 para formato 12 horas
+
+  return `${hours}:${minutes}:${seconds} ${amPm}`;
+};
+
 
 export const getColorForLeg = (leg: { route?: { color?: string }, mode: string }) => {
   return leg.route?.color ? `#${leg.route.color}` : leg.mode === 'WALK' ? '#00BFFF' : 'gray';
