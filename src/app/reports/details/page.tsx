@@ -8,7 +8,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { useState } from "react";
 import { Status } from "@/types/register";
 import ConfirmModal from "@/components/ConfirmModal";
-import { Knock as KnockNode } from "@knocklabs/node";
+import { Knock } from "@knocklabs/node";
 
 const EvidenceDetails: React.FC = () => {
   const { selectedReport, setSelectedReport, updateReport } = useReports();
@@ -18,15 +18,12 @@ const EvidenceDetails: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const knockApiKey = process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY;
-  const knockPublicKey = process.env.NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY;
+
   if (!knockApiKey) {
     throw new Error("NEXT_PUBLIC_KNOCK_SECRET_API_KEY is not defined");
   }
-  if (!knockPublicKey) {
-    throw new Error("NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY is not defined");
-  }
 
-  const knockNode = new KnockNode(knockApiKey);
+  const knockNode = new Knock(knockApiKey);
 
   const handleBack = () => {
     if (role === "supervisor") {
