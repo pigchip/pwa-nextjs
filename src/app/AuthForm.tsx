@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Tutorial from './Tutorial';
 import React from 'react';
 import { useRole } from '@/contexts/RoleContext';
+import useUserStore from '@/stores/useUser';
 
 interface ModalContent {
   title: string;
@@ -157,6 +158,8 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     setShowModal(true);
   };
 
+  const { fetchUserDetails } = useUserStore();
+
   // Función para manejar el envío del formulario de inicio de sesión de Usuario
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -226,6 +229,9 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             setEmail('');
             setPassword('');
             setRole("user");
+
+            // Obtener detalles del usuario
+            await fetchUserDetails(email);
           }
         } else {
           // Error en las credenciales
