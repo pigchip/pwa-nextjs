@@ -92,7 +92,7 @@ const FooterComponent: React.FC = () => {
             <button
               onClick={() => handleNavigation("/supervisor")}
               className={`btn py-4 min-h-[60px] transition-colors w-full ${getButtonClass(
-                "/supervisor"
+                ["/supervisor", "/reports/details"]
               )}`}
             >
               <AssignmentIcon className="mt-2" />

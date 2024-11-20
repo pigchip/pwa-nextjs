@@ -7,12 +7,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useRole } from "@/contexts/RoleContext";
 import { useState } from "react";
 import { Status } from "@/types/register";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const EvidenceDetails: React.FC = () => {
   const { selectedReport, setSelectedReport, updateReport } = useReports();
   const router = useRouter();
   const { role } = useRole();
   const [newStatus, setNewStatus] = useState<Status | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleBack = () => {
     if (role === 'supervisor') {
@@ -26,31 +28,70 @@ const EvidenceDetails: React.FC = () => {
   const handleStatusChange = async () => {
     if (!newStatus || !selectedReport) return;
 
+    if (newStatus === 'Validado') {
+      setIsModalOpen(true);
+    } else {
+      await updateStatus();
+    }
+  };
+
+  const updateStatus = async () => {
     try {
       const response = await fetch(`/api/reports/update/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: selectedReport.id, status: newStatus }),
+        body: JSON.stringify({ id: selectedReport?.id, status: newStatus }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to update status');
       }
 
-      const newReport = await fetch(`/api/reports/${selectedReport.id}`);
+      const newReport = await fetch(`/api/reports/${selectedReport?.id}`);
       if (!newReport.ok) {
         throw new Error('Failed to fetch updated report');
       }
 
       const updatedReport = await newReport.json();
       setSelectedReport(updatedReport);
-      updateReport(updatedReport); // Add this line
+      updateReport(updatedReport);
       setNewStatus(null);
+
+      if (newStatus === 'Validado') {
+        await updateStationIncident(updatedReport.station, updatedReport.body);
+      }
     } catch (error) {
       console.error('Error updating status:', error);
     }
+  };
+
+  const updateStationIncident = async (stationId: number, incident: string) => {
+    try {
+      const response = await fetch(`/api/stations/update/incident`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: stationId, incident }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update station incident');
+      }
+    } catch (error) {
+      console.error('Error updating station incident:', error);
+    }
+  };
+
+  const handleModalConfirm = async () => {
+    setIsModalOpen(false);
+    await updateStatus();
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
   };
 
   if (!selectedReport) {
@@ -123,6 +164,12 @@ const EvidenceDetails: React.FC = () => {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        open={isModalOpen}
+        onClose={handleModalClose}
+        onConfirm={handleModalConfirm}
+      />
     </Layout>
   );
 };
