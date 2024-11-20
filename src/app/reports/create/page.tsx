@@ -14,6 +14,7 @@ import { Transport, Line, Station, Register, Status } from "@/types";
 import { getMexicoCityDateTime } from "@/utils/date";
 import { useTransportLinesStore } from "@/stores/useTransportLinesStore";
 import { TransportName } from "@/types/transport";
+import { incidents } from "@/utils/incidents";
 
 const CreateEvidenceComponent: React.FC = () => {
   const router = useRouter();
@@ -32,39 +33,6 @@ const CreateEvidenceComponent: React.FC = () => {
   const [stationsDisabled, setStationsDisabled] = useState<boolean>(false);
 
   const { lines, fetchTransportLines } = useTransportLinesStore();
-
-  const incidents = [
-    {
-      id: 1,
-      name: "Fallas técnicas",
-      description: "Problemas con el vehículo o la infraestructura",
-    },
-    {
-      id: 2,
-      name: "Accidente",
-      description: "Colisión o atropello",
-    },
-    {
-      id: 3,
-      name: "Operación",
-      description: "Problemas con el personal o el servicio",
-    },
-    {
-      id: 4,
-      name: "Factores externos",
-      description: "Clima, tráfico u otros factores externos",
-    },
-    {
-      id: 5,
-      name: "Seguridad",
-      description: "Robo, vandalismo o agresión",
-    },
-    {
-      id: 6,
-      name: "Otro",
-      description: "Otro tipo de incidente",
-    },
-  ];
 
   useEffect(() => {
     fetch("/api/transports")
