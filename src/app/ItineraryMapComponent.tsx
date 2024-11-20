@@ -208,35 +208,39 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   }, [selectedRoutes]);
 
   useEffect(() => {
-    // Update filtered itineraries based on selected agencies, routes, and stations
     let filtered = itineraryData;
-
-    if (selectedAgencies.length > 0) {
-      filtered = filtered.filter((itinerary) =>
-        itinerary.legs.some(
-          (leg) => leg.route?.agency?.id && selectedAgencies.includes(leg.route.agency.id)
-        )
-      );
-    }
-
+  
+    // Excluir itinerarios de líneas específicas seleccionadas
     if (selectedRoutes.length > 0) {
       filtered = filtered.filter((itinerary) =>
-        itinerary.legs.some((leg) => leg.route?.id && selectedRoutes.includes(leg.route.id))
-      );
-    }
-
-    if (selectedStations.length > 0) {
-      filtered = filtered.filter((itinerary) =>
-        itinerary.legs.some(
+        itinerary.legs.every(
           (leg) =>
-            (leg.from.stop?.id && selectedStations.includes(leg.from.stop.id)) ||
-            (leg.to.stop?.id && selectedStations.includes(leg.to.stop.id))
+            !(
+              leg.route?.id &&
+              selectedRoutes.includes(leg.route.id)
+            )
         )
       );
     }
-
+  
+    // Excluir itinerarios que pasen por estaciones específicas en las líneas correspondientes
+    if (selectedStations.length > 0) {
+      filtered = filtered.filter((itinerary) =>
+        itinerary.legs.every((leg) => {
+          const isExcludedStation =
+            (leg.from.stop?.id && selectedStations.includes(leg.from.stop.id)) ||
+            (leg.to.stop?.id && selectedStations.includes(leg.to.stop.id));
+          const isAssociatedRoute =
+            leg.route?.id && selectedRoutes.includes(leg.route.id);
+  
+          // Excluir itinerario solo si la estación está en una línea seleccionada
+          return !(isExcludedStation && isAssociatedRoute);
+        })
+      );
+    }
+  
     setFilteredItineraries(filtered);
-  }, [selectedAgencies, selectedRoutes, selectedStations, itineraryData]);
+  }, [selectedRoutes, selectedStations, itineraryData]);  
 
   useEffect(() => {
     // Update start and end locations
@@ -610,7 +614,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               <TextField
                 {...params}
                 variant="outlined"
-                label="Filtrar por Agencia"
+                label="Excluir por Agencia"
                 placeholder="Selecciona agencias"
               />
             )}
@@ -644,7 +648,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               <TextField
                 {...params}
                 variant="outlined"
-                label="Filtrar por Línea/Ruta"
+                label="Excluir por Línea/Ruta"
                 placeholder="Selecciona rutas"
               />
             )}
@@ -676,7 +680,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               <TextField
                 {...params}
                 variant="outlined"
-                label="Filtrar por Estación"
+                label="Excluir por Estación"
                 placeholder="Selecciona estaciones"
               />
             )}
