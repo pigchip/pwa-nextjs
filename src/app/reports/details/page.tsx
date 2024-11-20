@@ -3,11 +3,12 @@
 import Layout from "@/components/Layout";
 import { useReports } from "@/contexts/ReportsContext";
 import { useRouter } from "next/navigation";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRole } from "@/contexts/RoleContext";
 import { useState } from "react";
 import { Status } from "@/types/register";
 import ConfirmModal from "@/components/ConfirmModal";
+import { Knock as KnockNode } from "@knocklabs/node";
 
 const EvidenceDetails: React.FC = () => {
   const { selectedReport, setSelectedReport, updateReport } = useReports();
@@ -16,8 +17,19 @@ const EvidenceDetails: React.FC = () => {
   const [newStatus, setNewStatus] = useState<Status | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const knockApiKey = process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY;
+  const knockPublicKey = process.env.NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY;
+  if (!knockApiKey) {
+    throw new Error("NEXT_PUBLIC_KNOCK_SECRET_API_KEY is not defined");
+  }
+  if (!knockPublicKey) {
+    throw new Error("NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY is not defined");
+  }
+
+  const knockNode = new KnockNode(knockApiKey);
+
   const handleBack = () => {
-    if (role === 'supervisor') {
+    if (role === "supervisor") {
       router.push("/supervisor");
     } else {
       router.push("/reports");
@@ -28,7 +40,7 @@ const EvidenceDetails: React.FC = () => {
   const handleStatusChange = async () => {
     if (!newStatus || !selectedReport) return;
 
-    if (newStatus === 'Validado') {
+    if (newStatus === "Validado") {
       setIsModalOpen(true);
     } else {
       await updateStatus();
@@ -38,20 +50,20 @@ const EvidenceDetails: React.FC = () => {
   const updateStatus = async () => {
     try {
       const response = await fetch(`/api/reports/update/status`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: selectedReport?.id, status: newStatus }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        throw new Error("Failed to update status");
       }
 
       const newReport = await fetch(`/api/reports/${selectedReport?.id}`);
       if (!newReport.ok) {
-        throw new Error('Failed to fetch updated report');
+        throw new Error("Failed to fetch updated report");
       }
 
       const updatedReport = await newReport.json();
@@ -59,29 +71,39 @@ const EvidenceDetails: React.FC = () => {
       updateReport(updatedReport);
       setNewStatus(null);
 
-      if (newStatus === 'Validado') {
+      if (newStatus === "Validado") {
         await updateStationIncident(updatedReport.station, updatedReport.body);
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error("Error updating status:", error);
     }
   };
 
   const updateStationIncident = async (stationId: number, incident: string) => {
     try {
       const response = await fetch(`/api/stations/update/incident`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: stationId, incident }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update station incident');
+        throw new Error("Failed to update station incident");
       }
+
+      await knockNode.workflows.trigger("mts", {
+        recipients: ["iespinosas1700@alumno.ipn.mx"],
+        data: {
+          incident: {
+            value: incident,
+            station: stationId
+          }
+        }
+      });
     } catch (error) {
-      console.error('Error updating station incident:', error);
+      console.error("Error updating station incident:", error);
     }
   };
 
@@ -98,16 +120,19 @@ const EvidenceDetails: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const { body, date, line, route, station, status, transport, time } = selectedReport;
+  const { body, date, line, route, station, status, transport, time } =
+    selectedReport;
 
   return (
     <Layout>
       <div className="max-w-4xl mx-auto p-6 shadow-lg rounded-lg">
         <div className="flex items-center mb-6">
           <button onClick={handleBack} className="mr-2">
-            <ArrowBackIcon style={{ color: '#6ABDA6' }} />
+            <ArrowBackIcon style={{ color: "#6ABDA6" }} />
           </button>
-          <h1 className="text-3xl font-bold text-center flex-grow">Detalles de la Evidencia</h1>
+          <h1 className="text-3xl font-bold text-center flex-grow">
+            Detalles de la Evidencia
+          </h1>
         </div>
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between">
@@ -142,16 +167,20 @@ const EvidenceDetails: React.FC = () => {
             <span className="font-semibold">Descripción:</span>
             <span>{body}</span>
           </div>
-          {role === 'supervisor' && (
+          {role === "supervisor" && (
             <div className="mt-6">
               <select
-                value={newStatus || ''}
+                value={newStatus || ""}
                 onChange={(e) => setNewStatus(e.target.value as Status)}
                 className="p-2 border border-gray-300 rounded"
               >
-                <option value="" disabled>Seleccionar nuevo estado</option>
+                <option value="" disabled>
+                  Seleccionar nuevo estado
+                </option>
                 {Object.values(Status).map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
                 ))}
               </select>
               <button
