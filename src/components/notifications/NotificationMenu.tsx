@@ -29,7 +29,22 @@ const NotificationMenu = () => {
     isClient ? (
     <KnockProvider
       apiKey={process.env.NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY || ""}
-      userId={userDetails?.email || ""}
+      userId={userDetails?.email || "iespinosas1700@alumno.ipn.mx"}
+      i18n={{
+        translations: {
+          emptyFeedTitle: "No tienes notificaciones aún",
+          emptyFeedBody: "Te haremos saber cuando tengas una notificación",
+          notifications: "Notificaciones",
+          poweredBy: "Powered by MTS",
+          markAllAsRead: "Marcar todas como leídas",
+          archiveNotification: "Archivar notificación",
+          all: "Todas",
+          unread: "No leídas",
+          read: "Leídas",
+          unseen: "No vistas",
+        },
+        locale: "es"
+      }}
     >
       <KnockFeedProvider feedId={process.env.NEXT_PUBLIC_KNOCK_FEED_CHANNEL_ID || ""}>
         <>
