@@ -3,7 +3,7 @@
 import Layout from "@/components/Layout";
 import LineIncidents from "@/components/LineIncidents";
 import StationIncidents from "@/components/StationIncidents";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 const IncidentsPage: React.FC = () => {
   const [view, setView] = useState<"line" | "station">("line");
