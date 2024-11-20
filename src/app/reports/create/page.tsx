@@ -73,6 +73,16 @@ const CreateEvidenceComponent: React.FC = () => {
     await fetchTransportLines(transportName as TransportName);
   };
 
+  const handleLineSelect = async (line: Line) => {
+    setSelectedLine(line);
+    setSelectedStation(null);
+    setStations([]);
+
+    const response = await fetch(`/api/lines/${line.id}/stations`);
+    const data = await response.json();
+    setStations(data);
+  };
+
   const handleBackClick = () => {
     router.back();
   };
@@ -183,7 +193,7 @@ const CreateEvidenceComponent: React.FC = () => {
             <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
               <SubwayIcon className="ml-2" />
               <span className="flex-grow text-left pl-2 text-gray-400">
-                {selectedLine ? `${selectedLine.name} - ${selectedLine.information}` : "Línea"}
+                {selectedLine ? selectedLine.name : "Línea"}
               </span>
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
@@ -195,9 +205,9 @@ const CreateEvidenceComponent: React.FC = () => {
                       className={`${
                         focus ? "bg-gray-200" : ""
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                      onClick={() => setSelectedLine(line)}
+                      onClick={() => handleLineSelect(line)}
                     >
-                      {line.name} - {line.information}
+                      {line.name}
                     </button>
                   )}
                 </MenuItem>
