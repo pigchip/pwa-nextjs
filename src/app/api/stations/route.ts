@@ -1,23 +1,12 @@
-// pages/api/transports/lines/route.ts
+// pages/api/stations/route.ts
 
-import { Line } from '@/types/line';
+import { Station } from '@/types/station';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const { name } = await req.json();
-    if (!name) {
-      return NextResponse.json({
-        timestamp: new Date().toISOString(),
-        status: 400,
-        error: 'Bad Request',
-        message: 'Transport name is required',
-        path: req.url,
-      }, { status: 400 });
-    }   
-
-    const lines: Line[] = await getTransportLines(name);
-    return NextResponse.json(lines, { status: 200 });
+    const stations: Station[] = await getStations();
+    return NextResponse.json(stations, { status: 200 });
   } catch (error) {
     console.error(error);
     if (error instanceof FetchError) {
@@ -38,30 +27,29 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function getTransportLines(name: string): Promise<Line[]> {
+async function getStations(): Promise<Station[]> {
   const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (!apiUrl) {
     throw new Error('API base URL is not defined');
   }
 
-  const response = await fetch(`${apiUrl}/api/transports/lines`, {
-    method: 'POST',
+  const response = await fetch(`${apiUrl}/api/stations`, {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ name }),
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.log(response);
-    throw new FetchError(response.status, errorData.message || 'Failed to fetch transport lines');
+    console.log(errorData);
+    throw new FetchError(response.status, errorData.message || 'Failed to fetch stations');
   }
 
-  const data: Line[] = await response.json();
+  const data: Station[] = await response.json();
 
-  return data;
+  return data; // Return the raw data array
 }
 
 class FetchError extends Error {

@@ -1,23 +1,26 @@
+// pages/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import { useRouter } from "next/navigation";
+import Layout from "@/components/Layout";
+import { Transport, Line, Station, Register, Status } from "@/types";
+import { useTransportLinesStore } from "@/stores/useTransportLinesStore";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import SubwayIcon from "@mui/icons-material/Subway";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useRouter } from "next/navigation";
-import Layout from "@/components/Layout";
-import { Transport, Line, Station, Register, Status } from "@/types";
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { getMexicoCityDateTime } from "@/utils/date";
+import { incidents } from "@/utils/incidents";
+import { useLineStationsStore } from "@/stores/useLineStations";
+import { TransportName } from "@/types/transport";
 
 const CreateEvidenceComponent: React.FC = () => {
   const router = useRouter();
   const [transports, setTransports] = useState<Transport[]>([]);
-  const [lines, setLines] = useState<Line[]>([]);
-  const [stations, setStations] = useState<Station[]>([]);
   const [selectedTransport, setSelectedTransport] = useState<string | null>(
     null
   );
@@ -30,38 +33,8 @@ const CreateEvidenceComponent: React.FC = () => {
   } | null>(null);
   const [stationsDisabled, setStationsDisabled] = useState<boolean>(false);
 
-  const incidents = [
-    {
-      id: 1,
-      name: "Fallas técnicas",
-      description: "Problemas con el vehículo o la infraestructura",
-    },
-    {
-      id: 2,
-      name: "Accidente",
-      description: "Colisión o atropello",
-    },
-    {
-      id: 3,
-      name: "Operación",
-      description: "Problemas con el personal o el servicio",
-    },
-    {
-      id: 4,
-      name: "Factores externos",
-      description: "Clima, tráfico u otros factores externos",
-    },
-    {
-      id: 5,
-      name: "Seguridad",
-      description: "Robo, vandalismo o agresión",
-    },
-    {
-      id: 6,
-      name: "Otro",
-      description: "Otro tipo de incidente",
-    },
-  ];
+  const { lines, fetchTransportLines } = useTransportLinesStore();
+  const { lineStations, fetchStationsForLine } = useLineStationsStore();
 
   useEffect(() => {
     fetch("/api/transports")
@@ -71,47 +44,15 @@ const CreateEvidenceComponent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchLines = () => {
-      if (selectedTransport) {
-        fetch("/api/lines", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            const filteredLines = data.filter(
-              (line: Line) => line.transport === selectedTransport
-            );
-            setLines(filteredLines);
-          })
-          .catch((error) => console.error("Error fetching lines:", error));
-      }
-    };
+    if (lines.length > 0) {
+      lines.forEach((line) => fetchStationsForLine(line.id));
+    }
+  }, [lines, fetchStationsForLine]);
 
-    fetchLines();
-  }, [selectedTransport]);
-
-  useEffect(() => {
-    const fetchStations = () => {
-      if (selectedLine && stations.length === 0) {
-        fetch(`/api/lines/${selectedLine.id}/stations`)
-          .then((response) => response.json())
-          .then((data) => setStations(data))
-          .catch((error) => console.error("Error fetching stations:", error));
-      }
-    };
-
-    fetchStations();
-  }, [selectedLine, stations.length]);
-
-  const handleTransportSelect = (transportName: string) => {
+  const handleTransportSelect = async (transportName: string) => {
     setSelectedTransport(transportName);
     setSelectedLine(null);
     setSelectedStation(null);
-    setLines([]);
-    setStations([]);
     setStationsDisabled(
       [
         "Red de Transporte de Pasajeros, Servicio Ordinario",
@@ -122,6 +63,13 @@ const CreateEvidenceComponent: React.FC = () => {
         "Nochebús",
       ].includes(transportName)
     );
+
+    await fetchTransportLines(transportName as TransportName);
+  };
+
+  const handleLineSelect = async (line: Line) => {
+    setSelectedLine(line);
+    setSelectedStation(null);
   };
 
   const handleBackClick = () => {
@@ -189,8 +137,6 @@ const CreateEvidenceComponent: React.FC = () => {
     setSelectedLine(null);
     setSelectedStation(null);
     setSelectedIncident(null);
-    setLines([]);
-    setStations([]);
   };
 
   return (
@@ -247,9 +193,25 @@ const CreateEvidenceComponent: React.FC = () => {
                       className={`${
                         focus ? "bg-gray-200" : ""
                       } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                      onClick={() => setSelectedLine(line)}
+                      onClick={() => handleLineSelect(line)}
                     >
-                      {line.name}
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">
+                          {line.name}
+                          {lineStations[line.id] &&
+                            lineStations[line.id].length > 0 && (
+                              <span className="text-xs text-gray-500 ml-2">
+                                ({lineStations[line.id][0].name} -{" "}
+                                {
+                                  lineStations[line.id][
+                                    lineStations[line.id].length - 1
+                                  ].name
+                                }
+                                )
+                              </span>
+                            )}
+                        </span>
+                      </div>
                     </button>
                   )}
                 </MenuItem>
@@ -273,20 +235,21 @@ const CreateEvidenceComponent: React.FC = () => {
               <ArrowDropDownIcon className="ml-auto mr-4" />
             </MenuButton>
             <MenuItems className="absolute mt-2 w-full bg-white shadow-lg rounded-md z-10">
-              {stations.map((station, index) => (
-                <MenuItem key={index}>
-                  {({ focus }) => (
-                    <button
-                      className={`${
-                        focus ? "bg-gray-200" : ""
-                      } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                      onClick={() => setSelectedStation(station)}
-                    >
-                      {station.name}
-                    </button>
-                  )}
-                </MenuItem>
-              ))}
+              {selectedLine &&
+                lineStations[selectedLine.id]?.map((station, index) => (
+                  <MenuItem key={index}>
+                    {({ focus }) => (
+                      <button
+                        className={`${
+                          focus ? "bg-gray-200" : ""
+                        } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                        onClick={() => setSelectedStation(station)}
+                      >
+                        {station.name}
+                      </button>
+                    )}
+                  </MenuItem>
+                ))}
             </MenuItems>
           </Menu>
 
