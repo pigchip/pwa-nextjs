@@ -1035,20 +1035,6 @@ const RoutesMap: React.FC = () => {
                 </div>
               )}
 
-              {stationOpinions.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mt-2">Opiniones:</h4>
-                  <ul className="list-disc list-inside">
-                    {stationOpinions.map((opinion) => (
-                      <li key={opinion.id} className="mt-1">
-                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                        <p>{opinion.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* Formulario para agregar opinión */}
               {selectedStation.id !== 0 && (
                 <div>
@@ -1070,6 +1056,20 @@ const RoutesMap: React.FC = () => {
                       Enviar comentario
                     </button>
                   </form>
+                </div>
+              )}
+
+              {stationOpinions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mt-2">Opiniones:</h4>
+                  <ul className="list-disc list-inside">
+                    {stationOpinions.map((opinion) => (
+                      <li key={opinion.id} className="mt-1">
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                        <p>{opinion.body}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
@@ -1130,20 +1130,6 @@ const RoutesMap: React.FC = () => {
                 </div>
               )}
 
-              {lineOpinions.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mt-2">Opiniones:</h4>
-                  <ul className="list-disc list-inside">
-                    {lineOpinions.map((opinion) => (
-                      <li key={opinion.id} className="mt-1">
-                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                        <p>{opinion.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* Formulario para agregar opinión */}
               {selectedLine.id !== 0 && (
                 <div>
@@ -1165,6 +1151,20 @@ const RoutesMap: React.FC = () => {
                       Enviar comentario
                     </button>
                   </form>
+                </div>
+              )}
+              
+              {lineOpinions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mt-2">Opiniones:</h4>
+                  <ul className="list-disc list-inside">
+                    {lineOpinions.map((opinion) => (
+                      <li key={opinion.id} className="mt-1">
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                        <p>{opinion.body}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>

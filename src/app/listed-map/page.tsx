@@ -593,23 +593,6 @@ const TransportPage: React.FC = () => {
                 </>
               )}
 
-              {/* Opiniones de la Línea */}
-              {selectedLine.opinions && selectedLine.opinions.length > 0 && (
-                <>
-                  <h3 className="text-lg font-semibold mt-4">Opiniones:</h3>
-                  <ul className="list-disc list-inside">
-                    {selectedLine.opinions.map((opinion, index) => (
-                      opinion ? (
-                        <li key={opinion.id || index} className="mt-2">
-                          <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                          <p>{opinion.body}</p>
-                        </li>
-                      ) : null
-                    ))}
-                  </ul>
-                </>
-              )}
-
               {/* Formulario para agregar opinión a la línea */}
               <div className="mt-4">
                 <h4 className="text-lg font-semibold mb-2">Agregar comentario</h4>
@@ -631,6 +614,23 @@ const TransportPage: React.FC = () => {
                   </button>
                 </form>
               </div>
+
+              {/* Opiniones de la Línea */}
+              {selectedLine.opinions && selectedLine.opinions.length > 0 && (
+                <>
+                  <h3 className="text-lg font-semibold mt-4">Opiniones:</h3>
+                  <ul className="list-disc list-inside">
+                    {selectedLine.opinions.map((opinion, index) => (
+                      opinion ? (
+                        <li key={opinion.id || index} className="mt-2">
+                          <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                          <p>{opinion.body}</p>
+                        </li>
+                      ) : null
+                    ))}
+                  </ul>
+                </>
+              )}
             </>
           )}
 
@@ -665,23 +665,6 @@ const TransportPage: React.FC = () => {
                 </>
               )}
 
-              {/* Opiniones de la Estación */}
-              {selectedLineStation.opinions && selectedLineStation.opinions.length > 0 && (
-                <>
-                  <h3 className="text-lg font-semibold mt-4">Opiniones:</h3>
-                  <ul className="list-disc list-inside">
-                    {selectedLineStation.opinions.map((opinion, index) => (
-                      opinion ? (
-                        <li key={opinion.id || index} className="mt-2">
-                          <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                          <p>{opinion.body}</p>
-                        </li>
-                      ) : null
-                    ))}
-                  </ul>
-                </>
-              )}
-
               {/* Formulario para agregar opinión a la estación */}
               <div className="mt-4">
                 <h4 className="text-lg font-semibold mb-2">Agregar comentario</h4>
@@ -703,6 +686,23 @@ const TransportPage: React.FC = () => {
                   </button>
                 </form>
               </div>
+
+              {/* Opiniones de la Estación */}
+              {selectedLineStation.opinions && selectedLineStation.opinions.length > 0 && (
+                <>
+                  <h3 className="text-lg font-semibold mt-4">Opiniones:</h3>
+                  <ul className="list-disc list-inside">
+                    {selectedLineStation.opinions.map((opinion, index) => (
+                      opinion ? (
+                        <li key={opinion.id || index} className="mt-2">
+                          <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                          <p>{opinion.body}</p>
+                        </li>
+                      ) : null
+                    ))}
+                  </ul>
+                </>
+              )}
             </>
           )}
         </div>
