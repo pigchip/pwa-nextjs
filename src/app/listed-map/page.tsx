@@ -120,7 +120,7 @@ const TransportPage: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const stationsResponse = await fetch(`${apiUrl}/api/stations`);
+      const stationsResponse = await fetch(`${apiUrl}api/stations`);
       const stationsData: Station[] = await stationsResponse.json();
       setStations(stationsData);
 
@@ -159,7 +159,7 @@ const TransportPage: React.FC = () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
         // Obtener estaciones de la línea
-        const stationsResponse = await fetch(`${apiUrl}/api/lines/${lineId}/stations`);
+        const stationsResponse = await fetch(`${apiUrl}api/lines/${lineId}/stations`);
         const stationsData: Station[] = await stationsResponse.json();
         setLineStations(stationsData);
 
@@ -223,7 +223,7 @@ const TransportPage: React.FC = () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
 
         // Obtener el transporte de la estación
-        const lineResponseForStation = await fetch(`${apiUrl}/api/lines/${station.line}`);
+        const lineResponseForStation = await fetch(`${apiUrl}api/lines/${station.line}`);
         const lineDataForStation = await lineResponseForStation.json();
         station.transport = lineDataForStation.transport;
         station.lineName = lineDataForStation.name;
@@ -325,7 +325,7 @@ const TransportPage: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
+      const response = await fetch(`${apiUrl}api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -369,7 +369,7 @@ const TransportPage: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/user/${userId}/opinions`, {
+      const response = await fetch(`${apiUrl}api/user/${userId}/opinions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -403,7 +403,7 @@ const TransportPage: React.FC = () => {
   const handleDeleteOpinion = async (opinionId: number) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/opinions`, {
+      const response = await fetch(`${apiUrl}api/opinions`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -449,7 +449,7 @@ const TransportPage: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/opinions`, {
+      const response = await fetch(`${apiUrl}api/opinions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

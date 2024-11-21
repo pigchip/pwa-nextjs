@@ -449,7 +449,7 @@ const RoutesMap: React.FC = () => {
       const fetchAdditionalData = async () => {
         try {
           const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-          const transfersResponse = await fetch(`${apiUrl}/api/stations/${station.id}/transfers`, {
+          const transfersResponse = await fetch(`${apiUrl}api/stations/${station.id}/transfers`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -560,7 +560,7 @@ const RoutesMap: React.FC = () => {
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-        const routesResponse = await fetch(`${apiUrl}/api/lines/${line.id}/routes`, {
+        const routesResponse = await fetch(`${apiUrl}api/lines/${line.id}/routes`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -703,7 +703,7 @@ const RoutesMap: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
+      const response = await fetch(`${apiUrl}api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -755,7 +755,7 @@ const RoutesMap: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/user/${userId}/opinions`, {
+      const response = await fetch(`${apiUrl}api/user/${userId}/opinions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -790,7 +790,7 @@ const RoutesMap: React.FC = () => {
   const handleDeleteOpinion = async (opinionId: number) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/opinions`, {
+      const response = await fetch(`${apiUrl}api/opinions`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -836,7 +836,7 @@ const RoutesMap: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/opinions`, {
+      const response = await fetch(`${apiUrl}api/opinions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
