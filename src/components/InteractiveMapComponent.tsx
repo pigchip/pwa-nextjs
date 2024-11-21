@@ -87,7 +87,7 @@ const InteractiveMapComponent: React.FC<InteractiveMapComponentProps> = ({
   lon,
 }) => {
   return (
-    <MapContainer center={lat !== 123 && lon !== 123 ? [lat, lon] : [19.432608, -99.133209]} zoom={12} style={{ height: '64vh', width: '100vw', zIndex: 0 }}>
+    <MapContainer center={lat !== 123 && lon !== 123 ? [lat, lon] : [19.432608, -99.133209]} zoom={12} style={{ height: '100%', width: '100%', zIndex: 0 }}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {selectedRoutes.length > 0 && displayedRoutes.map((route) =>
         route.patterns.map((pattern, patternIndex) => {

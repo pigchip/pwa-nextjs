@@ -1049,7 +1049,7 @@ useEffect(() => {
 
       <div>
         {/* Contenedor del mapa */}
-        <div className="relative w-full h-4/5">
+        <div className="relative w-full h-full">
         <InteractiveMapComponent
             lat={selectedLatLon.lat}
             lon={selectedLatLon.lon}
