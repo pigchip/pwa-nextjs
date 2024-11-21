@@ -63,7 +63,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const [itineraryData, setItineraryData] = useState<Itinerary[]>([]);
   const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [expandedLegIndex, setExpandedLegIndex] = useState<number | null>(null);
   const [currentLegIndex, setCurrentLegIndex] = useState<number>(0);
 
@@ -658,6 +658,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
+            maxZoom={19}
+            minZoom={10}
+            updateWhenIdle={true}
+            keepBuffer={2}
           />
 
           {startLocation && (
