@@ -901,10 +901,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         )}
                                       <p>
                                         <strong>Desde:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].from.name === 'Origin'
+                                        {itinerary.legs[currentLegIndex].from.name === 'Origin' || !itinerary.legs[currentLegIndex].from.name
                                           ? startLocation?.display_name
                                           : itinerary.legs[currentLegIndex].from.stop?.name 
-                                            ? itinerary.legs[currentLegIndex].from.stop.name
+                                            ? itinerary.legs[currentLegIndex].from.stop.name 
                                             : itinerary.legs[currentLegIndex].from.name}
                                       </p>
                                       <p>
