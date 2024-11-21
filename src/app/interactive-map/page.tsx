@@ -128,11 +128,9 @@ const InteractiveMapComponent = dynamic(() => import('@/components/InteractiveMa
 });
 
 interface RoutesMapProps {
-  lat?: number;
-  lon?: number;
 }
 
-const RoutesMap: React.FC<RoutesMapProps> = ({ lat = 123, lon = 123 }) => {
+const RoutesMap: React.FC<RoutesMapProps> = () => {
   // Estados y variables
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selectedLatLon, setSelectedLatLon] = useState<{ lat: number; lon: number }>({ lat: 123, lon: 123 });
@@ -167,10 +165,13 @@ const RoutesMap: React.FC<RoutesMapProps> = ({ lat = 123, lon = 123 }) => {
   };
   
   useEffect(() => {
-    if (lat !== 123 && lon !== 123 && (selectedLatLon.lat !== lat || selectedLatLon.lon !== lon)) {
-      handleSelectLatLon(lat, lon);
+    const lt = parseFloat(localStorage.getItem('latx') ?? '123');
+    const ln = parseFloat(localStorage.getItem('lonx') ?? '123');
+  
+    if (lt !== 123 && ln !== 123 && (selectedLatLon.lat !== lt || selectedLatLon.lon !== ln)) {
+      handleSelectLatLon(lt, ln);
     }
-  }, [lat, lon, selectedLatLon]);
+  }, [selectedLatLon]);
 
   const toggleMapInteraction = () => {
     setIsMapInteractive((prev) => !prev);
@@ -981,7 +982,7 @@ useEffect(() => {
     }
   };
 
-  return lat !== 123 && lon !== 123 ? (
+  return selectedLatLon.lat !== 123 && selectedLatLon.lon !== 123 ? (
     <LayoutNoHeader>
           <div className="relative w-full h-50vh">
       <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
@@ -1050,8 +1051,8 @@ useEffect(() => {
         {/* Contenedor del mapa */}
         <div className="relative w-full h-4/5">
         <InteractiveMapComponent
-            lat={lat}
-            lon={lon}
+            lat={selectedLatLon.lat}
+            lon={selectedLatLon.lon}
             selectedRoutes={selectedRoutes}
             displayedRoutes={filteredRoutes.filter(route =>
               selectedRoutes.includes(`${route.shortName}-${route.agency.name}`)

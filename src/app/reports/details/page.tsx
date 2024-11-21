@@ -155,7 +155,7 @@ const EvidenceDetails: React.FC = () => {
           {/* Mapa */}
           <div className="mt-6">
             <h2 className="text-lg font-bold mb-2">Ubicación en el mapa</h2>
-            <MapWithMarker lat={parseFloat(x)} lon={parseFloat(y)} />
+            <MapWithMarker lat={x} lon={y} />
           </div>
 
           {role === "supervisor" && (

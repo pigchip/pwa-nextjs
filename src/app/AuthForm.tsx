@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Tutorial from './Tutorial';
 import React from 'react';
 import { useRole } from '@/contexts/RoleContext';
@@ -137,6 +137,11 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     }
     setShowModal(true);
   };
+
+  useEffect(() => {
+    localStorage.setItem('latx', '123');
+    localStorage.setItem('lonx', '123');
+  }, []);
 
   // Función para cerrar el modal
   const closeModal = (): void => {
