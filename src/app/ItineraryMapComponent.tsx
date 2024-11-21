@@ -800,40 +800,6 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               )}
             />
 
-            {/* Combobox de estaciones */}
-            {/* <Autocomplete
-              multiple
-              options={stationList}
-              groupBy={(option) => `${option.agencyName} - ${option.routeName}`}
-              disableCloseOnSelect
-              getOptionLabel={(option) => `${option.name} (${option.routeName})`} // Hacer única la etiqueta
-              onChange={(event, value) => {
-                setSelectedStations(value.map((station) => station.id));
-                console.log('Selected Stations:', value.map((station) => station.id));
-              }}
-              renderOption={(props, option, { selected }) => (
-                <li {...props} key={option.id}>
-                  <Checkbox
-                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                    checkedIcon={<Check fontSize="small" />}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {`${option.name} (${option.routeName})`}
-                </li>
-              )}
-              style={{ width: '100%' }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Excluir por Estación"
-                  placeholder="Selecciona estaciones"
-                  id='stations-autocomplete'
-                  name='stations'
-                />
-              )}
-            /> */}
           </div>
         )}
 
@@ -862,8 +828,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        marginRight:
-                                          legIndex < itinerary.legs.length - 1 ? '12px' : '0',
+                                        marginRight: '10px',
                                       }}
                                       title={`ETA: ${generateRandomETA()}`}
                                     >
@@ -1061,7 +1026,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                             {/* Visualización de legs con íconos */}
                             <div className="flex items-center flex-wrap">
                               {selectedItinerary.legs.map(
-                                (leg: Leg) => {
+                                (leg: Leg, legIndex) => {
                                   const color = getColorForLeg(leg);
                                   const Icon = getTransportIcon(leg.mode);
                                   return (
@@ -1071,8 +1036,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           display: 'flex',
                                           flexDirection: 'column',
                                           alignItems: 'center',
-                                          marginRight:
-                                            leg.gtfsId.length < selectedItinerary.legs.length - 1 ? '12px' : '0',
+                                          marginRight: '10px',
                                         }}
                                         title={`ETA: ${generateRandomETA()}`}
                                       >
@@ -1113,7 +1077,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           {Math.round(leg.distance)}m
                                         </span>
                                       </div>
-                                      {leg.gtfsId.length < selectedItinerary.legs.length - 1 && (
+                                      {legIndex < selectedItinerary.legs.length - 1 && (
                                         <ArrowForwardIcon style={{ color: 'gray' }} />
                                       )}
                                     </React.Fragment>
