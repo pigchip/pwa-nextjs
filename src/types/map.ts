@@ -12,10 +12,12 @@ export interface LegGeometry {
 
 export interface Route {
   id: string;
+  gtfsId: string;
   shortName: string;
   longName: string;
   color?: string;
   agency?: {
+    gtfsId?: string;
     id: string;
     name: string;
     url: string;
@@ -23,6 +25,7 @@ export interface Route {
 }
 
 export interface Leg {
+  gtfsId: string;
   mode: string;
   startTime: number;
   endTime: number;
@@ -41,6 +44,7 @@ export interface Stop {
 }
 
 export interface Itinerary {
+  id?: string;
   startTime: number;
   endTime: number;
   duration: number;

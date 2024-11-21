@@ -40,6 +40,7 @@ import {
   ITINERARY_QUERY_BUS_SUBWAY_WALK,
   ITINERARY_QUERY_SUBWAY_TRAM_WALK,
   ITINERARY_QUERY_ALL_MODES_WALK,
+  generateBannedBlocks,
 } from '@/queries/queries';
 import { fetchItineraries } from '@/utils/fetchItineraries';
 import { getTransportIcon } from '@/utils/getTransportIcon';
@@ -78,46 +79,44 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   // State for custom marker
   const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
 
-  // State for agency filtering
+  // State para filtrado de agencias
   const [agencyList, setAgencyList] = useState([
-    { id: 'QWdlbmN5OjE6U1VC', name: 'Ferrocarriles Suburbanos' },
-    { id: 'QWdlbmN5OjE6Q0M', name: 'Corredores Concesionados' },
-    { id: 'QWdlbmN5OjE6SU5URVJVUkJBTk8', name: 'Tren El Insurgente' },
-    { id: 'QWdlbmN5OjE6Q0JC', name: 'Cablebus' },
-    { id: 'QWdlbmN5OjE6TUI', name: 'Metrobús' },
-    { id: 'QWdlbmN5OjE6TUVUUk8', name: 'Sistema de Transporte Colectivo Metro' },
-    { id: 'QWdlbmN5OjE6VEw', name: 'Servicio de Tren Ligero' },
-    { id: 'QWdlbmN5OjE6UFVNQUJVUw', name: 'Pumabús' },
-    { id: 'QWdlbmN5OjE6VFJPTEU', name: 'Trolebús' },
-    { id: 'QWdlbmN5OjE6UlRQ', name: 'Red de Transporte de Pasajeros' },
+    { id: 'QWdlbmN5OjE6U1VC', name: 'Ferrocarriles Suburbanos', gtfsId: "1:SUB" },
+    { id: 'QWdlbmN5OjE6Q0M', name: 'Corredores Concesionados', gtfsId: "1:CC" },
+    { id: 'QWdlbmN5OjE6SU5URVJVUkJBTk8', name: 'Tren El Insurgente', gtfsId: "1:INTERURBANO" },
+    { id: 'QWdlbmN5OjE6Q0JC', name: 'Cablebus', gtfsId: "1:CBB" },
+    { id: 'QWdlbmN5OjE6TUI', name: 'Metrobús', gtfsId: "1:MB" },
+    { id: 'QWdlbmN5OjE6TUVUUk8', name: 'Sistema de Transporte Colectivo Metro', gtfsId: "1:METRO" },
+    { id: 'QWdlbmN5OjE6VEw', name: 'Servicio de Tren Ligero', gtfsId: "1:TL" },
+    { id: 'QWdlbmN5OjE6UFVNQUJVUw', name: 'Pumabús', gtfsId: "1:PUMABUS" },
+    { id: 'QWdlbmN5OjE6VFJPTEU', name: 'Trolebús', gtfsId: "1:TROLE" },
+    { id: 'QWdlbmN5OjE6UlRQ', name: 'Red de Transporte de Pasajeros', gtfsId: "1:RTP" },
   ]);
 
-  const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
+  const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]); // Almacena gtfsId
 
-  // State for route filtering
-  const [routeList, setRouteList] = useState<{ id: string; shortName: string; longName: string; agencyName: string }[]>([]);
-  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
+  // State para filtrado de rutas
+  const [routeList, setRouteList] = useState<{ gtfsId: string; shortName: string; longName: string; agencyName: string }[]>([]);
+  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]); // Almacena gtfsId
 
-  // State for station filtering
+  // State para filtrado de estaciones
   const [stationList, setStationList] = useState<{ id: string; name: string; routeId: string; routeName: string; agencyName: string }[]>([]);
-  const [selectedStations, setSelectedStations] = useState<string[]>([]);
+  const [selectedStations, setSelectedStations] = useState<string[]>([]); // Almacena id de estaciones
 
 
   useEffect(() => {
     const fetchRouteData = async () => {
-      const data = await Promise.all([fetchGtfsData()]);
-      setRouteData(data[0]);
-      return data;
+      const data = await fetchGtfsData();
+      console.log('Route Data Fetched:', data); // Verificar estructura de datos
+      setRouteData(data);
     };
     fetchRouteData();
   }, []);
 
-  console.log('Route Data:', routeData);
-
+  // Filtrar rutas basado en agencias seleccionadas
   useEffect(() => {
-    // Update routeList based on selected agencies
     interface Route {
-      id: string;
+      gtfsId: string;
       shortName: string;
       longName: string;
       agencyName: string;
@@ -127,10 +126,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
     if (selectedAgencies.length > 0) {
       routeData?.forEach((agency) => {
-        if (selectedAgencies.includes(agency.id)) {
+        if (selectedAgencies.includes(agency.gtfsId)) { // Usar gtfsId
           agency.routes.forEach((route) => {
             routes.push({
-              id: route.id,
+              gtfsId: route.gtfsId,
               shortName: route.shortName,
               longName: route.longName,
               agencyName: agency.name,
@@ -139,12 +138,24 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         }
       });
     } else {
-      // If no agency is selected, show no routes
-      routes = [];
+      // Si no hay agencias seleccionadas, mostrar todas las rutas
+      routeData?.forEach((agency) => {
+        agency.routes.forEach((route) => {
+          routes.push({
+            gtfsId: route.gtfsId,
+            shortName: route.shortName,
+            longName: route.longName,
+            agencyName: agency.name,
+          });
+        });
+      });
     }
 
-    // Sort routes alphabetically by agencyName and then by route shortName
-    routes.sort((a, b) => {
+    // Eliminar rutas duplicadas por gtfsId (si es necesario)
+    const uniqueRoutes = Array.from(new Map(routes.map(route => [route.gtfsId, route])).values());
+
+    // Ordenar rutas alfabéticamente por agencyName y luego por shortName
+    uniqueRoutes.sort((a, b) => {
       if (a.agencyName < b.agencyName) return -1;
       if (a.agencyName > b.agencyName) return 1;
       if (a.shortName < b.shortName) return -1;
@@ -152,11 +163,12 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       return 0;
     });
 
-    setRouteList(routes);
-  }, [selectedAgencies]);
+    setRouteList(uniqueRoutes);
+    console.log('Route List:', uniqueRoutes); // Depuración
+  }, [selectedAgencies, routeData]);
 
+  // Filtrar estaciones basado en rutas seleccionadas
   useEffect(() => {
-    // Update stationList based on selected routes
     interface Station {
       id: string;
       name: string;
@@ -170,12 +182,12 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     if (selectedRoutes.length > 0) {
       routeData?.forEach((agency) => {
         agency.routes.forEach((route) => {
-          if (selectedRoutes.includes(route.id) && route.stops) {
+          if (selectedRoutes.includes(route.gtfsId) && route.stops) { // Usar gtfsId
             route.stops.forEach((stop) => {
               stations.push({
                 id: stop.id,
                 name: stop.name,
-                routeId: route.id,
+                routeId: route.gtfsId,
                 routeName: `${route.shortName} - ${route.longName}`,
                 agencyName: agency.name,
               });
@@ -184,81 +196,95 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         });
       });
     } else {
-      // If no route is selected, show no stations
-      stations = [];
+      // Si no hay rutas seleccionadas, mostrar todas las estaciones
+      routeData?.forEach((agency) => {
+        agency.routes.forEach((route) => {
+          if (route.stops) {
+            route.stops.forEach((stop) => {
+              stations.push({
+                id: stop.id,
+                name: stop.name,
+                routeId: route.gtfsId,
+                routeName: `${route.shortName} - ${route.longName}`,
+                agencyName: agency.name,
+              });
+            });
+          }
+        });
+      });
     }
 
-    // Remove duplicate stations based on station ID
-    const uniqueStations = stations.filter(
-      (station, index, self) => index === self.findIndex((s) => s.id === station.id)
-    );
+    // Eliminar estaciones duplicadas basadas en el id
+    const uniqueStations = Array.from(new Map(stations.map(station => [station.id, station])).values());
 
-    // Sort stations alphabetically by agencyName, routeName, then station name
+    // Ordenar estaciones alfabéticamente por agencyName, routeName y luego por nombre
     uniqueStations.sort((a, b) => {
       if (a.agencyName < b.agencyName) return -1;
       if (a.agencyName > b.agencyName) return 1;
       if (a.routeName < b.routeName) return -1;
       if (a.routeName > b.routeName) return 1;
-      if (a.id < b.id) return -1;
-      if (a.id > b.id) return 1;
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
       return 0;
     });
 
     setStationList(uniqueStations);
-  }, [selectedRoutes]);
+    console.log('Station List:', uniqueStations); // Depuración
+  }, [selectedRoutes, routeData]);
 
+  // Filtrar itinerarios basado en agencias, rutas y estaciones excluidas
   useEffect(() => {
     if (!routeData) {
       setFilteredItineraries(itineraryData);
       return;
     }
   
-    // Conjuntos para almacenar las agencias y rutas a excluir
+    // Sets para almacenar las agencias y rutas a excluir
     const agenciesToExclude = new Set<string>();
     const routesToExclude = new Set<string>();
     const routesToExcludeWithStation = new Set<string>();
   
     // Procesar las agencias seleccionadas
-    selectedAgencies.forEach(agencyId => {
-      const agency = routeData.find(a => a.id === agencyId);
-      const agencyRoutes = agency?.routes.map(r => r.id) || [];
+    selectedAgencies.forEach(agencyGtfsId => {
+      const agency = routeData.find(a => a.gtfsId === agencyGtfsId);
+      const agencyRoutes = agency?.routes.map(r => r.gtfsId) || [];
       
       // Rutas seleccionadas dentro de la agencia
-      const selectedRoutesForAgency = selectedRoutes.filter(routeId => agencyRoutes.includes(routeId));
+      const selectedRoutesForAgency = selectedRoutes.filter(routeGtfsId => agencyRoutes.includes(routeGtfsId));
   
       if (selectedRoutesForAgency.length === 0) {
         // Si no se seleccionaron rutas dentro de la agencia, excluir toda la agencia
-        agenciesToExclude.add(agencyId);
+        agenciesToExclude.add(agencyGtfsId);
       } else {
         // Si se seleccionaron rutas dentro de la agencia
-        selectedRoutesForAgency.forEach(routeId => {
+        selectedRoutesForAgency.forEach(routeGtfsId => {
           if (selectedStations.length > 0) {
             // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
-            routesToExcludeWithStation.add(routeId);
+            routesToExcludeWithStation.add(routeGtfsId);
           } else {
             // Si no se seleccionaron estaciones, excluir completamente esas rutas
-            routesToExclude.add(routeId);
+            routesToExclude.add(routeGtfsId);
           }
         });
       }
     });
   
     // Procesar las rutas seleccionadas que no están asociadas a ninguna agencia seleccionada
-    const selectedRoutesNotInAgencies = selectedRoutes.filter(routeId => {
-      return !selectedAgencies.some(agencyId => {
-        const agency = routeData.find(a => a.id === agencyId);
-        const agencyRoutes = agency?.routes.map(r => r.id) || [];
-        return agencyRoutes.includes(routeId);
+    const selectedRoutesNotInAgencies = selectedRoutes.filter(routeGtfsId => {
+      return !selectedAgencies.some(agencyGtfsId => {
+        const agency = routeData.find(a => a.gtfsId === agencyGtfsId);
+        const agencyRoutes = agency?.routes.map(r => r.gtfsId) || [];
+        return agencyRoutes.includes(routeGtfsId);
       });
     });
   
-    selectedRoutesNotInAgencies.forEach(routeId => {
+    selectedRoutesNotInAgencies.forEach(routeGtfsId => {
       if (selectedStations.length > 0) {
         // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
-        routesToExcludeWithStation.add(routeId);
+        routesToExcludeWithStation.add(routeGtfsId);
       } else {
         // Si no se seleccionaron estaciones, excluir completamente esas rutas
-        routesToExclude.add(routeId);
+        routesToExclude.add(routeGtfsId);
       }
     });
   
@@ -266,22 +292,22 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     const filtered = itineraryData.filter(itinerary => {
       // Excluir itinerarios que tengan al menos un leg que coincida con los criterios de exclusión
       return !itinerary.legs.some(leg => {
-        const agencyId = leg.route?.agency?.id;
-        const routeId = leg.route?.id;
+        const agencyGtfsId = leg.route?.agency?.gtfsId;
+        const routeGtfsId = leg.route?.gtfsId;
         const stationIds = leg.stops ? leg.stops.map(stop => stop.id) : [];
   
         // 1. Excluir itinerarios por agencia completa
-        if (agencyId && agenciesToExclude.has(agencyId)) {
+        if (agencyGtfsId && agenciesToExclude.has(agencyGtfsId)) {
           return true;
         }
   
         // 2. Excluir itinerarios por rutas completas
-        if (routeId && routesToExclude.has(routeId)) {
+        if (routeGtfsId && routesToExclude.has(routeGtfsId)) {
           return true;
         }
   
         // 3. Excluir itinerarios por rutas y estaciones seleccionadas
-        if (routeId && routesToExcludeWithStation.has(routeId)) {
+        if (routeGtfsId && routesToExcludeWithStation.has(routeGtfsId)) {
           // Verificar si el itinerario pasa por alguna de las estaciones seleccionadas
           if (stationIds.some(id => selectedStations.includes(id))) {
             return true;
@@ -293,12 +319,15 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       });
     });
   
+    console.log('Agencies to Exclude:', Array.from(agenciesToExclude));
+    console.log('Routes to Exclude:', Array.from(routesToExclude));
+    console.log('Routes to Exclude with Station:', Array.from(routesToExcludeWithStation));
+    console.log('Filtered Itineraries:', filtered); // Depuración
     setFilteredItineraries(filtered);
   }, [selectedAgencies, selectedRoutes, selectedStations, itineraryData, routeData]);
-   
 
+  // Actualizar ubicaciones de inicio y fin
   useEffect(() => {
-    // Update start and end locations
     if (startLocation) {
       setFromLat(startLocation.lat.toString());
       setFromLon(startLocation.lon.toString());
@@ -316,6 +345,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   }, [startLocation, endLocation, userLocation]);
 
+  // Obtener ubicación del usuario si no se proporciona startLocation
   useEffect(() => {
     if (!startLocation) {
       navigator.geolocation.getCurrentPosition(
@@ -337,13 +367,14 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   }, [startLocation]);
 
+  // Generar una clave simplificada para itinerarios
   function generateSimplifiedItineraryKey(itinerary: Itinerary): string {
-    // Clave simplificada basada en el modo de transporte y las ubicaciones de origen y destino
     return `${itinerary.legs
       .map((leg) => `${leg.mode}-${leg.from.name}-${leg.to.name}`)
       .join('|')}`;
   }
 
+  // Eliminar itinerarios duplicados
   function removeDuplicateItineraries(itineraries: Itinerary[]) {
     const seen = new Set();
     return itineraries.filter((itinerary) => {
@@ -357,6 +388,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     });
   }
 
+  // Función para obtener itinerarios
   const fetchAllItineraries = useCallback(async () => {
     if (!fromLat || !fromLon || !toLat || !toLon) {
       return;
@@ -365,16 +397,22 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     setLoading(true);
     setIsExpanded(true);
 
-    const currentDate = new Date().toLocaleDateString('en-US'); // Formato ISO (YYYY-MM-DD)
+    const currentDate = new Date().toLocaleDateString('en-US'); // Formato MM/DD/YYYY
     console.log('Current Local Date:', currentDate);
     const currentTime = new Date().toLocaleTimeString('en-US', { hour12: true });
     console.log('Current Local Time:', currentTime);  
     
-    const maxTransfers = 10; // Increase to allow more transfers
-    const numItineraries = 30; // Fetch more itineraries
+    const maxTransfers = 10; // Aumentar para permitir más transferencias
+    const numItineraries = 30; // Obtener más itinerarios
 
     try {
-      // Fetch itineraries for different transport modes
+      const { bannedAgencies, bannedRoutes } = generateBannedBlocks(
+        selectedAgencies,
+        selectedRoutes,
+        routeData
+      );
+
+      // Consultas para diferentes modos de transporte
       const queries = [
         ITINERARY_QUERY(
           Number(fromLat),
@@ -384,7 +422,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_WALK_ONLY(
           Number(fromLat),
@@ -394,7 +434,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
         ),
         ITINERARY_QUERY_BUS_WALK(
           Number(fromLat),
@@ -404,7 +444,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_SUBWAY_WALK(
           Number(fromLat),
@@ -414,7 +456,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_TRAM_WALK(
           Number(fromLat),
@@ -424,7 +468,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_RAIL_WALK(
           Number(fromLat),
@@ -434,7 +480,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_FERRY_WALK(
           Number(fromLat),
@@ -444,7 +492,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_GONDOLA_WALK(
           Number(fromLat),
@@ -454,7 +504,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_CABLE_CAR_WALK(
           Number(fromLat),
@@ -464,7 +516,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_FUNICULAR_WALK(
           Number(fromLat),
@@ -474,7 +528,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_BUS_SUBWAY_WALK(
           Number(fromLat),
@@ -484,7 +540,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_SUBWAY_TRAM_WALK(
           Number(fromLat),
@@ -494,7 +552,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_ALL_MODES_WALK(
           Number(fromLat),
@@ -504,36 +564,50 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
       ];
 
-      // Execute all queries and collect responses
+      // Ejecutar todas las consultas y recopilar respuestas
       const results = await Promise.all(queries.map((query) => fetchItineraries(query)));
 
-      // Combine all itineraries
+      // Combinar todos los itinerarios
       let allItineraries = results.flat();
 
       // Filtrar itinerarios únicos
       const uniqueItineraries = removeDuplicateItineraries(allItineraries);
 
-      // Sort itineraries by duration (fastest to longest)
+      // Ordenar itinerarios por duración (más rápido a más largo)
       const sortedItineraries = uniqueItineraries.sort((a, b) => a.duration - b.duration);
 
       setItineraryData(sortedItineraries);
+      console.log('Itinerary Data Set:', sortedItineraries); // Depuración
+
+      // Verificar si los itinerarios tienen legGeometry.points
+      sortedItineraries.forEach((itinerary, index) => {
+        itinerary.legs.forEach((leg, legIndex) => {
+          if (!leg.legGeometry?.points) {
+            console.warn(`Itinerary ${index}, Leg ${legIndex} no tiene legGeometry.points`);
+          }
+        });
+      });
     } catch (error) {
       console.error('Error fetching itineraries:', error);
     } finally {
       setLoading(false);
     }
-  }, [fromLat, fromLon, toLat, toLon]);
+  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes, routeData]);
 
+  // Ejecutar fetchAllItineraries cuando las coordenadas o filtros cambien
   useEffect(() => {
     if (fromLat && fromLon && toLat && toLon) {
       fetchAllItineraries();
     }
-  }, [fromLat, fromLon, toLat, toLon, fetchAllItineraries]);
+  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes, fetchAllItineraries]);
 
+  // Manejar la selección y trazado de un itinerario
   const handlePlotItinerary = (itinerary: Itinerary) => {
     if (!itinerary) {
       setSelectedItinerary(itinerary);
@@ -544,12 +618,21 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       setSelectedItinerary(itinerary);
     }
     console.log('Itinerario seleccionado para trazar:', itinerary);
+
+    // Verificar si el itinerario tiene legs con legGeometry.points
+    itinerary.legs.forEach((leg, index) => {
+      if (!leg.legGeometry?.points) {
+        console.warn(`Leg ${index} del itinerario seleccionado no tiene legGeometry.points`);
+      }
+    });
+
     setTimeout(() => {
       setIsExpanded(false);
-    }, 50); // Adjust the timing as necessary
+    }, 50); // Ajustar el tiempo según sea necesario
     setExpandedLegIndex(null);
   };
 
+  // Manejar la expansión de detalles de un leg
   const handleExpandDetails = (index: number) => {
     setExpandedLegIndex(index === expandedLegIndex ? null : index);
     setCurrentLegIndex(0);
@@ -594,12 +677,12 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           )}
 
           {selectedItinerary &&
-            selectedItinerary.legs.map((leg: Leg, legIndex: React.Key | null | undefined) => {
+            selectedItinerary.legs.map((leg: Leg) => {
               if (leg.legGeometry?.points) {
                 const decodedPolyline = polyline.decode(leg.legGeometry.points);
                 return (
                   <Polyline
-                    key={legIndex}
+                    key={`${selectedItinerary.id}-${leg.gtfsId}`} // Clave única usando gtfsId
                     positions={decodedPolyline.map((coord) => [coord[0], coord[1]])}
                     pathOptions={getPolylineStyle(leg)}
                   />
@@ -644,18 +727,20 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           <div className="p-4 bg-white shadow-md">
             {/* Combobox de agencias */}
             <Autocomplete
+              id='agenciess'
               multiple
               options={agencyList}
               disableCloseOnSelect
               getOptionLabel={(option) => option.name}
               onChange={(event, value) => {
-                setSelectedAgencies(value.map((agency) => agency.id));
+                setSelectedAgencies(value.map((agency) => agency.gtfsId)); // Usar gtfsId
+                console.log('Selected Agencies:', value.map((agency) => agency.gtfsId));
                 // Reset selected routes and stations when agencies change
                 setSelectedRoutes([]);
                 setSelectedStations([]);
               }}
               renderOption={(props, option, { selected }) => (
-                <li {...props}>
+                <li {...props} key={option.gtfsId}> {/* Asegurar clave única */}
                   <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                     checkedIcon={<Check fontSize="small" />}
@@ -672,6 +757,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                   variant="outlined"
                   label="Excluir por Agencia"
                   placeholder="Selecciona agencias"
+                  id="agencies-autocomplete"
+                  name="agencies"
                 />
               )}
             />
@@ -684,19 +771,20 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               disableCloseOnSelect
               getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
               onChange={(event, value) => {
-                setSelectedRoutes(value.map((route) => route.id));
-                // Reset selected stations when routes change
+                setSelectedRoutes(value.map((route) => route.gtfsId)); // Usar gtfsId
+                console.log('Selected Routes:', value.map((route) => route.gtfsId));
+                // Reset selected stations cuando las rutas cambian
                 setSelectedStations([]);
               }}
               renderOption={(props, option, { selected }) => (
-                <li {...props}>
+                <li {...props} key={option.gtfsId}> {/* Asegurar clave única */}
                   <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                     checkedIcon={<Check fontSize="small" />}
                     style={{ marginRight: 8 }}
                     checked={selected}
                   />
-                  {option.shortName} - {option.longName}
+                  {`${option.shortName} - ${option.longName}`}
                 </li>
               )}
               style={{ width: '100%', marginBottom: '16px' }}
@@ -706,29 +794,32 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                   variant="outlined"
                   label="Excluir por Línea/Ruta"
                   placeholder="Selecciona rutas"
+                  id='routes-autocomplete'
+                  name='routes'
                 />
               )}
             />
 
             {/* Combobox de estaciones */}
-            <Autocomplete
+            {/* <Autocomplete
               multiple
               options={stationList}
               groupBy={(option) => `${option.agencyName} - ${option.routeName}`}
               disableCloseOnSelect
-              getOptionLabel={(option) => option.name}
+              getOptionLabel={(option) => `${option.name} (${option.routeName})`} // Hacer única la etiqueta
               onChange={(event, value) => {
                 setSelectedStations(value.map((station) => station.id));
+                console.log('Selected Stations:', value.map((station) => station.id));
               }}
               renderOption={(props, option, { selected }) => (
-                <li {...props}>
+                <li {...props} key={option.id}>
                   <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                     checkedIcon={<Check fontSize="small" />}
                     style={{ marginRight: 8 }}
                     checked={selected}
                   />
-                  {option.name}
+                  {`${option.name} (${option.routeName})`}
                 </li>
               )}
               style={{ width: '100%' }}
@@ -738,32 +829,34 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                   variant="outlined"
                   label="Excluir por Estación"
                   placeholder="Selecciona estaciones"
+                  id='stations-autocomplete'
+                  name='stations'
                 />
               )}
-            />
+            /> */}
           </div>
         )}
 
         <div className="p-4 flex flex-col">
-          {/* Menu Content */}
+          {/* Contenido del Menú */}
           {loading ? (
             <p className="text-center">Cargando itinerarios...</p>
           ) : (
             <>
               {filteredItineraries.length > 0 ? (
                 <div className="space-y-4 overflow-y-auto">
-                  {/* If the menu is expanded, show all itineraries */}
+                  {/* Si el menú está expandido, mostrar todos los itinerarios */}
                   {isExpanded
                     ? filteredItineraries.map((itinerary, index) => (
-                        <div key={index} className="bg-green-100 p-3 rounded-lg max-w-full">
+                        <div key={itinerary.id} className="bg-green-100 p-3 rounded-lg max-w-full">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                            {/* Visualization of legs with icons */}
+                            {/* Visualización de legs con íconos */}
                             <div className="flex items-center flex-wrap">
                               {itinerary.legs.map((leg, legIndex) => {
                                 const color = getColorForLeg(leg);
                                 const Icon = getTransportIcon(leg.mode);
                                 return (
-                                  <React.Fragment key={legIndex}>
+                                  <React.Fragment key={`${itinerary.id}-${leg.gtfsId}`}>
                                     <div
                                       style={{
                                         display: 'flex',
@@ -774,7 +867,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       }}
                                       title={`ETA: ${generateRandomETA()}`}
                                     >
-                                      {/* Duration above the icon */}
+                                      {/* Duración encima del ícono */}
                                       <span
                                         style={{
                                           fontSize: '12px',
@@ -800,7 +893,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       >
                                         {Icon}
                                       </div>
-                                      {/* Distance below the icon */}
+                                      {/* Distancia debajo del ícono */}
                                       <span
                                         style={{
                                           fontSize: '12px',
@@ -820,7 +913,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               })}
                             </div>
 
-                            {/* Buttons for details and mapping */}
+                            {/* Botones para detalles y mapeo */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
                               <div className="flex flex-col items-start mb-2 sm:mb-0">
                                 {itinerary.waitingTime > 0 && (
@@ -856,10 +949,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               </button>
                             </div>
                           </div>
-                          {/* Show details if expanded */}
+                          {/* Mostrar detalles si está expandido */}
                           {expandedLegIndex === index && (
                             <div className="mt-2">
-                              {/* Slider controls */}
+                              {/* Controles del Slider */}
                               <div className="flex items-center justify-between">
                                 <button
                                   onClick={() =>
@@ -874,7 +967,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   Anterior
                                 </button>
                                 <div className="flex-1 mx-4">
-                                  {/* Show current leg */}
+                                  {/* Mostrar leg actual */}
                                   {itinerary.legs[currentLegIndex] && (
                                     <div
                                       className="rounded-lg p-4 text-white"
@@ -884,7 +977,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         ),
                                       }}
                                     >
-                                      {/* Leg details */}
+                                      {/* Detalles del leg */}
                                       {itinerary.legs[currentLegIndex].route?.agency && (
                                         <p>
                                           <strong>Agencia:</strong>{' '}
@@ -945,7 +1038,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   Siguiente
                                 </button>
                               </div>
-                              {/* Pagination indicator */}
+                              {/* Indicador de paginación */}
                               <div className="flex justify-center mt-2">
                                 {itinerary.legs.map((_, idx) => (
                                   <div
@@ -960,28 +1053,26 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                           )}
                         </div>
                       ))
-                    : // If the menu is collapsed, only show the selected itinerary
+                    : 
+                      // Si el menú está colapsado, solo mostrar el itinerario seleccionado
                       selectedItinerary && (
                         <div className="bg-green-100 p-3 rounded-lg max-w-full">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                            {/* Visualization of legs with icons */}
+                            {/* Visualización de legs con íconos */}
                             <div className="flex items-center flex-wrap">
                               {selectedItinerary.legs.map(
-                                (leg: Leg, legIndex: React.Key | null | undefined) => {
+                                (leg: Leg) => {
                                   const color = getColorForLeg(leg);
                                   const Icon = getTransportIcon(leg.mode);
                                   return (
-                                    <React.Fragment key={legIndex}>
+                                    <React.Fragment key={`${selectedItinerary.id}-${leg.gtfsId}`}>
                                       <div
                                         style={{
                                           display: 'flex',
                                           flexDirection: 'column',
                                           alignItems: 'center',
                                           marginRight:
-                                            (legIndex as number) <
-                                            selectedItinerary.legs.length - 1
-                                              ? '12px'
-                                              : '0',
+                                            leg.gtfsId.length < selectedItinerary.legs.length - 1 ? '12px' : '0',
                                         }}
                                         title={`ETA: ${generateRandomETA()}`}
                                       >
@@ -1022,17 +1113,16 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           {Math.round(leg.distance)}m
                                         </span>
                                       </div>
-                                      {typeof legIndex === 'number' &&
-                                        legIndex < selectedItinerary.legs.length - 1 && (
-                                          <ArrowForwardIcon style={{ color: 'gray' }} />
-                                        )}
+                                      {leg.gtfsId.length < selectedItinerary.legs.length - 1 && (
+                                        <ArrowForwardIcon style={{ color: 'gray' }} />
+                                      )}
                                     </React.Fragment>
                                   );
                                 }
                               )}
                             </div>
 
-                            {/* Buttons for saving the route */}
+                            {/* Botones para guardar la ruta */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
                               <div className="flex flex-col items-start mb-2 sm:mb-0">
                                 {selectedItinerary.waitingTime > 0 && (
@@ -1050,7 +1140,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   </p>
                                 </div>
                               </div>
-                              {/* "Save Route" Button */}
+                              {/* Botón "Guardar Ruta" */}
                               <button
                                 className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
                                 onClick={() =>

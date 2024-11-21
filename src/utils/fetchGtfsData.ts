@@ -10,6 +10,7 @@ export interface Stop {
   
   export interface Route {
     id: string;
+    gtfsId: string;
     shortName: string;
     longName: string;
     stops: Stop[];
@@ -17,6 +18,7 @@ export interface Stop {
   
   export interface Agency {
     id: string;
+    gtfsId: string;
     name: string;
     routes: Route[];
   }
