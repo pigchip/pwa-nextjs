@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Tooltip, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Marker, Tooltip, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -56,6 +56,8 @@ interface InteractiveMapComponentProps {
   getStationLogo: (agencyName: string) => string;
   incidents: Incident[];
   showIncidents: boolean;
+  lat: number;
+  lon: number; 
 }
 
 // Componente para ícono de incidentes
@@ -81,9 +83,11 @@ const InteractiveMapComponent: React.FC<InteractiveMapComponentProps> = ({
   getStationLogo,
   incidents,
   showIncidents,
+  lat,
+  lon,
 }) => {
   return (
-    <MapContainer center={[19.432608, -99.133209]} zoom={12} style={{ height: '64vh', width: '100vw', zIndex: 0 }}>
+    <MapContainer center={lat !== 123 && lon !== 123 ? [lat, lon] : [19.432608, -99.133209]} zoom={12} style={{ height: '64vh', width: '100vw', zIndex: 0 }}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {selectedRoutes.length > 0 && displayedRoutes.map((route) =>
         route.patterns.map((pattern, patternIndex) => {
@@ -133,6 +137,15 @@ const InteractiveMapComponent: React.FC<InteractiveMapComponentProps> = ({
           );
         })
       )}
+
+        {/* Dibujamos un círculo en las coordenadas proporcionadas */}
+        {lat !== 123 && lon !== 123 && (
+          <Circle
+            center={[lat, lon]}
+            radius={200}
+            pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.5 }}
+          />
+        )}
 
         {/* Renderizar marcadores de incidentes si showIncidents es true */}
         {showIncidents &&
