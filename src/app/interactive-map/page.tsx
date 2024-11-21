@@ -93,6 +93,36 @@ interface Opinion {
   place: string;
 }
 
+interface Incident {
+  id: number;
+  name: string;
+  line: number | string;
+  incident: string;
+  services: string;
+  information: string;
+  lat: number;
+  lon: number;
+  agency: string;
+  route: string;
+}
+
+interface InteractiveMapComponentProps {
+  selectedRoutes: string[];
+  displayedRoutes: Route[];
+  handlePolylineClick: (route: Route) => void;
+  handleMarkerClick: (stationInfo: any, stop: Stop, route: Route) => void;
+  findStationInfo: (
+    stopName: string,
+    lat: number,
+    lon: number,
+    agencyName: string
+  ) => { station: any; line: any } | null;
+  getStationLogo: (agencyName: string) => string;
+  incidents: Incident[]; // Asegúrate de que sea Incident[] y no Station[]
+  showIncidents: boolean;
+}
+
+
 const InteractiveMapComponent = dynamic(() => import('@/components/InteractiveMapComponent'), {
   ssr: false,
 });
@@ -122,6 +152,9 @@ const RoutesMap: React.FC = () => {
   const [showUserOpinionsModal, setShowUserOpinionsModal] = useState<boolean>(false);
   const [editingOpinion, setEditingOpinion] = useState<Opinion | null>(null);
   const [isMapInteractive, setIsMapInteractive] = useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [showIncidents, setShowIncidents] = useState<boolean>(false);
+  const [stopsData, setStopsData] = useState<Stop[]>([]);
 
   const toggleMapInteraction = () => {
     setIsMapInteractive((prev) => !prev);
@@ -177,6 +210,11 @@ const RoutesMap: React.FC = () => {
         const apiRoutesData = await fetchApiRoutes();
         setApiRoutesData(apiRoutesData);
 
+        // Extraer todas las paradas de las rutas
+        const allStops = routesData.flatMap(route =>
+          route.patterns.flatMap(pattern => pattern.stops)
+        );
+        setStopsData(allStops);
       } catch (err: any) {
         setError(err.message);
       }
@@ -270,6 +308,75 @@ const RoutesMap: React.FC = () => {
     fetchData();
   }, []);
 
+// Inside your RoutesMap component
+
+useEffect(() => {
+  async function fetchIncidents() {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}api/stations/incidents`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Error al obtener los incidentes desde la API");
+      }
+      const data: Station[] = await response.json();
+
+      // Map Station[] to Incident[]
+      const mappedIncidents: Incident[] = data.map((incidentStation) => {
+        // Find associated stops
+        const associatedStops = stopsData.filter(
+          (stop) => normalizeString(stop.name) === normalizeString(incidentStation.name)
+        );
+
+        // Select a stop to get coordinates
+        const selectedStop = associatedStops[0]; // Adjust as needed
+
+        if (selectedStop) {
+          // Find the corresponding line
+          const lineInfo = linesData.find(
+            (line) => line.id === incidentStation.line
+          );
+
+          // Extract agency and route names
+          const agencyName = lineInfo ? lineInfo.transport : "Desconocido";
+          const routeName = lineInfo ? lineInfo.name : "Desconocido";
+
+          return {
+            id: incidentStation.id,
+            name: incidentStation.name,
+            line: incidentStation.line,
+            incident: incidentStation.incident,
+            services: incidentStation.services,
+            information: incidentStation.information,
+            lat: selectedStop.lat,
+            lon: selectedStop.lon,
+            agency: agencyName, // Populate agency name
+            route: routeName,   // Populate route name
+          };
+        } else {
+          console.warn(`No se encontró una parada asociada para la estación: ${incidentStation.name}`);
+          // Decide how to handle this case, e.g., omit the incident
+          return null;
+        }
+      }).filter((incident): incident is Incident => incident !== null); // Filter out nulls
+
+      setIncidents(mappedIncidents);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  if (stationsData.length > 0 && stopsData.length > 0) {
+    fetchIncidents();
+  }
+}, [stationsData, stopsData, linesData]); // Added linesData as a dependency
+
+  
+  
   // Funciones de manejo de eventos y lógica
   const handleAgencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const agencyName = event.target.value;
@@ -915,6 +1022,15 @@ const RoutesMap: React.FC = () => {
 
           <div>
             <button
+              onClick={() => setShowIncidents(prev => !prev)}
+              className={`bg-${showIncidents ? "blue" : "red"}-500 text-white px-4 py-2 rounded hover:bg-${showIncidents ? "gray" : "orange"}-600 transition`}
+            >
+              {showIncidents ? 'Ocultar Incidentes' : 'Ver Incidentes'}
+            </button>
+          </div>
+
+          <div>
+            <button
               onClick={() => {
                 setShowUserOpinionsModal(true);
                 setSelectedStation(null);
@@ -955,6 +1071,8 @@ const RoutesMap: React.FC = () => {
               handleMarkerClick={handleMarkerClick}
               findStationInfo={findStationInfo}
               getStationLogo={getStationLogo}
+              incidents={incidents}
+              showIncidents={showIncidents}
             />
           </div>
 

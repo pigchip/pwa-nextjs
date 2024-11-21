@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Marker, Tooltip, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -34,6 +34,19 @@ interface Route {
   patterns: Pattern[];
 }
 
+interface Incident {
+  id: number;
+  name: string;
+  line: number | string;
+  incident: string;
+  services: string;
+  information: string;
+  lat: number;
+  lon: number;
+  agency: string;
+  route: string;
+}
+
 interface InteractiveMapComponentProps {
   selectedRoutes: string[];
   displayedRoutes: Route[];
@@ -41,7 +54,23 @@ interface InteractiveMapComponentProps {
   handleMarkerClick: (stationInfo: any, stop: Stop, route: Route) => void;
   findStationInfo: (stopName: string, lat: number, lon: number, agencyName: string) => { station: any; line: any } | null;
   getStationLogo: (agencyName: string) => string;
+  incidents: Incident[];
+  showIncidents: boolean;
 }
+
+// Componente para ícono de incidentes
+const IncidentIcon = () =>
+  new L.DivIcon({
+    className: '',
+    html:` <div class="bg-white text-red-500 text-2xl flex items-center justify-center rounded-full" style="width: 35px; height: 35px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);">
+             <span class="material-icons" style="transform: translateY(-2px);">warning</span>
+           </div>`,
+    iconSize: [35, 35], // Icon size remains the same
+    iconAnchor: [17.5, 17.5], // Center the icon
+    popupAnchor: [1, -30], // Popup anchor remains the same
+  });
+
+
 
 const InteractiveMapComponent: React.FC<InteractiveMapComponentProps> = ({
   selectedRoutes,
@@ -50,6 +79,8 @@ const InteractiveMapComponent: React.FC<InteractiveMapComponentProps> = ({
   handleMarkerClick,
   findStationInfo,
   getStationLogo,
+  incidents,
+  showIncidents,
 }) => {
   return (
     <MapContainer center={[19.432608, -99.133209]} zoom={12} style={{ height: '64vh', width: '100vw', zIndex: 0 }}>
@@ -102,6 +133,36 @@ const InteractiveMapComponent: React.FC<InteractiveMapComponentProps> = ({
           );
         })
       )}
+
+        {/* Renderizar marcadores de incidentes si showIncidents es true */}
+        {showIncidents &&
+          incidents.map((incident) => {
+            if (typeof incident.lat !== 'number' || typeof incident.lon !== 'number') {
+              console.warn(
+                `Incident ${incident.id} tiene coordenadas inválidas: (${incident.lat}, ${incident.lon})`
+              );
+              return null;
+            }
+            return (
+              <Marker
+                key={`incident-${incident.id}`}
+                position={[incident.lat, incident.lon]}
+                icon={IncidentIcon()}
+              >
+                <Popup>
+                  <div className="incident-popup text-base font-sans" style={{ width: '200px' }}>
+                    <strong className="font-semibold center">{incident.name}</strong>
+                    <div className='text-sm'>
+                      <strong>Agencia:</strong> {incident.agency}<br />
+                      <strong>Línea/Ruta:</strong> {incident.route}<br />
+                      <strong>Incidente:</strong> <br />{incident.incident}
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+
     </MapContainer>
   );
 };
