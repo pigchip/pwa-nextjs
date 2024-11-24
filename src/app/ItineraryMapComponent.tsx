@@ -652,7 +652,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               ? [userLocation.lat, userLocation.lon]
               : defaultPosition
           }
-          zoom={13}
+          minZoom={10}
+          zoom={10}
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
