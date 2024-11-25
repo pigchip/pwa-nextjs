@@ -135,6 +135,7 @@ const RoutesMap: React.FC<RoutesMapProps> = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selectedLatLon, setSelectedLatLon] = useState<{ lat: number; lon: number }>({ lat: 123, lon: 123 });
   const [stationsData, setStationsData] = useState<Station[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [linesData, setLinesData] = useState<Line[]>([]);
   const [apiRoutesData, setApiRoutesData] = useState<ApiRoute[]>([]);
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
@@ -174,6 +175,8 @@ const RoutesMap: React.FC<RoutesMapProps> = () => {
   }, [selectedLatLon]);
 
   const toggleMapInteraction = () => {
+    setDropdownOpen(false);
+    setIsRoutesDropdownOpen(false);
     setIsMapInteractive((prev) => !prev);
   };
   // Función para validar email
@@ -451,6 +454,7 @@ useEffect(() => {
     setEditingOpinion(null);
 
     setIsRoutesDropdownOpen(!isRoutesDropdownOpen);
+    setDropdownOpen(false);
   };
 
   const displayedRoutes = selectedRoutes.length > 0 ? filteredRoutes.filter((route) => {
@@ -988,20 +992,35 @@ useEffect(() => {
       <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
 
       <div className="flex flex-wrap justify-center mb-4 space-x-4 z-20 relative">
-        <div>
-          {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
-            <label key={agency} className="block">
-              <input
-                type="checkbox"
-                value={agency}
-                checked={selectedAgencies.includes(agency)}
-                onChange={handleAgencyChange}
-                className="mr-2"
-              />
-              {agency}
-            </label>
-          ))}
-        </div>
+      <div className="relative inline-block">
+            <button
+              className="bg-blue-500 text-white font-semibold py-2 px-4 rounded"
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+                setIsRoutesDropdownOpen(false);
+              }}
+            >
+              Agencias
+            </button>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-48">
+                <div className="p-2">
+                  {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
+                    <label key={agency} className="block">
+                      <input
+                        type="checkbox"
+                        value={agency}
+                        checked={selectedAgencies.includes(agency)}
+                        onChange={handleAgencyChange}
+                        className="mr-2"
+                      />
+                      {agency}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
         <div className="relative">
           <button
@@ -1240,19 +1259,34 @@ useEffect(() => {
         <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
  
         <div className="flex flex-wrap justify-center mb-4 space-x-4 z-20 relative">
-          <div>
-            {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
-              <label key={agency} className="block">
-                <input
-                  type="checkbox"
-                  value={agency}
-                  checked={selectedAgencies.includes(agency)}
-                  onChange={handleAgencyChange}
-                  className="mr-2"
-                />
-                {agency}
-              </label>
-            ))}
+          <div className="relative inline-block">
+            <button
+              className="bg-blue-500 text-white font-semibold py-2 px-4 rounded"
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+                setIsRoutesDropdownOpen(false);
+              }}
+            >
+              Agencias
+            </button>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-48">
+                <div className="p-2">
+                  {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
+                    <label key={agency} className="block">
+                      <input
+                        type="checkbox"
+                        value={agency}
+                        checked={selectedAgencies.includes(agency)}
+                        onChange={handleAgencyChange}
+                        className="mr-2"
+                      />
+                      {agency}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="relative">
@@ -1312,6 +1346,7 @@ useEffect(() => {
                 setLineSchedules({});
                 setLineOpinions([]);
                 setIsRoutesDropdownOpen(false);
+                setDropdownOpen(false);
               }}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
             >
