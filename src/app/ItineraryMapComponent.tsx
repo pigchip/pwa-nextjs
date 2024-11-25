@@ -736,6 +736,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               multiple
               options={agencyList}
               disableCloseOnSelect
+              value={agencyList.filter(agency => selectedAgencies.includes(agency.gtfsId))}
               getOptionLabel={(option) => option.name}
               onChange={(event, value) => {
                 setSelectedAgencies(value.map((agency) => agency.gtfsId)); // Usar gtfsId
@@ -774,6 +775,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               options={routeList}
               groupBy={(option) => option.agencyName}
               disableCloseOnSelect
+              value={routeList.filter(route => selectedRoutes.includes(route.gtfsId))}
               getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
               onChange={(event, value) => {
                 setSelectedRoutes(value.map((route) => route.gtfsId)); // Usar gtfsId
