@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Status } from "@/types/register";
 import ConfirmModal from "@/components/ConfirmModal";
 import MapWithMarker from "@/components/MapWithMarker"; // Importa el componente del mapa
+import { Knock } from "@knocklabs/node";
 
 const EvidenceDetails: React.FC = () => {
   const { selectedReport, setSelectedReport, updateReport } = useReports();
@@ -16,6 +17,14 @@ const EvidenceDetails: React.FC = () => {
   const { role } = useRole();
   const [newStatus, setNewStatus] = useState<Status | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const knockApiKey = process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY;
+
+  if (!knockApiKey) {
+    throw new Error("NEXT_PUBLIC_KNOCK_SECRET_API_KEY is not defined");
+  }
+
+  const knockNode = new Knock(knockApiKey);
 
   const handleBack = () => {
     if (role === "supervisor") {
@@ -81,6 +90,16 @@ const EvidenceDetails: React.FC = () => {
       if (!response.ok) {
         throw new Error("Failed to update station incident");
       }
+
+      await knockNode.workflows.trigger("mts", {
+        recipients: ["iespinosas1700@alumno.ipn.mx", "jangeles1700@alumno.ipn.mx", "aguzman1702@alumno.ipn.mx", "agarciaz1703@alumno.ipn.mx"],
+        data: {
+          incident: {
+            value: incident,
+            station: stationId
+          }
+        }
+      });
     } catch (error) {
       console.error("Error updating station incident:", error);
     }
