@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Layout from '@/components/Layout';
 import { Close as CloseIcon, Lock, Map } from '@mui/icons-material';
+import LayoutNoHeader from '@/components/LayoutNoHeader';
 
 interface Geometry {
   lat: number;
@@ -93,14 +94,48 @@ interface Opinion {
   place: string;
 }
 
+interface Incident {
+  id: number;
+  name: string;
+  line: number | string;
+  incident: string;
+  services: string;
+  information: string;
+  lat: number;
+  lon: number;
+  agency: string;
+  route: string;
+}
+
+interface InteractiveMapComponentProps {
+  selectedRoutes: string[];
+  displayedRoutes: Route[];
+  handlePolylineClick: (route: Route) => void;
+  handleMarkerClick: (stationInfo: any, stop: Stop, route: Route) => void;
+  findStationInfo: (
+    stopName: string,
+    lat: number,
+    lon: number,
+    agencyName: string
+  ) => { station: any; line: any } | null;
+  getStationLogo: (agencyName: string) => string;
+  incidents: Incident[]; // Asegúrate de que sea Incident[] y no Station[]
+  showIncidents: boolean;
+}
+
 const InteractiveMapComponent = dynamic(() => import('@/components/InteractiveMapComponent'), {
   ssr: false,
 });
 
-const RoutesMap: React.FC = () => {
+interface RoutesMapProps {
+}
+
+const RoutesMap: React.FC<RoutesMapProps> = () => {
   // Estados y variables
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [selectedLatLon, setSelectedLatLon] = useState<{ lat: number; lon: number }>({ lat: 123, lon: 123 });
   const [stationsData, setStationsData] = useState<Station[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [linesData, setLinesData] = useState<Line[]>([]);
   const [apiRoutesData, setApiRoutesData] = useState<ApiRoute[]>([]);
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
@@ -122,8 +157,26 @@ const RoutesMap: React.FC = () => {
   const [showUserOpinionsModal, setShowUserOpinionsModal] = useState<boolean>(false);
   const [editingOpinion, setEditingOpinion] = useState<Opinion | null>(null);
   const [isMapInteractive, setIsMapInteractive] = useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [showIncidents, setShowIncidents] = useState<boolean>(false);
+  const [stopsData, setStopsData] = useState<Stop[]>([]);
+
+  const handleSelectLatLon = (lat: number, lon: number) => {
+    setSelectedLatLon({ lat, lon });
+  };
+  
+  useEffect(() => {
+    const lt = parseFloat(localStorage.getItem('latx') ?? '123');
+    const ln = parseFloat(localStorage.getItem('lonx') ?? '123');
+  
+    if (lt !== 123 && ln !== 123 && (selectedLatLon.lat !== lt || selectedLatLon.lon !== ln)) {
+      handleSelectLatLon(lt, ln);
+    }
+  }, [selectedLatLon]);
 
   const toggleMapInteraction = () => {
+    setDropdownOpen(false);
+    setIsRoutesDropdownOpen(false);
     setIsMapInteractive((prev) => !prev);
   };
   // Función para validar email
@@ -135,7 +188,7 @@ const RoutesMap: React.FC = () => {
     if (storedEmail && validateEmail(storedEmail)) {
       fetchUserId(storedEmail);
     } else {
-      alert('No se encontró un correo electrónico válido en el localStorage.');
+      
     }
   }, []);
 
@@ -177,6 +230,11 @@ const RoutesMap: React.FC = () => {
         const apiRoutesData = await fetchApiRoutes();
         setApiRoutesData(apiRoutesData);
 
+        // Extraer todas las paradas de las rutas
+        const allStops = routesData.flatMap(route =>
+          route.patterns.flatMap(pattern => pattern.stops)
+        );
+        setStopsData(allStops);
       } catch (err: any) {
         setError(err.message);
       }
@@ -270,6 +328,75 @@ const RoutesMap: React.FC = () => {
     fetchData();
   }, []);
 
+// Inside your RoutesMap component
+
+useEffect(() => {
+  async function fetchIncidents() {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
+      const response = await fetch(`${apiUrl}api/stations/incidents`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Error al obtener los incidentes desde la API");
+      }
+      const data: Station[] = await response.json();
+
+      // Map Station[] to Incident[]
+      const mappedIncidents: Incident[] = data.map((incidentStation) => {
+        // Find associated stops
+        const associatedStops = stopsData.filter(
+          (stop) => normalizeString(stop.name) === normalizeString(incidentStation.name)
+        );
+
+        // Select a stop to get coordinates
+        const selectedStop = associatedStops[0]; // Adjust as needed
+
+        if (selectedStop) {
+          // Find the corresponding line
+          const lineInfo = linesData.find(
+            (line) => line.id === incidentStation.line
+          );
+
+          // Extract agency and route names
+          const agencyName = lineInfo ? lineInfo.transport : "Desconocido";
+          const routeName = lineInfo ? lineInfo.name : "Desconocido";
+
+          return {
+            id: incidentStation.id,
+            name: incidentStation.name,
+            line: incidentStation.line,
+            incident: incidentStation.incident,
+            services: incidentStation.services,
+            information: incidentStation.information,
+            lat: selectedStop.lat,
+            lon: selectedStop.lon,
+            agency: agencyName, // Populate agency name
+            route: routeName,   // Populate route name
+          };
+        } else {
+          console.warn(`No se encontró una parada asociada para la estación: ${incidentStation.name}`);
+          // Decide how to handle this case, e.g., omit the incident
+          return null;
+        }
+      }).filter((incident): incident is Incident => incident !== null); // Filter out nulls
+
+      setIncidents(mappedIncidents);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  if (stationsData.length > 0 && stopsData.length > 0) {
+    fetchIncidents();
+  }
+}, [stationsData, stopsData, linesData]); // Added linesData as a dependency
+
+  
+  
   // Funciones de manejo de eventos y lógica
   const handleAgencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const agencyName = event.target.value;
@@ -327,6 +454,7 @@ const RoutesMap: React.FC = () => {
     setEditingOpinion(null);
 
     setIsRoutesDropdownOpen(!isRoutesDropdownOpen);
+    setDropdownOpen(false);
   };
 
   const displayedRoutes = selectedRoutes.length > 0 ? filteredRoutes.filter((route) => {
@@ -449,7 +577,7 @@ const RoutesMap: React.FC = () => {
       const fetchAdditionalData = async () => {
         try {
           const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-          const transfersResponse = await fetch(`${apiUrl}/api/stations/${station.id}/transfers`, {
+          const transfersResponse = await fetch(`${apiUrl}api/stations/${station.id}/transfers`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -560,7 +688,7 @@ const RoutesMap: React.FC = () => {
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-        const routesResponse = await fetch(`${apiUrl}/api/lines/${line.id}/routes`, {
+        const routesResponse = await fetch(`${apiUrl}api/lines/${line.id}/routes`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -703,7 +831,7 @@ const RoutesMap: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
+      const response = await fetch(`${apiUrl}api/${isStation ? 'stations' : 'lines'}/${id}/opinions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -755,7 +883,7 @@ const RoutesMap: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/user/${userId}/opinions`, {
+      const response = await fetch(`${apiUrl}api/user/${userId}/opinions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -790,7 +918,7 @@ const RoutesMap: React.FC = () => {
   const handleDeleteOpinion = async (opinionId: number) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/opinions`, {
+      const response = await fetch(`${apiUrl}api/opinions`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -836,7 +964,7 @@ const RoutesMap: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL_STATIONS;
-      const response = await fetch(`${apiUrl}/api/opinions`, {
+      const response = await fetch(`${apiUrl}api/opinions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -858,25 +986,307 @@ const RoutesMap: React.FC = () => {
     }
   };
 
-  return (
+  return selectedLatLon.lat !== 123 && selectedLatLon.lon !== 123 ? (
+    <LayoutNoHeader>
+          <div className="relative w-full h-50vh">
+      <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
+
+      <div className="flex flex-wrap justify-center mb-4 space-x-4 z-20 relative">
+      <div className="relative inline-block">
+            <button
+              className="bg-blue-500 text-white font-semibold py-2 px-4 rounded"
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+                setIsRoutesDropdownOpen(false);
+              }}
+            >
+              Agencias
+            </button>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-48">
+                <div className="p-2">
+                  {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
+                    <label key={agency} className="block">
+                      <input
+                        type="checkbox"
+                        value={agency}
+                        checked={selectedAgencies.includes(agency)}
+                        onChange={handleAgencyChange}
+                        className="mr-2"
+                      />
+                      {agency}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+        <div className="relative">
+          <button
+            onClick={toggleRoutesDropdown}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          >
+            {selectedRoutes.length > 0 ? `Rutas seleccionadas (${selectedRoutes.length})` : 'Seleccione rutas'}
+          </button>
+          {isRoutesDropdownOpen && (
+            <div className="absolute bg-white border border-gray-300 z-10 w-64 h-64 overflow-y-auto p-2 mt-1">
+              {selectedAgencies.map((agency) => (
+                <div key={`agency-${agency}`} className="mb-2">
+                  <strong>{`Rutas de ${agency}`}</strong>
+                  <div>
+                    {filteredRoutes
+                      .filter((route) => route.agency.name === agency)
+                      .map((route, index) => (
+                        <label key={`${route.shortName}-${agency}-${index}`} className="block">
+                          <input
+                            type="checkbox"
+                            value={`${route.shortName}-${agency}`}
+                            checked={selectedRoutes.includes(`${route.shortName}-${agency}`)}
+                            onChange={handleRouteSelection}
+                            className="mr-2"
+                          />
+                          {route.shortName} - {route.longName}
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <button
+            onClick={() => setShowIncidents(prev => !prev)}
+            className={`bg-${showIncidents ? "blue" : "red"}-500 text-white px-4 py-2 rounded hover:bg-${showIncidents ? "gray" : "orange"}-600 transition`}
+          >
+            {showIncidents ? 'Ocultar Incidentes' : 'Ver Incidentes'}
+          </button>
+        </div>
+      </div>
+
+      <div>
+        {/* Contenedor del mapa */}
+        <div className="relative w-full h-full">
+        <InteractiveMapComponent
+            lat={selectedLatLon.lat}
+            lon={selectedLatLon.lon}
+            selectedRoutes={selectedRoutes}
+            displayedRoutes={filteredRoutes.filter(route =>
+              selectedRoutes.includes(`${route.shortName}-${route.agency.name}`)
+            )}
+            
+            handlePolylineClick={handlePolylineClick}
+            handleMarkerClick={handleMarkerClick}
+            findStationInfo={findStationInfo}
+            getStationLogo={getStationLogo}
+            incidents={incidents}
+            showIncidents={showIncidents}
+          />
+        </div>
+
+        {/* Ventana emergente para la estación */}
+        {selectedStation && (
+          <div className="fixed top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
+            <button
+              onClick={() => {
+                setSelectedStation(null);
+                setStationTransfers([]);
+                setStationRoutes([]);
+                setStationSchedules({});
+                setStationOpinions([]);
+              }}
+              className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-700 transition"
+            >
+              <CloseIcon />
+            </button>
+            <div className="flex items-center">
+              <img src={getStationLogo(selectedStation.transport)} alt={selectedStation.transport} className="w-6 h-6 mr-2" />
+              <h3 className="text-lg font-semibold">{selectedStation.name}</h3>
+            </div>
+            <p><strong>Transporte:</strong> {selectedStation.transport}</p>
+            <p><strong>Línea:</strong> {selectedStation.line}</p>
+
+            {/* Mostrar información adicional solo si el ID no es 0 */}
+            {selectedStation.id !== 0 && (
+              <>
+                <p><strong>Incidente:</strong> {selectedStation.incident || 'No hay incidentes reportados'}</p>
+                <p><strong>Servicios:</strong> {selectedStation.services || 'No disponible'}</p>
+                <p><strong>Información:</strong> {selectedStation.information || 'No disponible'}</p>
+              </>
+            )}
+
+            {stationTransfers.length > 0 && (
+              <div>
+                <h4 className="font-semibold mt-2">Transbordos:</h4>
+                <ul className="list-disc list-inside">
+                  {stationTransfers.map((transfer) => {
+                    const line = linesData.find(line => line.id === transfer.line);
+                    const transport = line ? line.transport : 'Desconocido';
+                    return (
+                      <li key={transfer.id} className="flex items-center">
+                        <img src={getStationLogo(transport)} alt={transport} className="w-4 h-4 mr-1" />
+                        {transfer.name} - {transport}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {stationRoutes.length > 0 && (
+              <div>
+                <h4 className="font-semibold mt-2">Rutas:</h4>
+                {stationRoutes.map((route) => {
+                  const scheduleData = stationSchedules[route.id];
+                  const schedules = scheduleData && scheduleData.schedules ? scheduleData.schedules : [];
+                  return (
+                    <div key={route.id} className="mt-1">
+                      <p><strong>Ruta:</strong> {route.name}</p>
+                      <p><strong>Precio:</strong> ${route.price}</p>
+                      {schedules.length > 0 && (
+                        <div>
+                          <p><strong>Horarios:</strong></p>
+                          <ul className="list-disc list-inside">
+                            {schedules.map((schedule: any) => (
+                              <li key={schedule.id}>
+                                {schedule.day}: {schedule.open} - {schedule.close}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {stationOpinions.length > 0 && (
+              <div>
+                <h4 className="font-semibold mt-2">Opiniones:</h4>
+                <ul className="list-disc list-inside">
+                  {stationOpinions.map((opinion) => (
+                    <li key={opinion.id} className="mt-1">
+                      <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                      <p>{opinion.body}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Ventana emergente para la línea */}
+        {selectedLine && (
+          <div className="fixed top-5 right-5 w-80 h-96 bg-white p-4 border border-gray-300 z-30 overflow-y-auto">
+            <button
+              onClick={() => {
+                setSelectedLine(null);
+                setLineRoutes([]);
+                setLineSchedules({});
+                setLineOpinions([]);
+              }}
+              className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-700 transition"
+            >
+              <CloseIcon />
+            </button>
+            <div className="flex items-center">
+              <img src={getStationLogo(selectedLine.transport)} alt={selectedLine.transport} className="w-6 h-6 mr-2" />
+              <h3 className="text-lg font-semibold">Línea {selectedLine.name} {selectedLine.longName}</h3>
+            </div>
+            <p><strong>Transporte:</strong> {selectedLine.transport}</p>
+            {selectedLine.id !== 0 && (
+              <>
+                <p><strong>Incidente:</strong> {selectedLine.incident || 'No hay incidentes reportados'}</p>
+                <p><strong>Velocidad:</strong> {selectedLine.speed} km/h</p>
+                <p><strong>Información:</strong> {selectedLine.information || 'No disponible'}</p>
+              </>
+            )}
+
+            {lineRoutes.length > 0 && (
+              <div>
+                <h4 className="font-semibold mt-2">Rutas de la línea:</h4>
+                {lineRoutes.map((route) => {
+                  const scheduleData = lineSchedules[route.id];
+                  const schedules = scheduleData && scheduleData.schedules ? scheduleData.schedules : [];
+                  return (
+                    <div key={route.id} className="mt-1">
+                      <p><strong>Ruta:</strong> {route.name}</p>
+                      <p><strong>Precio:</strong> ${route.price}</p>
+                      {schedules.length > 0 && (
+                        <div>
+                          <p><strong>Horarios:</strong></p>
+                          <ul className="list-disc list-inside">
+                            {schedules.map((schedule: any) => (
+                              <li key={schedule.id}>
+                                {schedule.day}: {schedule.open} - {schedule.close}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {lineOpinions.length > 0 && (
+              <div>
+                <h4 className="font-semibold mt-2">Opiniones:</h4>
+                <ul className="list-disc list-inside">
+                  {lineOpinions.map((opinion) => (
+                    <li key={opinion.id} className="mt-1">
+                      <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                      <p>{opinion.body}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </div>
+    </LayoutNoHeader>
+  ) : (
     <Layout>
       <div className="relative w-full h-50vh">
         <h1 className="text-center text-2xl font-bold my-4">Rutas de Transporte</h1>
  
         <div className="flex flex-wrap justify-center mb-4 space-x-4 z-20 relative">
-          <div>
-            {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
-              <label key={agency} className="block">
-                <input
-                  type="checkbox"
-                  value={agency}
-                  checked={selectedAgencies.includes(agency)}
-                  onChange={handleAgencyChange}
-                  className="mr-2"
-                />
-                {agency}
-              </label>
-            ))}
+          <div className="relative inline-block">
+            <button
+              className="bg-blue-500 text-white font-semibold py-2 px-4 rounded"
+              onClick={() => {
+                setDropdownOpen(!dropdownOpen);
+                setIsRoutesDropdownOpen(false);
+              }}
+            >
+              Agencias
+            </button>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-48">
+                <div className="p-2">
+                  {[...new Set(routes.map((route) => route.agency.name))].map((agency) => (
+                    <label key={agency} className="block">
+                      <input
+                        type="checkbox"
+                        value={agency}
+                        checked={selectedAgencies.includes(agency)}
+                        onChange={handleAgencyChange}
+                        className="mr-2"
+                      />
+                      {agency}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="relative">
@@ -915,6 +1325,15 @@ const RoutesMap: React.FC = () => {
 
           <div>
             <button
+              onClick={() => setShowIncidents(prev => !prev)}
+              className={`bg-${showIncidents ? "blue" : "red"}-500 text-white px-4 py-2 rounded hover:bg-${showIncidents ? "gray" : "orange"}-600 transition`}
+            >
+              {showIncidents ? 'Ocultar Incidentes' : 'Ver Incidentes'}
+            </button>
+          </div>
+
+          <div>
+            <button
               onClick={() => {
                 setShowUserOpinionsModal(true);
                 setSelectedStation(null);
@@ -927,6 +1346,7 @@ const RoutesMap: React.FC = () => {
                 setLineSchedules({});
                 setLineOpinions([]);
                 setIsRoutesDropdownOpen(false);
+                setDropdownOpen(false);
               }}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
             >
@@ -946,6 +1366,8 @@ const RoutesMap: React.FC = () => {
               </div>
             )}
           <InteractiveMapComponent
+              lat={123}
+              lon={123}
               selectedRoutes={selectedRoutes}
               displayedRoutes={filteredRoutes.filter(route =>
                 selectedRoutes.includes(`${route.shortName}-${route.agency.name}`)
@@ -955,6 +1377,8 @@ const RoutesMap: React.FC = () => {
               handleMarkerClick={handleMarkerClick}
               findStationInfo={findStationInfo}
               getStationLogo={getStationLogo}
+              incidents={incidents}
+              showIncidents={showIncidents}
             />
           </div>
 
@@ -1035,20 +1459,6 @@ const RoutesMap: React.FC = () => {
                 </div>
               )}
 
-              {stationOpinions.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mt-2">Opiniones:</h4>
-                  <ul className="list-disc list-inside">
-                    {stationOpinions.map((opinion) => (
-                      <li key={opinion.id} className="mt-1">
-                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                        <p>{opinion.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* Formulario para agregar opinión */}
               {selectedStation.id !== 0 && (
                 <div>
@@ -1070,6 +1480,20 @@ const RoutesMap: React.FC = () => {
                       Enviar comentario
                     </button>
                   </form>
+                </div>
+              )}
+
+              {stationOpinions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mt-2">Opiniones:</h4>
+                  <ul className="list-disc list-inside">
+                    {stationOpinions.map((opinion) => (
+                      <li key={opinion.id} className="mt-1">
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                        <p>{opinion.body}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
@@ -1130,20 +1554,6 @@ const RoutesMap: React.FC = () => {
                 </div>
               )}
 
-              {lineOpinions.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mt-2">Opiniones:</h4>
-                  <ul className="list-disc list-inside">
-                    {lineOpinions.map((opinion) => (
-                      <li key={opinion.id} className="mt-1">
-                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
-                        <p>{opinion.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* Formulario para agregar opinión */}
               {selectedLine.id !== 0 && (
                 <div>
@@ -1165,6 +1575,20 @@ const RoutesMap: React.FC = () => {
                       Enviar comentario
                     </button>
                   </form>
+                </div>
+              )}
+              
+              {lineOpinions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mt-2">Opiniones:</h4>
+                  <ul className="list-disc list-inside">
+                    {lineOpinions.map((opinion) => (
+                      <li key={opinion.id} className="mt-1">
+                        <span><strong>{opinion.type}</strong> ({opinion.date} {opinion.time})</span>
+                        <p>{opinion.body}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>

@@ -3,6 +3,8 @@ import { PlanResponse, Itinerary } from "@/types/map";
 
 export const fetchItineraries = async (query: string): Promise<Itinerary[]> => {
   try {
+    console.log("Querying OTP API with:", query);
+
     const otpUrl = process.env.NEXT_PUBLIC_OTP_API_BASE_URL;
 
     const response = await fetch(`${otpUrl}otp/routers/default/index/graphql`, {

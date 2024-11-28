@@ -34,8 +34,10 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
     setLoading(true);
     setError(null);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
     try {
-      const response = await fetch(`/api/userByEmail/${email}?timestamp=${new Date().getTime()}`, {// Parametro timestap, se puede utilizar para asegurar que no se almacene en caché
+      const response = await fetch(`${apiUrl}/api/userByEmail/${email}`, {// Parametro timestap, se puede utilizar para asegurar que no se almacene en caché
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Tutorial from './Tutorial';
 import React from 'react';
 import { useRole } from '@/contexts/RoleContext';
@@ -29,7 +29,7 @@ export default function AuthForm({
   const [lastname_pat, setLastnamePat] = useState<string>('');
   const [lastname_mat, setLastnameMat] = useState<string>('');
   const [curp, setCurp] = useState<string>('');
-  const [occupation, setOccupation] = useState<string>('');
+  const [ocuparion, setOccupation] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -138,6 +138,11 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     }
     setShowModal(true);
   };
+
+  useEffect(() => {
+    localStorage.setItem('latx', '123');
+    localStorage.setItem('lonx', '123');
+  }, []);
 
   // Función para cerrar el modal
   const closeModal = (): void => {
@@ -553,7 +558,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       setPasswordErrorMessage("");
     }
 
-    if (!validateOccupation(occupation)) {
+    if (!validateOccupation(ocuparion)) {
       setOccupationError(true);
       setOccupationErrorMessage("La ocupación no es válida.");
       hasError = true;
@@ -589,7 +594,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           lastname_mat,
           email,
           curp,
-          occupation,
+          ocuparion,
           password,
           phone,
         }),
@@ -806,7 +811,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                   >
                     <span className="material-icons text-black mr-2">work</span>
                     <select
-                      value={occupation}
+                      value={ocuparion}
                       onChange={(e) => {
                         setOccupation(e.target.value);
                         setOccupationError(false);

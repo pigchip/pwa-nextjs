@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Layout from '@/components/Layout';
 import { useRouter } from 'next/navigation';
 import LiveLocationComponent from '@/components/LiveLocationComponent'; // Import the component
+import { useRole } from '@/contexts/RoleContext';
 
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
 
@@ -15,6 +16,7 @@ const SettingsComponent: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { role } = useRole();
 
   const router = useRouter();
 
@@ -76,30 +78,35 @@ const SettingsComponent: React.FC = () => {
 
         <div className="pb-4 flex flex-col items-center">
           <div className="flex flex-col items-center space-y-4">
-            <button className="w-64 py-2 bg-[#602e2e] text-white font-semibold rounded-lg">
+            {/* <button className="w-64 py-2 bg-[#602e2e] text-white font-semibold rounded-lg">
               Borrar historial búsquedas
-            </button>
-            <button
-              className="w-64 py-2 bg-red-400 text-white font-semibold rounded-lg"
-              onClick={handleDeleteAccountClick}
-            >
-              Eliminar cuenta
-            </button>
+            </button> */}
             <button className="w-64 py-2 bg-blue-500 text-white font-semibold rounded-lg" onClick={handleLogout}>
               Cerrar sesión
             </button>
-            <button
-              className="w-64 py-2 bg-green-500 text-white font-semibold rounded-lg"
-              onClick={() => setShowLocationModal(true)} // Open location modal
-            >
-              Compartir ubicación en vivo
-            </button>
-            <button
-              className="w-64 py-2 bg-purple-500 text-white font-semibold rounded-lg"
-              onClick={() => router.push('/most-visited')}
-            >
-              Ver líneas y estaciones más visitadas
-            </button>
+            
+            {role === 'user' && (
+              <>
+                <button
+                  className="w-64 py-2 bg-red-400 text-white font-semibold rounded-lg"
+                  onClick={handleDeleteAccountClick}
+                >
+                  Eliminar cuenta
+                </button>
+                <button
+                  className="w-64 py-2 bg-green-500 text-white font-semibold rounded-lg"
+                  onClick={() => setShowLocationModal(true)} // Open location modal
+                >
+                  Compartir ubicación en vivo
+                </button>
+                <button
+                  className="w-64 py-2 bg-purple-500 text-white font-semibold rounded-lg"
+                  onClick={() => router.push('/most-visited')}
+                >
+                  Ver líneas y estaciones más visitadas
+                </button>
+              </>
+            )}
           </div>
           <Image src="/icon-512.png" alt="Logo" width={64} height={64} className="mt-4" />
         </div>

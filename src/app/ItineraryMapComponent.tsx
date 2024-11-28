@@ -40,10 +40,12 @@ import {
   ITINERARY_QUERY_BUS_SUBWAY_WALK,
   ITINERARY_QUERY_SUBWAY_TRAM_WALK,
   ITINERARY_QUERY_ALL_MODES_WALK,
+  generateBannedBlocks,
 } from '@/queries/queries';
 import { fetchItineraries } from '@/utils/fetchItineraries';
 import { getTransportIcon } from '@/utils/getTransportIcon';
 import { Check } from '@mui/icons-material';
+import { Agency, fetchGtfsData } from '@/utils/fetchGtfsData';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -61,7 +63,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const [itineraryData, setItineraryData] = useState<Itinerary[]>([]);
   const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [expandedLegIndex, setExpandedLegIndex] = useState<number | null>(null);
   const [currentLegIndex, setCurrentLegIndex] = useState<number>(0);
 
@@ -72,1602 +74,49 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   const [startName, setStartName] = useState<string>(startLocation?.name || '');
   const [endName, setEndName] = useState<string>(endLocation?.name || '');
+  const [routeData, setRouteData] = useState<Agency[] | null>(null);
 
   // State for custom marker
   const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
 
-  // State for agency filtering
+  // State para filtrado de agencias
   const [agencyList, setAgencyList] = useState([
-    { id: 'QWdlbmN5OjE6U1VC', name: 'Ferrocarriles Suburbanos' },
-    { id: 'QWdlbmN5OjE6Q0M', name: 'Corredores Concesionados' },
-    { id: 'QWdlbmN5OjE6SU5URVJVUkJBTk8', name: 'Tren El Insurgente' },
-    { id: 'QWdlbmN5OjE6Q0JC', name: 'Cablebus' },
-    { id: 'QWdlbmN5OjE6TUI', name: 'Metrobús' },
-    { id: 'QWdlbmN5OjE6TUVUUk8', name: 'Sistema de Transporte Colectivo Metro' },
-    { id: 'QWdlbmN5OjE6VEw', name: 'Servicio de Tren Ligero' },
-    { id: 'QWdlbmN5OjE6UFVNQUJVUw', name: 'Pumabús' },
-    { id: 'QWdlbmN5OjE6VFJPTEU', name: 'Trolebús' },
-    { id: 'QWdlbmN5OjE6UlRQ', name: 'Red de Transporte de Pasajeros' },
+    { id: 'QWdlbmN5OjE6U1VC', name: 'Ferrocarriles Suburbanos', gtfsId: "1:SUB" },
+    { id: 'QWdlbmN5OjE6Q0M', name: 'Corredores Concesionados', gtfsId: "1:CC" },
+    { id: 'QWdlbmN5OjE6SU5URVJVUkJBTk8', name: 'Tren El Insurgente', gtfsId: "1:INTERURBANO" },
+    { id: 'QWdlbmN5OjE6Q0JC', name: 'Cablebus', gtfsId: "1:CBB" },
+    { id: 'QWdlbmN5OjE6TUI', name: 'Metrobús', gtfsId: "1:MB" },
+    { id: 'QWdlbmN5OjE6TUVUUk8', name: 'Sistema de Transporte Colectivo Metro', gtfsId: "1:METRO" },
+    { id: 'QWdlbmN5OjE6VEw', name: 'Servicio de Tren Ligero', gtfsId: "1:TL" },
+    { id: 'QWdlbmN5OjE6UFVNQUJVUw', name: 'Pumabús', gtfsId: "1:PUMABUS" },
+    { id: 'QWdlbmN5OjE6VFJPTEU', name: 'Trolebús', gtfsId: "1:TROLE" },
+    { id: 'QWdlbmN5OjE6UlRQ', name: 'Red de Transporte de Pasajeros', gtfsId: "1:RTP" },
   ]);
 
-  const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
+  const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]); // Almacena gtfsId
 
-  // State for route filtering
-  const [routeList, setRouteList] = useState<{ id: string; shortName: string; longName: string; agencyName: string }[]>([]);
-  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
+  // State para filtrado de rutas
+  const [routeList, setRouteList] = useState<{ gtfsId: string; shortName: string; longName: string; agencyName: string }[]>([]);
+  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]); // Almacena gtfsId
 
-  // Data provided (omitted for brevity)
-  const routeData = {
-    data: {
-      agencies: [
-        {
-          id: "QWdlbmN5OjE6U1VC",
-          name: "Ferrocarriles Suburbanos",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwNzAwTDE",
-              shortName: "1",
-              longName: "Buenavista-Cuautitlan"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6Q0M",
-          name: "Corredores Concesionados",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0U",
-              shortName: "Z3E",
-              longName: "Metro Taxqueña - UAM Xochimilco por 18-19"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0Q",
-              shortName: "Z3D",
-              longName: "Metro Taxqueña - UAM Xochimilco por Carmen 8-9"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0M",
-              shortName: "Z3C",
-              longName: "Metro Taxqueña - UAM Xochimilco por Bachilleres 4"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0I",
-              shortName: "Z3B",
-              longName: "Metro Taxqueña - Unidad San Marcos"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0g",
-              shortName: "Z3H",
-              longName: "Metro Taxqueña - UACM Tezonco por Torres"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0c",
-              shortName: "Z3G",
-              longName: "Metro Taxqueña - UACM Tezonco por Escuela"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0Y",
-              shortName: "Z3F",
-              longName: "Metro Taxqueña - Técnicos y Manuales"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMkI",
-              shortName: "12B",
-              longName: "Lomas de Sotelo - Buenavista"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNEM",
-              shortName: "24C",
-              longName: "División del Norte - Sauzales"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMkM",
-              shortName: "12C",
-              longName: "Cuatro Caminos - San Cosme"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNEQ",
-              shortName: "24D",
-              longName: "Estadio Azteca - Santo Domingo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMkQ",
-              shortName: "12D",
-              longName: "Lomas de Sotelo - San Cosme"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaM0E",
-              shortName: "Z3A",
-              longName: "Metro Taxqueña - Los Reyes Culhuacán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNUE",
-              shortName: "25A",
-              longName: "Tasqueña - Madreselva"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxM0E",
-              shortName: "13A",
-              longName: "Ingenieros Militares - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNUI",
-              shortName: "25B",
-              longName: "Tasqueña - Galeana"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNUM",
-              shortName: "25C",
-              longName: "Tasqueña - Milpa Alta"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxM0I",
-              shortName: "13B",
-              longName: "Av. Homero - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMUE",
-              shortName: "1A",
-              longName: "Cuatro Caminos - Canal de Chalco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEY",
-              shortName: "Z4F",
-              longName: "Metro San Lázaro - Valle de Aragón - Múzquiz"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEU",
-              shortName: "Z4E",
-              longName: "Carretones -Tepito"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEQ",
-              shortName: "Z4D",
-              longName: "Metro Potrero - Metro Eduardo Molina"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEM",
-              shortName: "Z4C",
-              longName: "Metro Potrero - Gertrudis Sánchez"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEo",
-              shortName: "Z4J",
-              longName: "Esmeralda - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEk",
-              shortName: "Z4I",
-              longName: "Metro Impulsora - Metro Balbuena"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEg",
-              shortName: "Z4H",
-              longName: "Metro Impulsora - Pino Suárez"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEc",
-              shortName: "Z4G",
-              longName: "Metro San Lázaro - Valle de Guadalupe -Múzquiz"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNUQ",
-              shortName: "25D",
-              longName: "Tasqueña - San Gregorio"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxM0M",
-              shortName: "13C",
-              longName: "Ejército Nacional - Metro Sevilla"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMUI",
-              shortName: "1B",
-              longName: "Tacubaya - Canal de Chalco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMUM",
-              shortName: "1C",
-              longName: "Barranca del Muerto - Canal de Chalco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxM0Q",
-              shortName: "13D",
-              longName: "Av. Homero - Metro Sevilla"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNUU",
-              shortName: "25E",
-              longName: "Xochimilco - Milpa Alta"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxM0U",
-              shortName: "13E",
-              longName: "Lomas de Sotelo por Homero - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEI",
-              shortName: "Z4B",
-              longName: "San Felipe - Santa Anita"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEE",
-              shortName: "Z4A",
-              longName: "Metro Santa Anita - Vergel"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNEE",
-              shortName: "14A",
-              longName: "Metro Tepalcates - San Antonio Abad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMkE",
-              shortName: "2A",
-              longName: "Taxqueña - Pirul"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMkI",
-              shortName: "2B",
-              longName: "C. U. - Pirul"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaNEs",
-              shortName: "Z4K",
-              longName: "Metro Rio de los Remedios - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMkE",
-              shortName: "22A",
-              longName: "Félix Parra Mixcoac - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMEE",
-              shortName: "10A",
-              longName: "Panteón San Isidro - Metro Oceanía Norte 172"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMkI",
-              shortName: "22B",
-              longName: "UPIICSA - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMEI",
-              shortName: "10B",
-              longName: "Panteón San Isidro - Peñón"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMkM",
-              shortName: "22C",
-              longName: "Centro de Abasto - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMkQ",
-              shortName: "22D",
-              longName: "Av. 5 Ermita - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMEM",
-              shortName: "10C",
-              longName: "RCA Víctor - Peñón"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMEQ",
-              shortName: "10D",
-              longName: "Metro Camarones - Peñón"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMEU",
-              shortName: "10E",
-              longName: "Metro Camarones - Manchuria"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyM0E",
-              shortName: "23A",
-              longName: "CETRAM Tacuba - Especialidades Médicas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkQ",
-              shortName: "Z2D",
-              longName: "Metro Barranca del Muerto - Lomas de Tarango"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkM",
-              shortName: "Z2C",
-              longName: "Metro Barranca del Muerto - Bosques"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkI",
-              shortName: "Z2B",
-              longName: "Metro Barranca del Muerto - Llano Redondo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkE",
-              shortName: "Z2A",
-              longName: "San Ángel - Santa Lucía"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkg",
-              shortName: "Z2H",
-              longName: "Mixcoac - Queso"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkc",
-              shortName: "Z2G",
-              longName: "Mixcoac - Puerta Grande"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkY",
-              shortName: "Z2F",
-              longName: "Metro Mixcoac - San Bartolo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkU",
-              shortName: "Z2E",
-              longName: "Metro Mixcoac - Puente Colorado"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyM0I",
-              shortName: "23B",
-              longName: "CETRAM Tacuba - San Isidro"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMUE",
-              shortName: "11A",
-              longName: "Cuatro Caminos - Metro Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMUI",
-              shortName: "11B",
-              longName: "Metro Normal - Pantitlán Calle 7"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyM0M",
-              shortName: "23C",
-              longName: "CETRAM Tacuba - Tecamachalco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMUM",
-              shortName: "11C",
-              longName: "Metro Normal - Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyM0Q",
-              shortName: "23D",
-              longName: "CETRAM Tacuba - ESIA"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMUQ",
-              shortName: "11D",
-              longName: "Cuatro Caminos por Flores Magón - Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMUU",
-              shortName: "11E",
-              longName: "Metro Normal - Canal de San Juan"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMUY",
-              shortName: "11F",
-              longName: "Cuatro Caminos - Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNEE",
-              shortName: "24A",
-              longName: "Chapultepec - Preparatoria 5"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxMkE",
-              shortName: "12A",
-              longName: "Cuatro Caminos - Buenavista"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyNEI",
-              shortName: "24B",
-              longName: "Merced - Salto del Agua - Cuemanco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMko",
-              shortName: "Z2J",
-              longName: "Metro Tacubaya - Tepeaca"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTBaMkk",
-              shortName: "Z2I",
-              longName: "Metro Tacubaya - Cehuayo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0E",
-              shortName: "17A",
-              longName: "Caseta a Cuernavaca - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0I",
-              shortName: "17B",
-              longName: "Xochimilco - Izazaga por Miramontes"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwNUE",
-              shortName: "5A",
-              longName: "Martín Carrera - Escuela Naval"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0M",
-              shortName: "17C",
-              longName: "Deportivo Xochimilco - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0Q",
-              shortName: "17D",
-              longName: "Santiago Tepelcatlalpan - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0U",
-              shortName: "17E",
-              longName: "Allende - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0Y",
-              shortName: "17F",
-              longName: "La Joya - Corregiddora"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0c",
-              shortName: "17G",
-              longName: "La Joya Hospitales - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0g",
-              shortName: "17H",
-              longName: "Fuentes Brotantes - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0k",
-              shortName: "17I",
-              longName: "Coapa - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0o",
-              shortName: "17J",
-              longName: "Totoltepec - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0s",
-              shortName: "17K",
-              longName: "Tepeximilpa - Izazaga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxN0w",
-              shortName: "17L",
-              longName: "San Lázaro-Taxqueña"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOEE",
-              shortName: "18A",
-              longName: "Valle Dorado - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOEI",
-              shortName: "18B",
-              longName: "1ro de Mayo - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwNkE",
-              shortName: "6A",
-              longName: "Barranca del Muerto - Ermita"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOEM",
-              shortName: "18C",
-              longName: "Valle Dorado - Insurgentes"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOEQ",
-              shortName: "18D",
-              longName: "Satélite - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMkM",
-              shortName: "2C",
-              longName: "C. U. - Tlaxopan"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMkQ",
-              shortName: "2D",
-              longName: "Taxqueña - Tlaxopan"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMkU",
-              shortName: "2E",
-              longName: "C. U . - Moras"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwMkY",
-              shortName: "2F",
-              longName: "Taxqueña - Moras"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNUE",
-              shortName: "15A",
-              longName: "Av. Ceylán - Av. Central"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNUI",
-              shortName: "15B",
-              longName: "Metro Basílica - Pradera"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwM0E",
-              shortName: "3A",
-              longName: "Iztacala - Politécnico"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNUM",
-              shortName: "15C",
-              longName: "Metro Potrero - Bosques de Aragón"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNkE",
-              shortName: "16A",
-              longName: "Cuatro Caminos - Alameda"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwNEE",
-              shortName: "4A",
-              longName: "Alameda Oriente - Constitución"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNkI",
-              shortName: "16B",
-              longName: "Cuatro Caminos - Revolución"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwNEI",
-              shortName: "4B",
-              longName: "Canal de San Juan - Constitución"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNkM",
-              shortName: "16C",
-              longName: "Lomas Verdes - Metro Cuitláhuac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxNkQ",
-              shortName: "16D",
-              longName: "Echegaray - Metro Cuitláhuac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwNEM",
-              shortName: "4C",
-              longName: "Central de Abasto - Alameda Oriente"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwWjE",
-              shortName: "Z1",
-              longName: "Zonal 1 Cuautepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOUI",
-              shortName: "9B",
-              longName: "Metro Puebla por Sur 8 - La Valenciana"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOUM",
-              shortName: "9C",
-              longName: "Tacubaya Contraflujo Eje 3 - La Valenciana"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOUQ",
-              shortName: "9D",
-              longName: "Metro Puebla por Sur 20 - La Valenciana"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOUU",
-              shortName: "9E",
-              longName: "Tacubaya por Campeche - Tepalcates"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOUY",
-              shortName: "9F",
-              longName: "Tacubaya-Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOUE",
-              shortName: "9A",
-              longName: "Tacubaya por Querétaro - La Valenciana"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUE",
-              shortName: "19A",
-              longName: "Metro Tacuba por Fray Servando - Metro Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwN0E",
-              shortName: "7A",
-              longName: "Odontología por puente - Chapultepec por puente"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUI",
-              shortName: "19B",
-              longName: "Pemex por Fray Servando - Metro Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUM",
-              shortName: "19C",
-              longName: "Metro Chapultepec - Calle 81"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwN0I",
-              shortName: "7B",
-              longName: "Odontología - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUQ",
-              shortName: "19D",
-              longName: "Tacuba - Central de Abasto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwN0M",
-              shortName: "7C",
-              longName: "Odontología por Av. 504 - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwN0Q",
-              shortName: "7D",
-              longName: "Odontología por Av. 504 por puente - Chapultepec por Av. 504 por puente"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUU",
-              shortName: "19E",
-              longName: "Metro Chapultepec - Central de Abasto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUY",
-              shortName: "19F",
-              longName: "Chapultepec por Boturini - Metro Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUc",
-              shortName: "19G",
-              longName: "Periférico - Balneario"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUg",
-              shortName: "19H",
-              longName: "Metro Tacuba - Calle 81"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAxOUk",
-              shortName: "19I",
-              longName: "Chapultepec-Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOEE",
-              shortName: "8A",
-              longName: "Bosques - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOEI",
-              shortName: "8B",
-              longName: "Palmas - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOEM",
-              shortName: "8C",
-              longName: "Duraznos - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAwOEQ",
-              shortName: "8D",
-              longName: "Tecamachalco - Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMEE",
-              shortName: "20A",
-              longName: "Metro Tacubaya - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMEI",
-              shortName: "20B",
-              longName: "Tacubaya por Platino - Metro Aeropuerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMEM",
-              shortName: "20C",
-              longName: "La Raza Línea 3 - Juanacatlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMEQ",
-              shortName: "20D",
-              longName: "La Raza Línea 5 - Juanacatlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMUE",
-              shortName: "21A",
-              longName: "Chapultepec por Mazatlán - San Ángel"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMUI",
-              shortName: "21B",
-              longName: "Chapultepec por Circuito - San Ángel"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMUM",
-              shortName: "21C",
-              longName: "Barranca del Muerto - San Ángel"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMTAyMUQ",
-              shortName: "21D",
-              longName: "Metro Observatorio - San Ángel Clínica 4 y 8"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6SU5URVJVUkJBTk8",
-          name: "Tren El Insurgente",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgxMDAwMDE",
-              shortName: "1",
-              longName: "Zinacantepec - Santa Fe"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6Q0JC",
-          name: "Cablebus",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwODAwTDM",
-              shortName: "3",
-              longName: "Los Pinos/Constituyentes a Vasco de Quiroga"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwODAwTDI",
-              shortName: "2",
-              longName: "Constitución de 1917 a Santa Marta"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwODAwTDE",
-              shortName: "1",
-              longName: "Cuautepec/Tlalpexco a Indios Verdes"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6TUI",
-          name: "Metrobús",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDE",
-              shortName: "1",
-              longName: "Indios Verdes - El Caminero"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDI",
-              shortName: "2",
-              longName: "Tepalcates - Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDc",
-              shortName: "7",
-              longName: "Indios Verdes - Campo Marte"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDM",
-              shortName: "3",
-              longName: "Tenayuca - Pueblo Sta. Cruz Atoyac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDQ",
-              shortName: "4",
-              longName: "Centro Histórico - Buenavista - San Lázaro/AICM T1 y T2/Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDU",
-              shortName: "5",
-              longName: "Río de lo Remedios - Preparatoria 1"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMzAwTDY",
-              shortName: "6",
-              longName: "Villa de Aragón - El Rosario"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwM1NMMDE",
-              shortName: "SL01",
-              longName: "París - Alameda Tacubaya (Servicio de Apoyo L1)"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6TUVUUk8",
-          name: "Sistema de Transporte Colectivo Metro",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwMjBMMTI",
-              shortName: "L12",
-              longName: "Tláhuac-Mixcoac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTEI",
-              shortName: "B",
-              longName: "Ciudad Azteca - Buenavista"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTEE",
-              shortName: "A",
-              longName: "Pantitlán - La Paz"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDI",
-              shortName: "2",
-              longName: "Cuatro Caminos - Tasqueña"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDM",
-              shortName: "3",
-              longName: "Indios verdes - Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDE",
-              shortName: "1",
-              longName: "Pantitlán - Observatorio"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDg",
-              shortName: "8",
-              longName: "Garibaldi - Constitución de 1917"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDk",
-              shortName: "9",
-              longName: "Pantitlán - Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDY",
-              shortName: "6",
-              longName: "El Rosario - Martín Carrera"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDc",
-              shortName: "7",
-              longName: "El Rosario - Barranca del Muerto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDQ",
-              shortName: "4",
-              longName: "Santa Anita - Martín Carrera"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwMjAwTDU",
-              shortName: "5",
-              longName: "Politécnico - Pantitlán"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6VEw",
-          name: "Servicio de Tren Ligero",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwNjAwTDE",
-              shortName: "1",
-              longName: "Tasqueña - Xochimilco"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6UFVNQUJVUw",
-          name: "Pumabús",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjY",
-              shortName: "PUMA6",
-              longName: "Metrobús CU - Estadio Olímpico Universitario"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjU",
-              shortName: "PUMA5",
-              longName: "Metro Universidad - Av. Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjQ",
-              shortName: "PUMA4",
-              longName: "Metro Universidad - Jardín Botánico"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjM",
-              shortName: "PUMA3",
-              longName: "Metro Universidad - Zona Cultural"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjk",
-              shortName: "PUMA9",
-              longName: "Metrobús CU - Islas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjg",
-              shortName: "PUMA8",
-              longName: "Metrobús CU - Estadio Olímpico Universitario (por alberca)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjc",
-              shortName: "PUMA7",
-              longName: "Estadio Olímpico Universitario - Medicina"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjI",
-              shortName: "PUMA2",
-              longName: "Metro Universidad - Metrobús CU"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTAwUjE",
-              shortName: "PUMA1",
-              longName: "Metro Universidad - Islas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTBSMTM",
-              shortName: "PUMA13",
-              longName: "Metrobús CU - Unidad de Posgrado"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTBSMTE",
-              shortName: "PUMA11",
-              longName: "Metrobús CU -  AAPAUNAM"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwOTBSMTA",
-              shortName: "PUMA10",
-              longName: "Metrobús CU - Av. Imán"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6VFJPTEU",
-          name: "Trolebús",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDE",
-              shortName: "1",
-              longName: "Corredor cero emisiones \"Eje Central\""
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDQ",
-              shortName: "4",
-              longName: "Metro Boulevard Puerto Aéreo / Metro El Rosario"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDU",
-              shortName: "5",
-              longName: "San Felipe de Jesús / Metro Hidalgo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDI",
-              shortName: "2",
-              longName: "Corredor cero emisiones \"Eje 2-2A Sur\""
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDM",
-              shortName: "3",
-              longName: "Corredor cero emisiones \"Eje 7-7A Sur\""
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDg",
-              shortName: "8",
-              longName: "Circuito Politécnico"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDk",
-              shortName: "9",
-              longName: "Villa de Cortés - Apatlaco - Tepalcates"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDY",
-              shortName: "6",
-              longName: "Metro El Rosario / Metro Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDAwTDc",
-              shortName: "7",
-              longName: "CETRAM Periférico Oriente  - Ciudad Universitaria"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDBMMTA",
-              shortName: "10",
-              longName: "Constitución de 1917 - Acahualtepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNDBMMTI",
-              shortName: "12",
-              longName: "Tasqueña - Perisur"
-            }
-          ]
-        },
-        {
-          id: "QWdlbmN5OjE6UlRQ",
-          name: "Red de Transporte de Pasajeros",
-          routes: [
-            {
-              id: "Um91dGU6MTpDTVgwNTExMUE",
-              shortName: "111-A",
-              longName: "Izazaga - Caseta"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEyM0E",
-              shortName: "123-A",
-              longName: "Pedregal de San Nicolás - Metro Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMkE",
-              shortName: "2-A",
-              longName: "Izazaga - San Pedro Martir por FOVISSSTE"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExQU4",
-              shortName: "11-A",
-              longName: "Aragón por Av. 604 - Metro Chapultepec (Nochebús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTU3QU4",
-              shortName: "57-A",
-              longName: "Toreo - Metro Constitución de 1917 (Nochebús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTU3QVg",
-              shortName: "57-A",
-              longName: "Toreo - Metro Constitución de 1917 (Expreso)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExQVg",
-              shortName: "11-A",
-              longName: "Aragón por Av. 604 - Metro Chapultepec (Expreso)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMzM",
-              shortName: "33",
-              longName: "León de los Aldama - Metro Chabacano"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTM0QkU",
-              shortName: "34-B",
-              longName: "Parque de la Bombilla - Centro comercial Santa Fe (Ecobús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMzc",
-              shortName: "37",
-              longName: "U.C.T.M. Atzacoalco - Carmen Serdán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNTk",
-              shortName: "159",
-              longName: "Metro Constitución de 1917 - Palmitas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAyN0E",
-              shortName: "27-A",
-              longName: "Reclusorio Norte - Metro Hidalgo/Alameda Central"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAzOUI",
-              shortName: "39-B",
-              longName: "Av. Santa Ana - Xochimilco/Bosque de Nativitas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEyNEE",
-              shortName: "124-A",
-              longName: "Tepeaca - Metro Mixcoac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTM0Qk8",
-              shortName: "34-B",
-              longName: "Parque de la Bombilla - Centro comercial Santa Fe (Ordinario)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNUUzTDE",
-              shortName: "Ordinario3 L1",
-              longName: "Balderas - Alameda Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjE",
-              shortName: "161",
-              longName: "Metro Constitución de 1917 - Ampliación Santiago"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjI",
-              shortName: "162",
-              longName: "Santa Catarina - Metro Constitución de 1917"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjM",
-              shortName: "163",
-              longName: "San Miguel Teotongo/Guadalupe  -  Metro Zaragoza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwNDM",
-              shortName: "43",
-              longName: "San Felipe/León de Los Aldama -  Central de Abastos"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjQ",
-              shortName: "164",
-              longName: "Colonia Miguel de la Madrid -  Metro Zaragoza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjY",
-              shortName: "166",
-              longName: "Colonia Ixtlahuacan Avisadero -  Metro Zaragoza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjc",
-              shortName: "167",
-              longName: "Avisadero/Colonia Miravalle -  Metro Zaragoza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNjg",
-              shortName: "168",
-              longName: "Arenal 4ta. Sección - Metro Pantitlán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEwMUI",
-              shortName: "101-B",
-              longName: "Colonia Forestal - La Villa Ferroplaza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEwMUE",
-              shortName: "101-A",
-              longName: "Ampliación Malacates -  La Villa/Ferroplaza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExM0I",
-              shortName: "113-B",
-              longName: "Col. Navidad (Las Piedras) - Metro Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEwMUQ",
-              shortName: "101-D",
-              longName: "La Brecha Cocoyotes - La Villa Ferroplaza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwNTk",
-              shortName: "59",
-              longName: "Metro El Rosario - Metro Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxN0U",
-              shortName: "17-E",
-              longName: "Metro Universidad - San Pedro Martir por Carretera Federal"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxN0Y",
-              shortName: "17-F",
-              longName: "Metro Tasqueña - San Pedro Martir por FOVISSSTE"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNUUyTDE",
-              shortName: "Ordinario2 L1",
-              longName: "Balderas - CETRAM Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwNjk",
-              shortName: "69",
-              longName: "Estadio Azteca - Loloigque"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExNUE",
-              shortName: "115-A",
-              longName: "Las Águilas - Metro Chapultepec"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAzNEE",
-              shortName: "34-A",
-              longName: "Metro Balderas - Centro Comercial Santa Fe"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA0NkM",
-              shortName: "46-C",
-              longName: "Lienzo Charro/Santa Catarina - Central de Abasto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMTA",
-              shortName: "110",
-              longName: "Chimalpa - Metro Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMTI",
-              shortName: "112",
-              longName: "Ampliación Jalalpa - Metro Tacubaya (Av. Jalisco)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMTY",
-              shortName: "116",
-              longName: "Santa Rosa Xochiac - Metro Mixcoac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMTg",
-              shortName: "118",
-              longName: "Santa Rosa Xochiac - Metro Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMTk",
-              shortName: "119",
-              longName: "Piloto - Metro Tacubya (Av. Jalisco)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTQ3QU4",
-              shortName: "47-A",
-              longName: "Alameda Oriente - Xochimilco / Bosque de Nativitas (Nochebús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA1OUE",
-              shortName: "59-A",
-              longName: "Metro el Rosario  - Sullivan"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE0NEM",
-              shortName: "144-C",
-              longName: "San Salvador Cuahutenco - Villa Milpa Alta"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2NUFP",
-              shortName: "165-A",
-              longName: "Ejército de Oriente - Metro Constitución de 1917 (Ordinario)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2NUFF",
-              shortName: "165-A",
-              longName: "Ejército de Oriente - Metro Constitución de 1917 (Ecobús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTQ3QVg",
-              shortName: "47-A",
-              longName: "Alameda Oriente - Xochimilco / Bosque de Nativitas (Expreso)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMjA",
-              shortName: "120",
-              longName: "Metro Zapata - San Mateo Tlaltenango"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMjQ",
-              shortName: "124",
-              longName: "Puerta Grande - Metro Mixcoac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMjU",
-              shortName: "125",
-              longName: "Bosques del Pedregal - Metro Universidad por López Portillo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMjY",
-              shortName: "126",
-              longName: "Magdalena Atlitico a Metro Copilco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2NUFY",
-              shortName: "165-A",
-              longName: "Ejército de Oriente - Metro Constitución de 1917 (Expreso)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMjg",
-              shortName: "128",
-              longName: "San Bernabé/Oyamel - Metro Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE0NUE",
-              shortName: "145-A",
-              longName: "Santiago Tepalcatlalpan - República del Salvador"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEyMUE",
-              shortName: "121-A",
-              longName: "San Bartolo - Metro Zapata"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMzE",
-              shortName: "131",
-              longName: "Estadio Azteca - Caseta Cuernavaca"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMzI",
-              shortName: "132",
-              longName: "Tlalmille - Estadio Azteca"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMTI",
-              shortName: "12",
-              longName: "Aragón - Panteón San Isidro"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMzQ",
-              shortName: "134",
-              longName: "Santo Tomás Ajusco - Estadio Azteca"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMTg",
-              shortName: "18",
-              longName: "Metro Cuatro Caminos -  Colonia Moctezuma 2da. Sección"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMTk",
-              shortName: "19",
-              longName: "Metro El Rosario - Parque México por Cuitláhuac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEzNEI",
-              shortName: "134-B",
-              longName: "Estadio Azteca - Topilejo"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEzNEE",
-              shortName: "134-A",
-              longName: "Parres - Estadio Azteca"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxM0E",
-              shortName: "13-A",
-              longName: "Metro Chapultepec - Torres de Padierna/Pedregal de San Nicolás"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExMEM",
-              shortName: "110-C",
-              longName: "La Pila - Metro Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExMEI",
-              shortName: "110-B",
-              longName: "San Lorenzo Acopilco - Metro Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMUQ",
-              shortName: "1-D",
-              longName: "Metro Santa Martha -  Metro Mixcoac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEzNEQ",
-              shortName: "134-D",
-              longName: "Topilejo - Metro Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEzNEM",
-              shortName: "134-C",
-              longName: "Santo Tomás Ajusco - Metro Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA4MUE",
-              shortName: "81-A",
-              longName: "San Gregorio Atlapulco - Metro Taxqueña"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNUU0TDE",
-              shortName: "Ordinario4 L1",
-              longName: "Observatorio - Tacubaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDE",
-              shortName: "141",
-              longName: "Villa Milpa Alta - Metro Tláhuac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDI",
-              shortName: "142",
-              longName: "Tulyehualco - Xochimilco/Palmas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDM",
-              shortName: "143",
-              longName: "Villa Milpa Alta - Metro Tasqueña"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDQ",
-              shortName: "144",
-              longName: "San Pablo Oztotepec -  Xochimilco/Palmas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMjM",
-              shortName: "23",
-              longName: "Colonia El Tepetatal (El Charco) - Metro La Raza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDU",
-              shortName: "145",
-              longName: "Pedregal de San Francisco - Xochimilco/Palmas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDY",
-              shortName: "146",
-              longName: "San Miguel Tehuizco - Xochimilco/Palmas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwMjU",
-              shortName: "25",
-              longName: "Zacatenco - Metro Potrero"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDc",
-              shortName: "147",
-              longName: "San Bartolomé Xicomulco - Xochimilco/Palmas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDg",
-              shortName: "148",
-              longName: "San Nicolás Tetelco - Metro Tláhuac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxNDk",
-              shortName: "149",
-              longName: "Mixquic - Metro Tláhuac"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2M0I",
-              shortName: "163-B",
-              longName: "San Miguel Teotongo/Avisadero -  Metro Zaragoza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2M0E",
-              shortName: "163-A",
-              longName: "San Miguel Teotongo/Torres  -  Metro Zaragoza/M. Tepalcates"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAzMUI",
-              shortName: "31-B",
-              longName: "Izazaga- Deportivo Xochimilco"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA1N0M",
-              shortName: "57-C",
-              longName: "Toreo - Metro Constitución de 1917"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMDE",
-              shortName: "101",
-              longName: "Lomas de Cuautepec - La Villa Ferroplaza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMDI",
-              shortName: "102",
-              longName: "La Brecha - Metro Indios Verdes"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMDM",
-              shortName: "103",
-              longName: "Ampliación Malacates - Metro la Raza (Linea 3)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMDQ",
-              shortName: "104",
-              longName: "Colonia El Tepetatal (El Charco) -  Metro Potrero"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMDc",
-              shortName: "107",
-              longName: "Metro El Rosario - Metro Tacuba"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxMDg",
-              shortName: "108",
-              longName: "Colonia El Tepetatal (El Charco)  -  Metro Indios Verdes"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTIwME4",
-              shortName: "200",
-              longName: "Circuito Bicentenario (Nochebús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExNU8",
-              shortName: "115",
-              longName: "Jesús del Monte (Cuajimalpa) - Metro Tacubaya (Ordinario)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExNU4",
-              shortName: "115",
-              longName: "Jesús del Monte (Cuajimalpa) - Metro Tacubaya (Nochebús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTIwMFg",
-              shortName: "200",
-              longName: "Circuito Bicentenario (Expreso)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAxOUE",
-              shortName: "19-A",
-              longName: "Metro El Rosario - Parque México por Normal"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExNkE",
-              shortName: "116-A",
-              longName: "Río Guadalupe - Metro General Anaya"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNUUxTDE",
-              shortName: "Ordinario1 L1",
-              longName: "Balderas - Observatorio"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA3NkE",
-              shortName: "76-A",
-              longName: "Centro Comercial Santa Fe – Metro Auditorio por Reforma"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2MUQ",
-              shortName: "161-D",
-              longName: "Colonia Buenavista - Central de Abasto"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2MUM",
-              shortName: "161-C",
-              longName: "Metro Constitución de 1917 - Palmas"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA1MkM",
-              shortName: "52-C",
-              longName: "Metro Santa Martha - Metro Zapata"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2MUY",
-              shortName: "161-F",
-              longName: "Barranca de Guadalupe - Metro Constitución de 1917"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2MUU",
-              shortName: "161-E",
-              longName: "San José Buenavista - Metro Constitución de 1917"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA3Nk4",
-              shortName: "76",
-              longName: "Centro Comercial Santa Fe -  Metro Auditorio por Palmas (Nochebús)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTAwOUM",
-              shortName: "9-C",
-              longName: "Centro Comercial Santa Fe  - Tlacuitlapa/Puerta Grande"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTA3Nlg",
-              shortName: "76",
-              longName: "Centro Comercial Santa Fe -  Metro Auditorio por Palmas (Expreso)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTMwMEI",
-              shortName: "300-B",
-              longName: "Paseo Acoxpa - Santa Fe (UAM Cuajimalpa)"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTMwMEE",
-              shortName: "300-A",
-              longName: "Paseo Acoxpa - Metro Auditorio"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2MkQ",
-              shortName: "162-D",
-              longName: "Santa Catarina - Metro Universidad"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTE2MkI",
-              shortName: "162-B",
-              longName: "Campestre Potrero - Metro Zaragoza"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTEwN0I",
-              shortName: "107-B",
-              longName: "La Villa/Cantera - Metro Tacuba por Ceylán"
-            },
-            {
-              id: "Um91dGU6MTpDTVgwNTExOUI",
-              shortName: "119-B",
-              longName: "Presidentes - Metro Mixcoac"
-            }
-          ]
-        }
-      ]
-    },
-  };
+  // State para filtrado de estaciones
+  const [stationList, setStationList] = useState<{ id: string; name: string; routeId: string; routeName: string; agencyName: string }[]>([]);
+  const [selectedStations, setSelectedStations] = useState<string[]>([]); // Almacena id de estaciones
+
 
   useEffect(() => {
-    // Update routeList based on selected agencies
+    const fetchRouteData = async () => {
+      const data = await fetchGtfsData();
+      console.log('Route Data Fetched:', data); // Verificar estructura de datos
+      setRouteData(data);
+    };
+    fetchRouteData();
+  }, []);
+
+  // Filtrar rutas basado en agencias seleccionadas
+  useEffect(() => {
     interface Route {
-      id: string;
+      gtfsId: string;
       shortName: string;
       longName: string;
       agencyName: string;
@@ -1676,11 +125,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     let routes: Route[] = [];
 
     if (selectedAgencies.length > 0) {
-      routeData.data.agencies.forEach((agency) => {
-        if (selectedAgencies.includes(agency.id)) {
+      routeData?.forEach((agency) => {
+        if (selectedAgencies.includes(agency.gtfsId)) { // Usar gtfsId
           agency.routes.forEach((route) => {
             routes.push({
-              id: route.id,
+              gtfsId: route.gtfsId,
               shortName: route.shortName,
               longName: route.longName,
               agencyName: agency.name,
@@ -1689,12 +138,24 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         }
       });
     } else {
-      // If no agency is selected, show no routes
-      routes = [];
+      // Si no hay agencias seleccionadas, mostrar todas las rutas
+      routeData?.forEach((agency) => {
+        agency.routes.forEach((route) => {
+          routes.push({
+            gtfsId: route.gtfsId,
+            shortName: route.shortName,
+            longName: route.longName,
+            agencyName: agency.name,
+          });
+        });
+      });
     }
 
-    // Sort routes alphabetically by agencyName and then by route longName
-    routes.sort((a, b) => {
+    // Eliminar rutas duplicadas por gtfsId (si es necesario)
+    const uniqueRoutes = Array.from(new Map(routes.map(route => [route.gtfsId, route])).values());
+
+    // Ordenar rutas alfabéticamente por agencyName y luego por shortName
+    uniqueRoutes.sort((a, b) => {
       if (a.agencyName < b.agencyName) return -1;
       if (a.agencyName > b.agencyName) return 1;
       if (a.shortName < b.shortName) return -1;
@@ -1702,32 +163,171 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       return 0;
     });
 
-    setRouteList(routes);
-  }, [selectedAgencies]);
+    setRouteList(uniqueRoutes);
+    console.log('Route List:', uniqueRoutes); // Depuración
+  }, [selectedAgencies, routeData]);
 
+  // Filtrar estaciones basado en rutas seleccionadas
   useEffect(() => {
-    // Update filtered itineraries based on selected agencies and routes
-    let filtered = itineraryData;
-
-    if (selectedAgencies.length > 0) {
-      filtered = filtered.filter((itinerary) =>
-        itinerary.legs.some(
-          (leg) => leg.route?.agency?.id && selectedAgencies.includes(leg.route.agency.id)
-        )
-      );
+    interface Station {
+      id: string;
+      name: string;
+      routeId: string;
+      routeName: string;
+      agencyName: string;
     }
+
+    let stations: Station[] = [];
 
     if (selectedRoutes.length > 0) {
-      filtered = filtered.filter((itinerary) =>
-        itinerary.legs.some((leg) => leg.route?.id && selectedRoutes.includes(leg.route.id))
-      );
+      routeData?.forEach((agency) => {
+        agency.routes.forEach((route) => {
+          if (selectedRoutes.includes(route.gtfsId) && route.stops) { // Usar gtfsId
+            route.stops.forEach((stop) => {
+              stations.push({
+                id: stop.id,
+                name: stop.name,
+                routeId: route.gtfsId,
+                routeName: `${route.shortName} - ${route.longName}`,
+                agencyName: agency.name,
+              });
+            });
+          }
+        });
+      });
+    } else {
+      // Si no hay rutas seleccionadas, mostrar todas las estaciones
+      routeData?.forEach((agency) => {
+        agency.routes.forEach((route) => {
+          if (route.stops) {
+            route.stops.forEach((stop) => {
+              stations.push({
+                id: stop.id,
+                name: stop.name,
+                routeId: route.gtfsId,
+                routeName: `${route.shortName} - ${route.longName}`,
+                agencyName: agency.name,
+              });
+            });
+          }
+        });
+      });
     }
 
-    setFilteredItineraries(filtered);
-  }, [selectedAgencies, selectedRoutes, itineraryData]);
+    // Eliminar estaciones duplicadas basadas en el id
+    const uniqueStations = Array.from(new Map(stations.map(station => [station.id, station])).values());
 
+    // Ordenar estaciones alfabéticamente por agencyName, routeName y luego por nombre
+    uniqueStations.sort((a, b) => {
+      if (a.agencyName < b.agencyName) return -1;
+      if (a.agencyName > b.agencyName) return 1;
+      if (a.routeName < b.routeName) return -1;
+      if (a.routeName > b.routeName) return 1;
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    });
+
+    setStationList(uniqueStations);
+    console.log('Station List:', uniqueStations); // Depuración
+  }, [selectedRoutes, routeData]);
+
+  // Filtrar itinerarios basado en agencias, rutas y estaciones excluidas
   useEffect(() => {
-    // Update start and end locations
+    if (!routeData) {
+      setFilteredItineraries(itineraryData);
+      return;
+    }
+  
+    // Sets para almacenar las agencias y rutas a excluir
+    const agenciesToExclude = new Set<string>();
+    const routesToExclude = new Set<string>();
+    const routesToExcludeWithStation = new Set<string>();
+  
+    // Procesar las agencias seleccionadas
+    selectedAgencies.forEach(agencyGtfsId => {
+      const agency = routeData.find(a => a.gtfsId === agencyGtfsId);
+      const agencyRoutes = agency?.routes.map(r => r.gtfsId) || [];
+      
+      // Rutas seleccionadas dentro de la agencia
+      const selectedRoutesForAgency = selectedRoutes.filter(routeGtfsId => agencyRoutes.includes(routeGtfsId));
+  
+      if (selectedRoutesForAgency.length === 0) {
+        // Si no se seleccionaron rutas dentro de la agencia, excluir toda la agencia
+        agenciesToExclude.add(agencyGtfsId);
+      } else {
+        // Si se seleccionaron rutas dentro de la agencia
+        selectedRoutesForAgency.forEach(routeGtfsId => {
+          if (selectedStations.length > 0) {
+            // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
+            routesToExcludeWithStation.add(routeGtfsId);
+          } else {
+            // Si no se seleccionaron estaciones, excluir completamente esas rutas
+            routesToExclude.add(routeGtfsId);
+          }
+        });
+      }
+    });
+  
+    // Procesar las rutas seleccionadas que no están asociadas a ninguna agencia seleccionada
+    const selectedRoutesNotInAgencies = selectedRoutes.filter(routeGtfsId => {
+      return !selectedAgencies.some(agencyGtfsId => {
+        const agency = routeData.find(a => a.gtfsId === agencyGtfsId);
+        const agencyRoutes = agency?.routes.map(r => r.gtfsId) || [];
+        return agencyRoutes.includes(routeGtfsId);
+      });
+    });
+  
+    selectedRoutesNotInAgencies.forEach(routeGtfsId => {
+      if (selectedStations.length > 0) {
+        // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
+        routesToExcludeWithStation.add(routeGtfsId);
+      } else {
+        // Si no se seleccionaron estaciones, excluir completamente esas rutas
+        routesToExclude.add(routeGtfsId);
+      }
+    });
+  
+    // Filtrar los itinerarios
+    const filtered = itineraryData.filter(itinerary => {
+      // Excluir itinerarios que tengan al menos un leg que coincida con los criterios de exclusión
+      return !itinerary.legs.some(leg => {
+        const agencyGtfsId = leg.route?.agency?.gtfsId;
+        const routeGtfsId = leg.route?.gtfsId;
+        const stationIds = leg.stops ? leg.stops.map(stop => stop.id) : [];
+  
+        // 1. Excluir itinerarios por agencia completa
+        if (agencyGtfsId && agenciesToExclude.has(agencyGtfsId)) {
+          return true;
+        }
+  
+        // 2. Excluir itinerarios por rutas completas
+        if (routeGtfsId && routesToExclude.has(routeGtfsId)) {
+          return true;
+        }
+  
+        // 3. Excluir itinerarios por rutas y estaciones seleccionadas
+        if (routeGtfsId && routesToExcludeWithStation.has(routeGtfsId)) {
+          // Verificar si el itinerario pasa por alguna de las estaciones seleccionadas
+          if (stationIds.some(id => selectedStations.includes(id))) {
+            return true;
+          }
+        }
+  
+        // Si no coincide con ningún criterio de exclusión
+        return false;
+      });
+    });
+  
+    console.log('Agencies to Exclude:', Array.from(agenciesToExclude));
+    console.log('Routes to Exclude:', Array.from(routesToExclude));
+    console.log('Routes to Exclude with Station:', Array.from(routesToExcludeWithStation));
+    console.log('Filtered Itineraries:', filtered); // Depuración
+    setFilteredItineraries(filtered);
+  }, [selectedAgencies, selectedRoutes, selectedStations, itineraryData, routeData]);
+
+  // Actualizar ubicaciones de inicio y fin
+  useEffect(() => {
     if (startLocation) {
       setFromLat(startLocation.lat.toString());
       setFromLon(startLocation.lon.toString());
@@ -1745,6 +345,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   }, [startLocation, endLocation, userLocation]);
 
+  // Obtener ubicación del usuario si no se proporciona startLocation
   useEffect(() => {
     if (!startLocation) {
       navigator.geolocation.getCurrentPosition(
@@ -1766,13 +367,14 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
   }, [startLocation]);
 
+  // Generar una clave simplificada para itinerarios
   function generateSimplifiedItineraryKey(itinerary: Itinerary): string {
-    // Clave simplificada basada en el modo de transporte y las ubicaciones de origen y destino
     return `${itinerary.legs
       .map((leg) => `${leg.mode}-${leg.from.name}-${leg.to.name}`)
       .join('|')}`;
   }
 
+  // Eliminar itinerarios duplicados
   function removeDuplicateItineraries(itineraries: Itinerary[]) {
     const seen = new Set();
     return itineraries.filter((itinerary) => {
@@ -1786,6 +388,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     });
   }
 
+  // Función para obtener itinerarios
   const fetchAllItineraries = useCallback(async () => {
     if (!fromLat || !fromLon || !toLat || !toLon) {
       return;
@@ -1794,16 +397,22 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     setLoading(true);
     setIsExpanded(true);
 
-    const currentDate = new Date().toLocaleDateString('en-US'); // Formato ISO (YYYY-MM-DD)
+    const currentDate = new Date().toLocaleDateString('en-US'); // Formato MM/DD/YYYY
     console.log('Current Local Date:', currentDate);
     const currentTime = new Date().toLocaleTimeString('en-US', { hour12: true });
-    console.log('Current Local Time:', currentTime);
-
-    const maxTransfers = 10; // Increase to allow more transfers
-    const numItineraries = 30; // Fetch more itineraries
+    console.log('Current Local Time:', currentTime);  
+    
+    const maxTransfers = 10; // Aumentar para permitir más transferencias
+    const numItineraries = 30; // Obtener más itinerarios
 
     try {
-      // Fetch itineraries for different transport modes
+      const { bannedAgencies, bannedRoutes } = generateBannedBlocks(
+        selectedAgencies,
+        selectedRoutes,
+        routeData
+      );
+
+      // Consultas para diferentes modos de transporte
       const queries = [
         ITINERARY_QUERY(
           Number(fromLat),
@@ -1813,7 +422,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_WALK_ONLY(
           Number(fromLat),
@@ -1823,7 +434,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
         ),
         ITINERARY_QUERY_BUS_WALK(
           Number(fromLat),
@@ -1833,7 +444,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_SUBWAY_WALK(
           Number(fromLat),
@@ -1843,7 +456,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_TRAM_WALK(
           Number(fromLat),
@@ -1853,7 +468,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_RAIL_WALK(
           Number(fromLat),
@@ -1863,7 +480,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_FERRY_WALK(
           Number(fromLat),
@@ -1873,7 +492,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_GONDOLA_WALK(
           Number(fromLat),
@@ -1883,7 +504,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_CABLE_CAR_WALK(
           Number(fromLat),
@@ -1893,7 +516,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_FUNICULAR_WALK(
           Number(fromLat),
@@ -1903,7 +528,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_BUS_SUBWAY_WALK(
           Number(fromLat),
@@ -1913,7 +540,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_SUBWAY_TRAM_WALK(
           Number(fromLat),
@@ -1923,7 +552,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
         ITINERARY_QUERY_ALL_MODES_WALK(
           Number(fromLat),
@@ -1933,36 +564,50 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries
+          numItineraries,
+          bannedAgencies,
+          bannedRoutes
         ),
       ];
 
-      // Execute all queries and collect responses
+      // Ejecutar todas las consultas y recopilar respuestas
       const results = await Promise.all(queries.map((query) => fetchItineraries(query)));
 
-      // Combine all itineraries
+      // Combinar todos los itinerarios
       let allItineraries = results.flat();
 
       // Filtrar itinerarios únicos
       const uniqueItineraries = removeDuplicateItineraries(allItineraries);
 
-      // Sort itineraries by duration (fastest to longest)
+      // Ordenar itinerarios por duración (más rápido a más largo)
       const sortedItineraries = uniqueItineraries.sort((a, b) => a.duration - b.duration);
 
       setItineraryData(sortedItineraries);
+      console.log('Itinerary Data Set:', sortedItineraries); // Depuración
+
+      // Verificar si los itinerarios tienen legGeometry.points
+      sortedItineraries.forEach((itinerary, index) => {
+        itinerary.legs.forEach((leg, legIndex) => {
+          if (!leg.legGeometry?.points) {
+            console.warn(`Itinerary ${index}, Leg ${legIndex} no tiene legGeometry.points`);
+          }
+        });
+      });
     } catch (error) {
       console.error('Error fetching itineraries:', error);
     } finally {
       setLoading(false);
     }
-  }, [fromLat, fromLon, toLat, toLon]);
+  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes, routeData]);
 
+  // Ejecutar fetchAllItineraries cuando las coordenadas o filtros cambien
   useEffect(() => {
     if (fromLat && fromLon && toLat && toLon) {
       fetchAllItineraries();
     }
-  }, [fromLat, fromLon, toLat, toLon, fetchAllItineraries]);
+  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes, fetchAllItineraries]);
 
+  // Manejar la selección y trazado de un itinerario
   const handlePlotItinerary = (itinerary: Itinerary) => {
     if (!itinerary) {
       setSelectedItinerary(itinerary);
@@ -1973,12 +618,21 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       setSelectedItinerary(itinerary);
     }
     console.log('Itinerario seleccionado para trazar:', itinerary);
+
+    // Verificar si el itinerario tiene legs con legGeometry.points
+    itinerary.legs.forEach((leg, index) => {
+      if (!leg.legGeometry?.points) {
+        console.warn(`Leg ${index} del itinerario seleccionado no tiene legGeometry.points`);
+      }
+    });
+
     setTimeout(() => {
       setIsExpanded(false);
-    }, 50); // Adjust the timing as necessary
+    }, 50); // Ajustar el tiempo según sea necesario
     setExpandedLegIndex(null);
   };
 
+  // Manejar la expansión de detalles de un leg
   const handleExpandDetails = (index: number) => {
     setExpandedLegIndex(index === expandedLegIndex ? null : index);
     setCurrentLegIndex(0);
@@ -1998,12 +652,17 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               ? [userLocation.lat, userLocation.lon]
               : defaultPosition
           }
-          zoom={13}
+          minZoom={10}
+          zoom={10}
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
+            maxZoom={19}
+            minZoom={10}
+            updateWhenIdle={true}
+            keepBuffer={2}
           />
 
           {startLocation && (
@@ -2023,12 +682,12 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           )}
 
           {selectedItinerary &&
-            selectedItinerary.legs.map((leg: Leg, legIndex: React.Key | null | undefined) => {
+            selectedItinerary.legs.map((leg: Leg) => {
               if (leg.legGeometry?.points) {
                 const decodedPolyline = polyline.decode(leg.legGeometry.points);
                 return (
                   <Polyline
-                    key={legIndex}
+                    key={`${selectedItinerary.id}-${leg.gtfsId}`} // Clave única usando gtfsId
                     positions={decodedPolyline.map((coord) => [coord[0], coord[1]])}
                     pathOptions={getPolylineStyle(leg)}
                   />
@@ -2068,102 +727,119 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           )}
         </div>
 
-        {/* Combobox de agencias */}
-        <div className="p-4 bg-white shadow-md">
-          <Autocomplete
-            multiple
-            options={agencyList}
-            disableCloseOnSelect
-            getOptionLabel={(option) => option.name}
-            onChange={(event, value) => {
-              setSelectedAgencies(value.map((agency) => agency.id));
-            }}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<Check fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+        {/* Comboboxes */}
+        {isExpanded && (
+          <div className="p-4 bg-white shadow-md">
+            {/* Combobox de agencias */}
+            <Autocomplete
+              id='agenciess'
+              multiple
+              options={agencyList}
+              disableCloseOnSelect
+              value={agencyList.filter(agency => selectedAgencies.includes(agency.gtfsId))}
+              getOptionLabel={(option) => option.name}
+              onChange={(event, value) => {
+                setSelectedAgencies(value.map((agency) => agency.gtfsId)); // Usar gtfsId
+                console.log('Selected Agencies:', value.map((agency) => agency.gtfsId));
+                // Reset selected routes and stations when agencies change
+                setSelectedRoutes([]);
+                setSelectedStations([]);
+              }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props} key={option.gtfsId}> {/* Asegurar clave única */}
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<Check fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.name}
+                </li>
+              )}
+              style={{ width: '100%', marginBottom: '16px' }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Excluir por Agencia"
+                  placeholder="Selecciona agencias"
+                  id="agencies-autocomplete"
+                  name="agencies"
                 />
-                {option.name}
-              </li>
-            )}
-            style={{ width: '100%', marginBottom: '16px' }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="outlined"
-                label="Filtrar por Agencia"
-                placeholder="Selecciona agencias"
-              />
-            )}
-          />
+              )}
+            />
 
-          {/* Combobox de rutas */}
-          <Autocomplete
-            multiple
-            options={routeList}
-            groupBy={(option) => option.agencyName}
-            disableCloseOnSelect
-            getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
-            onChange={(event, value) => {
-              setSelectedRoutes(value.map((route) => route.id));
-            }}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<Check fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+            {/* Combobox de rutas */}
+            <Autocomplete
+              multiple
+              options={routeList}
+              groupBy={(option) => option.agencyName}
+              disableCloseOnSelect
+              value={routeList.filter(route => selectedRoutes.includes(route.gtfsId))}
+              getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
+              onChange={(event, value) => {
+                setSelectedRoutes(value.map((route) => route.gtfsId)); // Usar gtfsId
+                console.log('Selected Routes:', value.map((route) => route.gtfsId));
+                // Reset selected stations cuando las rutas cambian
+                setSelectedStations([]);
+              }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props} key={option.gtfsId}> {/* Asegurar clave única */}
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                    checkedIcon={<Check fontSize="small" />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {`${option.shortName} - ${option.longName}`}
+                </li>
+              )}
+              style={{ width: '100%', marginBottom: '16px' }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Excluir por Línea/Ruta"
+                  placeholder="Selecciona rutas"
+                  id='routes-autocomplete'
+                  name='routes'
                 />
-                {option.shortName} - {option.longName}
-              </li>
-            )}
-            style={{ width: '100%' }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="outlined"
-                label="Filtrar por Línea/Ruta"
-                placeholder="Selecciona rutas"
-              />
-            )}
-          />
-        </div>
+              )}
+            />
+
+          </div>
+        )}
 
         <div className="p-4 flex flex-col">
-          {/* Menu Content */}
+          {/* Contenido del Menú */}
           {loading ? (
             <p className="text-center">Cargando itinerarios...</p>
           ) : (
             <>
               {filteredItineraries.length > 0 ? (
                 <div className="space-y-4 overflow-y-auto">
-                  {/* If the menu is expanded, show all itineraries */}
+                  {/* Si el menú está expandido, mostrar todos los itinerarios */}
                   {isExpanded
                     ? filteredItineraries.map((itinerary, index) => (
-                        <div key={index} className="bg-green-100 p-3 rounded-lg max-w-full">
+                        <div key={itinerary.id} className="bg-green-100 p-3 rounded-lg max-w-full">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                            {/* Visualization of legs with icons */}
+                            {/* Visualización de legs con íconos */}
                             <div className="flex items-center flex-wrap">
                               {itinerary.legs.map((leg, legIndex) => {
                                 const color = getColorForLeg(leg);
                                 const Icon = getTransportIcon(leg.mode);
                                 return (
-                                  <React.Fragment key={legIndex}>
+                                  <React.Fragment key={`${itinerary.id}-${leg.gtfsId}`}>
                                     <div
                                       style={{
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        marginRight:
-                                          legIndex < itinerary.legs.length - 1 ? '12px' : '0',
+                                        marginRight: '10px',
                                       }}
                                       title={`ETA: ${generateRandomETA()}`}
                                     >
-                                      {/* Duration above the icon */}
+                                      {/* Duración encima del ícono */}
                                       <span
                                         style={{
                                           fontSize: '12px',
@@ -2189,7 +865,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       >
                                         {Icon}
                                       </div>
-                                      {/* Distance below the icon */}
+                                      {/* Distancia debajo del ícono */}
                                       <span
                                         style={{
                                           fontSize: '12px',
@@ -2209,7 +885,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               })}
                             </div>
 
-                            {/* Buttons for details and mapping */}
+                            {/* Botones para detalles y mapeo */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
                               <div className="flex flex-col items-start mb-2 sm:mb-0">
                                 {itinerary.waitingTime > 0 && (
@@ -2245,10 +921,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               </button>
                             </div>
                           </div>
-                          {/* Show details if expanded */}
+                          {/* Mostrar detalles si está expandido */}
                           {expandedLegIndex === index && (
                             <div className="mt-2">
-                              {/* Slider controls */}
+                              {/* Controles del Slider */}
                               <div className="flex items-center justify-between">
                                 <button
                                   onClick={() =>
@@ -2263,7 +939,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   Anterior
                                 </button>
                                 <div className="flex-1 mx-4">
-                                  {/* Show current leg */}
+                                  {/* Mostrar leg actual */}
                                   {itinerary.legs[currentLegIndex] && (
                                     <div
                                       className="rounded-lg p-4 text-white"
@@ -2273,7 +949,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         ),
                                       }}
                                     >
-                                      {/* Leg details */}
+                                      {/* Detalles del leg */}
                                       {itinerary.legs[currentLegIndex].route?.agency && (
                                         <p>
                                           <strong>Agencia:</strong>{' '}
@@ -2290,15 +966,19 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         )}
                                       <p>
                                         <strong>Desde:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].from.name === 'Origin'
+                                        {itinerary.legs[currentLegIndex].from.name === 'Origin' || !itinerary.legs[currentLegIndex].from.name
                                           ? startLocation?.display_name
-                                          : itinerary.legs[currentLegIndex].from.name}
+                                          : itinerary.legs[currentLegIndex].from.stop?.name 
+                                            ? itinerary.legs[currentLegIndex].from.stop.name 
+                                            : itinerary.legs[currentLegIndex].from.name}
                                       </p>
                                       <p>
                                         <strong>Hasta:</strong>{' '}
                                         {itinerary.legs[currentLegIndex].to.name === 'Destination'
                                           ? endLocation?.display_name
-                                          : itinerary.legs[currentLegIndex].to.name}
+                                          : itinerary.legs[currentLegIndex].to.stop?.name 
+                                            ? itinerary.legs[currentLegIndex].to.stop.name
+                                            : itinerary.legs[currentLegIndex].to.name}
                                       </p>
                                       <p>
                                         <strong>Distancia:</strong>{' '}
@@ -2313,7 +993,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         {formatTimeWithAmPm(itinerary.legs[currentLegIndex].startTime)}
                                       </p>
                                       <p>
-                                        <strong>Hora al terminar :</strong>{' '}
+                                        <strong>Hora al terminar:</strong>{' '}
                                         {formatTimeWithAmPm(itinerary.legs[currentLegIndex].endTime)}
                                       </p>
                                     </div>
@@ -2330,7 +1010,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   Siguiente
                                 </button>
                               </div>
-                              {/* Pagination indicator */}
+                              {/* Indicador de paginación */}
                               <div className="flex justify-center mt-2">
                                 {itinerary.legs.map((_, idx) => (
                                   <div
@@ -2345,28 +1025,25 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                           )}
                         </div>
                       ))
-                    : // If the menu is collapsed, only show the selected itinerary
+                    : 
+                      // Si el menú está colapsado, solo mostrar el itinerario seleccionado
                       selectedItinerary && (
                         <div className="bg-green-100 p-3 rounded-lg max-w-full">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                            {/* Visualization of legs with icons */}
+                            {/* Visualización de legs con íconos */}
                             <div className="flex items-center flex-wrap">
                               {selectedItinerary.legs.map(
-                                (leg: Leg, legIndex: React.Key | null | undefined) => {
+                                (leg: Leg, legIndex) => {
                                   const color = getColorForLeg(leg);
                                   const Icon = getTransportIcon(leg.mode);
                                   return (
-                                    <React.Fragment key={legIndex}>
+                                    <React.Fragment key={`${selectedItinerary.id}-${leg.gtfsId}`}>
                                       <div
                                         style={{
                                           display: 'flex',
                                           flexDirection: 'column',
                                           alignItems: 'center',
-                                          marginRight:
-                                            (legIndex as number) <
-                                            selectedItinerary.legs.length - 1
-                                              ? '12px'
-                                              : '0',
+                                          marginRight: '10px',
                                         }}
                                         title={`ETA: ${generateRandomETA()}`}
                                       >
@@ -2407,17 +1084,16 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                           {Math.round(leg.distance)}m
                                         </span>
                                       </div>
-                                      {typeof legIndex === 'number' &&
-                                        legIndex < selectedItinerary.legs.length - 1 && (
-                                          <ArrowForwardIcon style={{ color: 'gray' }} />
-                                        )}
+                                      {legIndex < selectedItinerary.legs.length - 1 && (
+                                        <ArrowForwardIcon style={{ color: 'gray' }} />
+                                      )}
                                     </React.Fragment>
                                   );
                                 }
                               )}
                             </div>
 
-                            {/* Buttons for saving the route */}
+                            {/* Botones para guardar la ruta */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-0 sm:space-x-2 mt-2 sm:mt-0 w-full sm:w-auto">
                               <div className="flex flex-col items-start mb-2 sm:mb-0">
                                 {selectedItinerary.waitingTime > 0 && (
@@ -2435,7 +1111,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   </p>
                                 </div>
                               </div>
-                              {/* "Save Route" Button */}
+                              {/* Botón "Guardar Ruta" */}
                               <button
                                 className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
                                 onClick={() =>

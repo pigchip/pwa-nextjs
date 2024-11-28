@@ -8,6 +8,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { useState } from "react";
 import { Status } from "@/types/register";
 import ConfirmModal from "@/components/ConfirmModal";
+import MapWithMarker from "@/components/MapWithMarker"; // Importa el componente del mapa
 import { Knock } from "@knocklabs/node";
 
 const EvidenceDetails: React.FC = () => {
@@ -117,7 +118,7 @@ const EvidenceDetails: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const { body, date, line, route, station, status, transport, time } =
+  const { body, date, line, route, station, status, transport, time, x, y } =
     selectedReport;
 
   return (
@@ -161,9 +162,21 @@ const EvidenceDetails: React.FC = () => {
             <span>{status.toString()}</span>
           </div>
           <div className="flex flex-col sm:flex-row justify-between">
+            <span className="font-semibold">Coordenadas:</span>
+            <span>{x}</span>
+            <span>{y}</span>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between">
             <span className="font-semibold">Descripción:</span>
             <span>{body}</span>
           </div>
+
+          {/* Mapa */}
+          <div className="mt-6">
+            <h2 className="text-lg font-bold mb-2">Ubicación en el mapa</h2>
+            <MapWithMarker lat={x} lon={y} />
+          </div>
+
           {role === "supervisor" && (
             <div className="mt-6">
               <select

@@ -3,6 +3,7 @@ export interface Place {
   name: string;
   lat: number;
   lon: number;
+  stop?: Stop;
 }
 
 export interface LegGeometry {
@@ -11,10 +12,12 @@ export interface LegGeometry {
 
 export interface Route {
   id: string;
+  gtfsId: string;
   shortName: string;
   longName: string;
   color?: string;
   agency?: {
+    gtfsId?: string;
     id: string;
     name: string;
     url: string;
@@ -22,6 +25,7 @@ export interface Route {
 }
 
 export interface Leg {
+  gtfsId: string;
   mode: string;
   startTime: number;
   endTime: number;
@@ -31,9 +35,16 @@ export interface Leg {
   duration: number;
   legGeometry?: LegGeometry;
   route?: Route;
+  stops?: Stop[];
+}
+
+export interface Stop {
+  id: string;
+  name: string;
 }
 
 export interface Itinerary {
+  id?: string;
   startTime: number;
   endTime: number;
   duration: number;
