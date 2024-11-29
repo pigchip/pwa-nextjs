@@ -89,6 +89,7 @@ const StationIncidents: React.FC = () => {
         <ul className="space-y-4">
           {currentRecords.map((incident) => {
             const transport = getTransportByLineId(incident.line);
+            const displayLine = transport.transport === "Metrobús" ? incident.line - 12 : incident.line;
             return (
               <li
                 key={incident.id}
@@ -97,7 +98,7 @@ const StationIncidents: React.FC = () => {
                 <div className="flex items-center mb-2">
                   <h3 className="text-xl font-semibold">{incident.name}</h3>
                   <span className="ml-2 text-sm text-gray-500">
-                    - Línea: {incident.line} del {transport.transport}
+                    - Línea: {displayLine} del {transport.transport}
                   </span>
                 </div>
                 <p className="text-gray-700">
