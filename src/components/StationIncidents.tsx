@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchIncidents } from "@/lib/fetchIncidents";
 import { Incident } from "@/types/incident";
+import { getTransportByLineId } from "@/utils/getTransportByLineId";
 
 const StationIncidents: React.FC = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -86,28 +87,32 @@ const StationIncidents: React.FC = () => {
         </p>
       ) : (
         <ul className="space-y-4">
-          {currentRecords.map((incident) => (
-            <li
-              key={incident.id}
-              className="p-4 border rounded-lg shadow-md bg-white"
-            >
-              <div className="flex items-center mb-2">
-                <h3 className="text-xl font-semibold">{incident.name}</h3>
-                <span className="ml-2 text-sm text-gray-500">
-                  - Línea: {incident.line}
-                </span>
-              </div>
-              <p className="text-gray-700">
-                <strong>Incidente:</strong> {incident.incident}
-              </p>
-              <p className="text-gray-700">
-                <strong>Servicios:</strong> {incident.services}
-              </p>
-              <p className="text-gray-700">
-                <strong>Información:</strong> {incident.information}
-              </p>
-            </li>
-          ))}
+          {currentRecords.map((incident) => {
+            const transport = getTransportByLineId(incident.line);
+            const displayLine = transport.transport === "Metrobús" ? incident.line - 12 : incident.line;
+            return (
+              <li
+                key={incident.id}
+                className="p-4 border rounded-lg shadow-md bg-white"
+              >
+                <div className="flex items-center mb-2">
+                  <h3 className="text-xl font-semibold">{incident.name}</h3>
+                  <span className="ml-2 text-sm text-gray-500">
+                    - Línea: {displayLine} del {transport.transport}
+                  </span>
+                </div>
+                <p className="text-gray-700">
+                  <strong>Incidente:</strong> {incident.incident}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Servicios:</strong> {incident.services}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Información:</strong> {incident.information}
+                </p>
+              </li>
+            );
+          })}
         </ul>
       )}
       <div className="flex justify-between mt-4">
