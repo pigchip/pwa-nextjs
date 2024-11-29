@@ -1,7 +1,7 @@
 import { DetailedTransport, TransportName } from "@/types/transport";
 
 
-export async function getTransportByLineId(lineId: number): Promise<DetailedTransport> {
+export function getTransportByLineId(lineId: number): DetailedTransport {
   let transportName: TransportName;
   let incident = "No incident reported";
   let information = "No additional information available";
