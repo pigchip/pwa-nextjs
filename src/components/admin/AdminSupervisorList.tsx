@@ -8,6 +8,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useLinesStations } from "@/stores/LinesStationsContext";
+import { fetchSupervisors } from "@/lib/fetchSupervisors";
 
 const AdminSupervisorList = () => {
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
@@ -17,13 +18,9 @@ const AdminSupervisorList = () => {
   const { lines, stations } = useLinesStations();
 
   useEffect(() => {
-    const fetchSupervisors = async () => {
+    const loadSupervisors = async () => {
       try {
-        const response = await fetch("/api/supervisors");
-        if (!response.ok) {
-          throw new Error("Failed to fetch supervisors");
-        }
-        const data: Supervisor[] = await response.json();
+        const data = await fetchSupervisors();
         setSupervisors(data);
       } catch (error) {
         setError((error as Error).message);
@@ -32,7 +29,7 @@ const AdminSupervisorList = () => {
       }
     };
 
-    fetchSupervisors();
+    loadSupervisors();
   }, []);
 
   if (loading) {
