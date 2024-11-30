@@ -1,10 +1,10 @@
-// pages/api/supervisor/sign-up.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
     const { email, sup, admin, line, station } = await req.json();
+
+    console.log(email, sup, admin, line, station);
 
     if (!email || !sup || !admin || line === undefined || station === undefined) {
       return NextResponse.json(
@@ -67,11 +67,24 @@ export async function POST(req: NextRequest) {
     });
 
     if (!supervisorResponse.ok) {
-      const errorData = await supervisorResponse.json();
+      const errorText = await supervisorResponse.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText };
+      }
       return NextResponse.json(errorData, { status: supervisorResponse.status });
     }
 
-    const createdSupervisor = await supervisorResponse.json();
+    const createdSupervisorText = await supervisorResponse.text();
+    let createdSupervisor;
+    try {
+      createdSupervisor = JSON.parse(createdSupervisorText);
+    } catch (e) {
+      createdSupervisor = { message: createdSupervisorText };
+    }
+
     return NextResponse.json(
       {
         message: "Supervisor account created successfully",
