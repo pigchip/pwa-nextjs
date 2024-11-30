@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Register, Status } from '@/types/register';
 import { useRouter } from 'next/navigation';
 import { useReports } from '@/contexts/ReportsContext';
+import { useLinesStations } from '@/stores/LinesStationsContext';
 
 const RegisterList: React.FC = () => {
   const [filteredRegisters, setFilteredRegisters] = useState<Register[]>([]);
@@ -20,6 +21,7 @@ const RegisterList: React.FC = () => {
   const itemsPerPage = 5; // Number of items per page
   const router = useRouter();
   const { reports, setSelectedReport } = useReports();
+  const { lines, stations } = useLinesStations();
 
   const filterRegisters = useCallback(() => {
     let filtered = reports;
@@ -68,7 +70,8 @@ const RegisterList: React.FC = () => {
 
   useEffect(() => {
     filterRegisters();
-  }, [filters, currentPage, filterRegisters]);
+    console.log(lines)
+  }, [filters, currentPage, filterRegisters, lines]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -137,8 +140,8 @@ const RegisterList: React.FC = () => {
         </select>
         <select name="line" value={filters.line} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
           <option value="">Todas las líneas</option>
-          {uniqueValues('line').map(line => (
-            <option key={line} value={line}>{line}</option>
+          {lines.map((line: { id: number; name: string }) => (
+            <option key={line.id} value={line.id.toString()}>{line.name}</option>
           ))}
         </select>
         <select name="route" value={filters.route} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
@@ -149,9 +152,9 @@ const RegisterList: React.FC = () => {
         </select>
         <select name="station" value={filters.station} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
           <option value="">Todas las estaciones</option>
-          {uniqueValues('station').map(station => (
-            <option key={station} value={station}>{station}</option>
-          ))}
+          {stations.map((station: { id: number; name: string }) => (
+              <option key={station.id} value={station.id.toString()}>{station.name}</option>
+            ))}
         </select>
         <select name="status" value={filters.status} onChange={handleFilterChange} className="p-2 border border-gray-300 rounded">
           <option value="">Todos los status</option>
@@ -181,9 +184,9 @@ const RegisterList: React.FC = () => {
               <div>
                 <p><strong>Usuario:</strong> {register.user}</p>
                 <p><strong>Transporte:</strong> {register.transport}</p>
-                <p><strong>Línea:</strong> {register.line}</p>
+                <p><strong>Línea:</strong> {lines.find((line: { id: number }) => line.id === Number(register.line))?.information || register.line}</p>
                 <p><strong>Ruta:</strong> {register.route}</p>
-                <p><strong>Estación:</strong> {register.station}</p>
+                <p><strong>Estación:</strong> {stations.find((station: { id: number }) => station.id === Number(register.station))?.name || register.station}</p>
                 <p><strong>Fecha:</strong> {register.date}</p>
                 <p><strong>Estado:</strong> {register.status}</p>
               </div>

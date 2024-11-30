@@ -9,6 +9,7 @@ import { SelectedItineraryProvider } from "@/contexts/SelectedItineraryContext";
 import { ReportsProvider } from "@/contexts/ReportsContext";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
+import { LinesStationsProvider } from "@/stores/LinesStationsContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -78,9 +79,11 @@ export default function RootLayout({
       </head>
       <body>
         <RoleProvider>
-          <SelectedItineraryProvider>
-            <ReportsProvider>{children}</ReportsProvider>
-          </SelectedItineraryProvider>
+          <LinesStationsProvider>
+            <SelectedItineraryProvider>
+              <ReportsProvider>{children}</ReportsProvider>
+            </SelectedItineraryProvider>
+          </LinesStationsProvider>
         </RoleProvider>
       </body>
     </html>
