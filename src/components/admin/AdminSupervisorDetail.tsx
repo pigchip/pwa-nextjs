@@ -5,6 +5,7 @@ import { Supervisor } from '@/types/supervisor';
 import { useParams, useRouter } from 'next/navigation';
 import { IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useLinesStations } from '@/stores/LinesStationsContext';
 
 const AdminSupervisorDetail = () => {
   const [supervisor, setSupervisor] = useState<Supervisor | null>(null);
@@ -14,6 +15,7 @@ const AdminSupervisorDetail = () => {
   const params = useParams();
   const router = useRouter();
   const id = params?.id;
+  const { lines, stations } = useLinesStations();
 
   useEffect(() => {
     if (!id) return;
@@ -53,8 +55,11 @@ const AdminSupervisorDetail = () => {
   }
 
   if (!supervisor) {
-    return <div className="flex justify-center items-center h-screen">Supervisor not found</div>;
+    return <div className="flex justify-center items-center h-screen">El supervisor no fue encontrado</div>;
   }
+
+  const lineName = lines.find(line => line.id === supervisor.line)?.information || supervisor.line;
+  const stationName = stations.find(station => station.id === supervisor.station)?.name || supervisor.station;
 
   return (
     <div className="container mx-auto p-4">
@@ -68,8 +73,8 @@ const AdminSupervisorDetail = () => {
         <p><strong>Supervisor ID:</strong> {supervisor.sup}</p>
         <p><strong>User:</strong> {supervisor.user}</p>
         <p><strong>Admin:</strong> {supervisor.admin}</p>
-        <p><strong>Line:</strong> {supervisor.line}</p>
-        <p><strong>Station:</strong> {supervisor.station}</p>
+        <p><strong>Línea:</strong> {lineName}</p>
+        <p><strong>Estación:</strong> {stationName}</p>
       </div>
     </div>
   );
