@@ -53,6 +53,7 @@ const AdminSupervisorForm = () => {
 
       // Create supervisor
       const supervisorData = {
+        email: formData.email,
         sup: formData.sup,
         user: userId,
         admin: formData.admin,
