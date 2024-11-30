@@ -7,6 +7,7 @@ const LineIncidents: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>('');
+  const [incidentFilter, setIncidentFilter] = useState<string>('');
 
   useEffect(() => {
     const fetchIncidents = async () => {
@@ -35,10 +36,11 @@ const LineIncidents: React.FC = () => {
   useEffect(() => {
     setFilteredIncidents(
       incidents.filter((incident) =>
-        incident.name.toLowerCase().includes(search.toLowerCase())
+        incident.name.toLowerCase().includes(search.toLowerCase()) &&
+        incident.incident.toLowerCase().includes(incidentFilter.toLowerCase())
       )
     );
-  }, [search, incidents]);
+  }, [search, incidentFilter, incidents]);
 
   if (loading) {
     return <p className="text-center text-gray-500">Cargando...</p>;
@@ -56,6 +58,13 @@ const LineIncidents: React.FC = () => {
         placeholder="Buscar por nombre de línea..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        className="mb-4 p-2 border rounded w-full"
+      />
+      <input
+        type="text"
+        placeholder="Filtrar por tipo de incidente..."
+        value={incidentFilter}
+        onChange={(e) => setIncidentFilter(e.target.value)}
         className="mb-4 p-2 border rounded w-full"
       />
       {filteredIncidents.length === 0 ? (
