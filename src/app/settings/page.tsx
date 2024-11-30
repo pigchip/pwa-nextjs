@@ -97,7 +97,7 @@ const SettingsComponent: React.FC = () => {
                   className="w-64 py-2 bg-green-500 text-white font-semibold rounded-lg"
                   onClick={() => setShowLocationModal(true)} // Open location modal
                 >
-                  Compartir ubicación en vivo
+                  Compartir ubicación actual
                 </button>
                 <button
                   className="w-64 py-2 bg-purple-500 text-white font-semibold rounded-lg"
@@ -141,7 +141,7 @@ const SettingsComponent: React.FC = () => {
         {showLocationModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center text-black">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-              <h3 className="text-lg font-semibold mb-4">Compartir ubicación en vivo</h3>
+              <h3 className="text-lg font-semibold mb-4">Compartir ubicación actual</h3>
               <LiveLocationComponent />
               <div className="flex justify-end space-x-2 mt-4">
                 <button className="bg-gray-300 text-black px-4 py-2 rounded" onClick={() => setShowLocationModal(false)}>
