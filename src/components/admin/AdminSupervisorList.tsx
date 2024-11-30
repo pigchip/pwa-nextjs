@@ -61,7 +61,7 @@ const AdminSupervisorList = () => {
           <thead className="bg-[#6ABDA6] text-white">
             <tr>
               <th className="py-3 px-6 border-b">Supervisor ID</th>
-              <th className="py-3 px-6 border-b">User</th>
+              <th className="py-3 px-6 border-b">Usuario</th>
               <th className="py-3 px-6 border-b">Admin</th>
               <th className="py-3 px-6 border-b">Línea</th>
               <th className="py-3 px-6 border-b">Estación</th>
