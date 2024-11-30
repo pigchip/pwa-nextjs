@@ -7,12 +7,14 @@ import { IconButton, Button } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useLinesStations } from "@/stores/LinesStationsContext";
 
 const AdminSupervisorList = () => {
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { lines, stations } = useLinesStations();
 
   useEffect(() => {
     const fetchSupervisors = async () => {
@@ -61,9 +63,9 @@ const AdminSupervisorList = () => {
               <th className="py-3 px-6 border-b">Supervisor ID</th>
               <th className="py-3 px-6 border-b">User</th>
               <th className="py-3 px-6 border-b">Admin</th>
-              <th className="py-3 px-6 border-b">Line</th>
-              <th className="py-3 px-6 border-b">Station</th>
-              <th className="py-3 px-6 border-b">Actions</th>
+              <th className="py-3 px-6 border-b">Línea</th>
+              <th className="py-3 px-6 border-b">Estación</th>
+              <th className="py-3 px-6 border-b">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -79,10 +81,10 @@ const AdminSupervisorList = () => {
                   {supervisor.admin}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
-                  {supervisor.line}
+                  {lines.find(line => line.id === supervisor.line)?.information || supervisor.line}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
-                  {supervisor.station}
+                  {stations.find(station => station.id === supervisor.station)?.name || supervisor.station}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
                   <IconButton
