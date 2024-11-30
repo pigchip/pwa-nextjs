@@ -71,7 +71,7 @@ const AdminSupervisorDetail = () => {
       </div>
       <div className="bg-white p-6 rounded-lg shadow-md">
         <p><strong>Supervisor ID:</strong> {supervisor.sup}</p>
-        <p><strong>User:</strong> {supervisor.user}</p>
+        <p><strong>Usuario:</strong> {supervisor.user}</p>
         <p><strong>Admin:</strong> {supervisor.admin}</p>
         <p><strong>Línea:</strong> {lineName}</p>
         <p><strong>Estación:</strong> {stationName}</p>
