@@ -169,29 +169,38 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   // Función para manejar el envío del formulario de "Olvidé mi contraseña"
   const handleForgotPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-
+  
     // Validar el correo electrónico
     if (!validateEmail(forgotPasswordEmail)) {
       setForgotPasswordError(true);
       setForgotPasswordMessage("El correo electrónico no es válido.");
       return;
     }
-
-    // Enviar la solicitud a la API
+  
+    // Enviar la solicitud al endpoint interno de Next.js
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/tmp/change`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const response = await fetch(`${apiUrl}/api/tmp/change`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        cache: "no-store",
         body: JSON.stringify({ email: forgotPasswordEmail }),
       });
 
+      const data = await response.json();
+  
       if (response.ok) {
+        if (data === true) {
         // Mostrar mensaje de éxito
         setForgotPasswordMessage("Se ha asignado una contraseña temporal segura a tu correo electrónico.");
         setForgotPasswordError(false);
-        // Opcional: Puedes cerrar el modal después de un tiempo o al hacer clic en un botón
+        // Opcional: cerrar el modal automáticamente
+      } else {
+      setForgotPasswordError(true);
+      setForgotPasswordMessage("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
+      }
       } else {
         // Manejar errores de la API
         const errorData = await response.json();
@@ -202,7 +211,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       setForgotPasswordError(true);
       setForgotPasswordMessage("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
     }
-  };
+  };  
 
   useEffect(() => {
     setHasSeenIt(localStorage.getItem('hasSeenTutorial') === 'true');
