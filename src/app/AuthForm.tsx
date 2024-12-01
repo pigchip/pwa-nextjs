@@ -180,7 +180,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     // Enviar la solicitud al endpoint interno de Next.js
     try {
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const response = await fetch(`${apiUrl}/api/tmp/change`, {
+      const response = await fetch(`${apiUrl}api/tmp/change`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
