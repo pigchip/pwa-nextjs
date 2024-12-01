@@ -59,6 +59,36 @@ export const saveRouteToLocalStorage = (
   }
 };
 
+export const incrementRouteFrequency = (
+  startName: string,
+  endName: string,
+  itinerary: any
+) => {
+  const frequentedRoutes: FrequentedRoute[] = JSON.parse(
+    localStorage.getItem("frequentedRoutes") || "[]"
+  );
+
+  const existingFrequentedRouteIndex = frequentedRoutes.findIndex(
+    (route) =>
+      route.startNameIti === startName && route.endNameIti === endName
+  );
+
+  if (existingFrequentedRouteIndex !== -1) {
+    // If the route exists, increment its frequency
+    frequentedRoutes[existingFrequentedRouteIndex].frequency += 1;
+  } else {
+    // If the route does not exist, set its frequency to 1
+    const newFrequentedRoute: FrequentedRoute = {
+      ...itinerary,
+      startNameIti: startName,
+      endNameIti: endName,
+      frequency: 1,
+    };
+    frequentedRoutes.push(newFrequentedRoute);
+  }
+
+  localStorage.setItem("frequentedRoutes", JSON.stringify(frequentedRoutes));
+};
 // Function to generate random ETA
 export const generateRandomETA = () => {
   const baseMinutes = 5;
