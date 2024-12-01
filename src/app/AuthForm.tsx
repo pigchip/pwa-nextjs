@@ -167,7 +167,9 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   };
 
   // Función para manejar el envío del formulario de "Olvidé mi contraseña"
-  const handleForgotPasswordSubmit = async () => {
+  const handleForgotPasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Prevenir el comportamiento por defecto de recarga
+  
     try {
       // Validar el correo electrónico
       if (!validateEmail(forgotPasswordEmail)) {
@@ -193,18 +195,23 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       const data = await response.json();
   
       if (data === true) {
-        setForgotPasswordMessage( "Se ha asignado una contraseña temporal segura a tu correo electrónico.");
+        setForgotPasswordMessage(
+          "Se ha asignado una contraseña temporal segura a tu correo electrónico."
+        );
         setForgotPasswordError(false);
       } else {
-        throw new Error("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
+        throw new Error(
+          "No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet."
+        );
       }
     } catch (err) {
       console.error("Error en la solicitud de 'Olvidé mi contraseña':", err);
       setForgotPasswordError(true);
-      setForgotPasswordMessage("Ocurrió un error al procesar tu solicitud.");
+      setForgotPasswordMessage(
+        "Ocurrió un error al procesar tu solicitud."
+      );
     }
   };
-    
 
   useEffect(() => {
     setHasSeenIt(localStorage.getItem('hasSeenTutorial') === 'true');
