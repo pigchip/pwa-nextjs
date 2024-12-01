@@ -167,19 +167,16 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   };
 
   // Función para manejar el envío del formulario de "Olvidé mi contraseña"
-  const handleForgotPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-  
-    // Validar el correo electrónico
-    if (!validateEmail(forgotPasswordEmail)) {
-      setForgotPasswordError(true);
-      setForgotPasswordMessage("El correo electrónico no es válido.");
-      return;
-    }
-  
-    // Enviar la solicitud al endpoint interno de Next.js
+  const handleForgotPasswordSubmit = async () => {
     try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      // Validar el correo electrónico
+      if (!validateEmail(forgotPasswordEmail)) {
+        setForgotPasswordError(true);
+        setForgotPasswordMessage("El correo electrónico no es válido.");
+        return;
+      }
+  
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       const response = await fetch(`${apiUrl}api/tmp/change`, {
         method: "POST",
         headers: {
@@ -188,30 +185,26 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
         cache: "no-store",
         body: JSON.stringify({ email: forgotPasswordEmail }),
       });
-
+  
+      if (!response.ok) {
+        throw new Error("Error al procesar tu solicitud.");
+      }
+  
       const data = await response.json();
   
-      if (response.ok) {
-        if (data === true) {
-        // Mostrar mensaje de éxito
-        setForgotPasswordMessage("Se ha asignado una contraseña temporal segura a tu correo electrónico.");
+      if (data === true) {
+        setForgotPasswordMessage( "Se ha asignado una contraseña temporal segura a tu correo electrónico.");
         setForgotPasswordError(false);
-        // Opcional: cerrar el modal automáticamente
       } else {
-      setForgotPasswordError(true);
-      setForgotPasswordMessage("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
+        throw new Error("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
       }
-      } else {
-        // Manejar errores de la API
-        const errorData = await response.json();
-        setForgotPasswordError(true);
-        setForgotPasswordMessage(errorData.message || "Ocurrió un error al procesar tu solicitud.");
-      }
-    } catch (error) {
+    } catch (err) {
+      console.error("Error en la solicitud de 'Olvidé mi contraseña':", err);
       setForgotPasswordError(true);
-      setForgotPasswordMessage("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
+      setForgotPasswordMessage("Ocurrió un error al procesar tu solicitud.");
     }
-  };  
+  };
+    
 
   useEffect(() => {
     setHasSeenIt(localStorage.getItem('hasSeenTutorial') === 'true');
