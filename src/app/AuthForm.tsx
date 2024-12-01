@@ -186,6 +186,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
           "Content-Type": "application/json",
         },
         cache: "no-store",
+        mode: "no-cors",
         body: JSON.stringify({ email: forgotPasswordEmail }),
       });
 
