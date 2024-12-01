@@ -17,7 +17,7 @@ const AdminSupervisorForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [filteredStations, setFilteredStations] = useState<Station[]>([]);
   const router = useRouter();
-  const { lines, stations } = useLinesStations();
+  const { lines, stations, getFirstAndLastStations } = useLinesStations();
 
   useEffect(() => {
     setFilteredStations(stations.filter(station => station.line === Number(formData.line)));
@@ -123,11 +123,14 @@ const AdminSupervisorForm = () => {
             required
           >
             <option value="">Selecciona una línea</option>
-            {lines.map((line) => (
-              <option key={line.id} value={line.id}>
-                {line.transport} - {line.name}
-              </option>
-            ))}
+            {lines.map((line) => {
+              const { firstStation, lastStation } = getFirstAndLastStations(line.id);
+              return (
+                <option key={line.id} value={line.id}>
+                  {line.transport} - {line.name} ({firstStation?.name} - {lastStation?.name})
+                </option>
+              );
+            })}
           </select>
         </div>
         <div className="mb-4">
