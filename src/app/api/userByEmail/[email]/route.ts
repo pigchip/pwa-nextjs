@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-export async function GET(req: Request, { params }: { params: { email: string } }) {
-  const { email } = params;
+export async function GET(req: Request, { params }: { params: Promise<{ email: string }> }) {
+  const { email } = await params;
 
   if (!email) {
     return NextResponse.json(
