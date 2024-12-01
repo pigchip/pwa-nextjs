@@ -5,7 +5,7 @@ import { useReports } from "@/contexts/ReportsContext";
 import { useRouter } from "next/navigation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRole } from "@/contexts/RoleContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Status } from "@/types/register";
 import ConfirmModal from "@/components/ConfirmModal";
 import MapWithMarker from "@/components/MapWithMarker"; // Importa el componente del mapa
