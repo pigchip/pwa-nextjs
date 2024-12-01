@@ -6,6 +6,7 @@ const MostFrequentedRoutes: React.FC = () => {
 
   useEffect(() => {
     const routes = getMostFrequentedRoutes();
+    console.log('routes', routes);
     const validRoutes = routes.filter((route: any) => route && route.startNameIti && route.endNameIti);
     setFrequentedRoutes(validRoutes);
   }, []);
@@ -47,7 +48,7 @@ const MostFrequentedRoutes: React.FC = () => {
                     <p className="text-gray-600">
                       Frecuencia:{" "}
                       <span className="font-medium">
-                        {itinerary.frequency}
+                        {itinerary.frequency || 'N/A'}
                       </span>
                     </p>
                   </div>
