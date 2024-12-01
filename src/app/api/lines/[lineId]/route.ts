@@ -2,8 +2,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest, { params }: { params: { lineId: string } }) {
-  const { lineId } = params;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ lineId: string }> }) {
+  const { lineId } = await params;
 
   try {
     const line = await getLineById(lineId);

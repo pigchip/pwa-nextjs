@@ -5,11 +5,12 @@ import { useReports } from "@/contexts/ReportsContext";
 import { useRouter } from "next/navigation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRole } from "@/contexts/RoleContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Status } from "@/types/register";
 import ConfirmModal from "@/components/ConfirmModal";
 import MapWithMarker from "@/components/MapWithMarker"; // Importa el componente del mapa
 import { Knock } from "@knocklabs/node";
+import { useLinesStations } from "@/stores/LinesStationsContext";
 
 const EvidenceDetails: React.FC = () => {
   const { selectedReport, setSelectedReport, updateReport } = useReports();
@@ -17,6 +18,7 @@ const EvidenceDetails: React.FC = () => {
   const { role } = useRole();
   const [newStatus, setNewStatus] = useState<Status | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { lines, stations, getFirstAndLastStations } = useLinesStations();
 
   const knockApiKey = process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY;
 
@@ -118,8 +120,11 @@ const EvidenceDetails: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const { body, date, line, route, station, status, transport, time, x, y } =
-    selectedReport;
+  const { body, date, line: lineId, route, station: stationId, status, transport, time, x, y } = selectedReport;
+
+  const line = lines.find(line => line.id === lineId);
+  const station = stations.find(station => station.id === stationId);
+  const { firstStation, lastStation } = getFirstAndLastStations(lineId);
 
   return (
     <Layout>
@@ -147,7 +152,7 @@ const EvidenceDetails: React.FC = () => {
           </div>
           <div className="flex flex-col sm:flex-row justify-between">
             <span className="font-semibold">Línea:</span>
-            <span>{line}</span>
+            <span>{line?.name} de {firstStation?.name} a {lastStation?.name}</span>
           </div>
           <div className="flex flex-col sm:flex-row justify-between">
             <span className="font-semibold">Ruta:</span>
@@ -155,7 +160,7 @@ const EvidenceDetails: React.FC = () => {
           </div>
           <div className="flex flex-col sm:flex-row justify-between">
             <span className="font-semibold">Estación:</span>
-            <span>{station}</span>
+            <span>{station?.name}</span>
           </div>
           <div className="flex flex-col sm:flex-row justify-between">
             <span className="font-semibold">Estado:</span>
