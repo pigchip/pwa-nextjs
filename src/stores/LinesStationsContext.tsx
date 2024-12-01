@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 interface LinesStationsContextProps {
     lines: Line[];
     stations: Station[];
+    getFirstAndLastStations: (lineId: number) => { firstStation: Station | undefined, lastStation: Station | undefined };
 }
 
 const LinesStationsContext = createContext<LinesStationsContextProps | undefined>(undefined);
@@ -29,8 +30,19 @@ export const LinesStationsProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchStations();
   }, []);
 
+  const getFirstAndLastStations = (lineId: number) => {
+    const lineStations = stations.filter(station => station.line === lineId);
+    if (lineStations.length === 0) {
+      return { firstStation: undefined, lastStation: undefined };
+    }
+    return {
+      firstStation: lineStations[0],
+      lastStation: lineStations[lineStations.length - 1]
+    };
+  };
+
   return (
-    <LinesStationsContext.Provider value={{ lines, stations }}>
+    <LinesStationsContext.Provider value={{ lines, stations, getFirstAndLastStations }}>
       {children}
     </LinesStationsContext.Provider>
   );
