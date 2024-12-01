@@ -179,13 +179,12 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       }
   
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const response = await fetch(`${apiUrl}api/pass`, {
+      const response = await fetch(`${apiUrl}api/pass/${forgotPasswordEmail}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         cache: "no-store",
-        body: JSON.stringify({ email: forgotPasswordEmail }),
       });
   
       if (!response.ok) {
