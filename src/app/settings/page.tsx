@@ -7,6 +7,7 @@ import Layout from '@/components/Layout';
 import { useRouter } from 'next/navigation';
 import LiveLocationComponent from '@/components/LiveLocationComponent'; // Import the component
 import { useRole } from '@/contexts/RoleContext';
+import Modal from '../Modal';
 
 const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
 
@@ -17,6 +18,17 @@ const SettingsComponent: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { role } = useRole();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: "", message: "" });
+
+  const openModal = (title: string, message: string) => {
+    setModalContent({ title, message });
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
 
   const router = useRouter();
 
@@ -59,7 +71,7 @@ const SettingsComponent: React.FC = () => {
 
       if (data === true) {
         handleCloseModal();
-        alert('Cuenta eliminada correctamente.');
+        openModal("Éxito", "Cuenta eliminada correctamente.");
         localStorage.removeItem('email');
         handleLogout();
       } else {
@@ -152,6 +164,14 @@ const SettingsComponent: React.FC = () => {
             </div>
           </div>
         )}
+
+        <Modal
+          isOpen={modalOpen}
+          onClose={closeModal}
+          title={modalContent.title}
+          message={modalContent.message}
+        />
+
       </div>
     </Layout>
   );

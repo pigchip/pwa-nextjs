@@ -4,11 +4,24 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import TwitterIcon from '@mui/icons-material/Twitter';
+import Modal from '@/app/Modal';
 
 const LiveLocationComponent: React.FC = () => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: "", message: "" });
+  
+  const openModal = (title: string, message: string) => {
+    setModalContent({ title, message });
+    setModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setModalOpen(false);
+  };
+  
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -41,7 +54,7 @@ const LiveLocationComponent: React.FC = () => {
   const handleCopyToClipboard = () => {
     if (shareUrl) {
       navigator.clipboard.writeText(shareUrl);
-      alert('¡Enlace copiado al portapapeles!');
+      openModal("Éxito", "¡Enlace copiado al portapapeles!");
     }
   };
 
@@ -91,6 +104,13 @@ const LiveLocationComponent: React.FC = () => {
       ) : (
         <p>Cargando...</p>
       )}
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={modalContent.title}
+        message={modalContent.message}
+      />
     </div>
   );
 };

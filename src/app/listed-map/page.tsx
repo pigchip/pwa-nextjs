@@ -5,6 +5,7 @@ import Layout from '@/components/Layout'; // Importamos el Layout
 import Image from 'next/image'; // Si necesitas usar imágenes en el componente
 import { Close } from '@mui/icons-material';
 import { getAgencyIcon } from '@/utils/agency';
+import Modal from '../Modal';
 
 // Definición de interfaces
 interface Opinion {
@@ -81,6 +82,18 @@ const TransportPage: React.FC = () => {
   const [editingOpinion, setEditingOpinion] = useState<Opinion | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lineStationsMap, setLineStationsMap] = useState<{ [key: number]: Station[] }>({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: "", message: "" });
+  
+  const openModal = (title: string, message: string) => {
+    setModalContent({ title, message });
+    setModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setModalOpen(false);
+  };
+  
 
   // Función para validar email
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -91,7 +104,7 @@ const TransportPage: React.FC = () => {
     if (storedEmail && validateEmail(storedEmail)) {
       fetchUserId(storedEmail);
     } else {
-      alert('No se encontró un correo electrónico válido en el localStorage.');
+      openModal("Error", "No se encontró un correo electrónico válido en el localStorage.");
     }
   }, []);
 
@@ -304,12 +317,12 @@ const TransportPage: React.FC = () => {
     const type = formData.get('type') as string;
 
     if (!userId || !body || !type) {
-      alert('Por favor, complete todos los campos.');
+      openModal("Mensaje", "Por favor, complete todos los campos.");
       return;
     }
 
     if (body.length > 60) {
-      alert('El mensaje no puede tener más de 60 caracteres.');
+      openModal("Mensaje", "El mensaje no puede tener más de 60 caracteres.'");
       return;
     }
 
@@ -339,7 +352,7 @@ const TransportPage: React.FC = () => {
         throw new Error('Error al enviar la opinión.');
       }
 
-      alert('Opinión enviada correctamente.');
+      openModal("Éxito", "Opinión enviada correctamente.");
 
       // Actualizar las opiniones
       if (isStation && selectedLineStation) {
@@ -365,7 +378,7 @@ const TransportPage: React.FC = () => {
   // Funciones para manejar la sección "Mis comentarios"
   const handleUserOpinions = async () => {
     if (!userId) {
-      alert('No se encontró el ID de usuario.');
+      openModal("Error", "No se encontró el ID de usuario.");
       return;
     }
 
@@ -417,7 +430,7 @@ const TransportPage: React.FC = () => {
         throw new Error('Error al borrar la opinión.');
       }
 
-      alert('Opinión borrada correctamente.');
+      openModal("Éxito", "Opinión borrada correctamente.");
       setUserOpinions(userOpinions.filter(op => op.id !== opinionId));
 
     } catch (err) {
@@ -434,12 +447,13 @@ const TransportPage: React.FC = () => {
     const type = formData.get('type') as string;
 
     if (!body || !type) {
-      alert('Por favor, complete todos los campos.');
+      openModal("Error", "Por favor, complete todos los campos.");
+
       return;
     }
 
     if (body.length > 60) {
-      alert('El mensaje no puede tener más de 60 caracteres.');
+      openModal("Mensaje", "El mensaje no puede tener más de 60 caracteres.'");
       return;
     }
 
@@ -463,7 +477,7 @@ const TransportPage: React.FC = () => {
         throw new Error('Error al actualizar la opinión.');
       }
 
-      alert('Opinión actualizada correctamente.');
+      openModal("Éxito", "Opinión actualizada correctamente.");
 
       setUserOpinions(userOpinions.map(op => op.id === editingOpinion.id ? { ...op, body, type } : op));
       setEditingOpinion(null);
@@ -800,6 +814,13 @@ const TransportPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        <Modal
+          isOpen={modalOpen}
+          onClose={closeModal}
+          title={modalContent.title}
+          message={modalContent.message}
+        />
       </div>
     </Layout>
   );

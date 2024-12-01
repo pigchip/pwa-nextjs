@@ -108,6 +108,18 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const [modalMessage, setModalMessage] = useState("");
   const [modalTitle, setModalTitle] = useState("");
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: "", message: "" });
+
+  const openModal = (title: string, message: string) => {
+    setModalContent({ title, message });
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
+
   const showModal = (title: string, message: string) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -374,7 +386,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         },
         (error) => {
           console.error('Error al obtener la ubicación', error);
-          alert(`Error (${error.code}): ${error.message}`);
+          openModal("Error", `Error (${error.code}): ${error.message}`);
           setUserLocation({ lat: 19.432608, lon: -99.133209, name: 'Default Location' });
         },
         {
@@ -660,6 +672,13 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   return (
     <div className="flex flex-col h-full">
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={modalContent.title}
+        message={modalContent.message}
+      />
+
       <div
         className={`flex-grow min-h-[100px] z-10 ${isExpanded ? 'h-[145px]' : 'h-[420px]'}`}
       >
