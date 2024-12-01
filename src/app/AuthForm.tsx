@@ -5,6 +5,7 @@ import Tutorial from './Tutorial';
 import React from 'react';
 import { useRole } from '@/contexts/RoleContext';
 import useUserStore from '@/stores/useUser';
+import { useRouter } from 'next/navigation';
 
 interface ModalContent {
   title: string;
@@ -143,6 +144,12 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     localStorage.setItem('latx', '123');
     localStorage.setItem('lonx', '123');
   }, []);
+
+  const router = useRouter();
+
+  const handleRedirect = () => {
+    router.push("/offline");
+  };
 
   // Función para cerrar el modal
   const closeModal = (): void => {
@@ -1085,6 +1092,15 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
               </div>
             )}
           </div>
+
+          {/* Botón flotante */}
+          <button
+            onClick={handleRedirect}
+            className="fixed top-4 right-4 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-red-600 transition-all"
+          >
+            <span className="material-icons text-sm">offline_bolt</span>
+          </button>
+
         </div>
       )}
     </>

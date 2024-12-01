@@ -1,8 +1,9 @@
 {
     "name":"Mobility Time Saver",
     "short_name":"MTS",
-    "theme_color":"#bababa",
-    "background_color":"#bababa",
+    "description":"Mobility Time Saver",
+    "theme_color":"#ffffff",
+    "background_color":"#ffffff",
     "display":"standalone",
     "orientation":"any",
     "scope":"/",

@@ -23,6 +23,24 @@ export default function RootLayout({
   const { userDetails, fetchUserDetails } = useUserStore();
 
   useEffect(() => {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        if (registrations.length === 0) {
+          // No hay SW registrados, registrar uno nuevo
+          navigator.serviceWorker
+            .register("/custom-sw.js", { scope: "/" })
+            .then(() => {
+              console.log("Service Worker registrado correctamente.");
+            })
+            .catch((error) => {
+              console.error("Error al registrar el Service Worker:", error);
+            });
+        } else {
+          console.log("Service Worker ya registrado.");
+        }
+      });
+  }, []);
+  
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const email = localStorage.getItem("email") || "iespinosas1700@alumno.ipn.mx";
       setStoredEmail(email);
@@ -75,6 +93,8 @@ export default function RootLayout({
         <meta name="theme-color" content="#000" media="(prefers-color-scheme: dark)" />
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body>
         <RoleProvider>
