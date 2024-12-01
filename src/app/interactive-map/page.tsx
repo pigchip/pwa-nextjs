@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { Close as CloseIcon, Lock, Map } from '@mui/icons-material';
 import LayoutNoHeader from '@/components/LayoutNoHeader';
 import Animation from '../Animation';
+import Modal from '../Modal';
 
 interface Geometry {
   lat: number;
@@ -161,6 +162,17 @@ const RoutesMap: React.FC<RoutesMapProps> = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [showIncidents, setShowIncidents] = useState<boolean>(false);
   const [stopsData, setStopsData] = useState<Stop[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: "", message: "" });
+
+  const openModal = (title: string, message: string) => {
+    setModalContent({ title, message });
+    setModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setModalOpen(false);
+  };
 
   const handleSelectLatLon = (lat: number, lon: number) => {
     setSelectedLatLon({ lat, lon });
@@ -815,12 +827,12 @@ useEffect(() => {
     const type = formData.get('type') as string;
 
     if (!userId || !body || !type) {
-      alert('Por favor, complete todos los campos.');
+      openModal("Error", "Por favor, complete todos los campos.");
       return;
     }
 
     if (body.length > 60) {
-      alert('El mensaje no puede tener más de 60 caracteres.');
+      openModal("Error", "El mensaje no puede tener más de 60 caracteres.");
       return;
     }
 
@@ -850,7 +862,7 @@ useEffect(() => {
         throw new Error('Error al enviar la opinión.');
       }
 
-      alert('Opinión enviada correctamente.');
+      openModal("Éxito", "Opinión enviada correctamente.");
 
       // Actualizar las opiniones
       if (isStation) {
@@ -870,7 +882,7 @@ useEffect(() => {
   // Funciones para manejar la sección "Mis comentarios"
   const handleUserOpinions = async () => {
     if (!userId) {
-      alert('No se encontró el ID de usuario.');
+      openModal("Error", "No se encontro el ID de usuario.");
       return;
     }
 
@@ -937,7 +949,8 @@ useEffect(() => {
         throw new Error('Error al borrar la opinión.');
       }
 
-      alert('Opinión borrada correctamente.');
+      openModal("Éxito", "Opinión borrada correctamente.");
+
       setUserOpinions(userOpinions.filter(op => op.id !== opinionId));
 
     } catch (err) {
@@ -954,12 +967,12 @@ useEffect(() => {
     const type = formData.get('type') as string;
 
     if (!body || !type) {
-      alert('Por favor, complete todos los campos.');
+      openModal("Advertencia", "Por favor, complete todos los campos.");
       return;
     }
 
     if (body.length > 60) {
-      alert('El mensaje no puede tener más de 60 caracteres.');
+      openModal("Advertencia", "El mensaje no puede tener más de 60 caracteres.");
       return;
     }
 
@@ -983,7 +996,7 @@ useEffect(() => {
         throw new Error('Error al actualizar la opinión.');
       }
 
-      alert('Opinión actualizada correctamente.');
+      openModal("Éxito", "Opinión actualizada correctamente.");
 
       setUserOpinions(userOpinions.map(op => op.id === editingOpinion.id ? { ...op, body, type } : op));
       setEditingOpinion(null);
@@ -1705,6 +1718,13 @@ useEffect(() => {
               <Map className="text-white" />
             )}
           </button>
+
+          <Modal
+            isOpen={modalOpen}
+            onClose={closeModal}
+            title={modalContent.title}
+            message={modalContent.message}
+          />
         </div>
       </div>
     </Layout>
