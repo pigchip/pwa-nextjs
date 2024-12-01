@@ -19,7 +19,6 @@ interface FormErrors {
   name?: string;
   lastname_pat?: string;
   lastname_mat?: string;
-  ocuparion?: string;
   phone?: string;
   password?: string;
   curp?: string; // Agregado
@@ -32,7 +31,6 @@ const validatePassword = (value: string) =>
 const validateName = (value: string) =>
   /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim()) && value.trim() !== '';
 const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
-const validateOccupation = (value: string) => value.trim() !== '';
 const validateCURP = (value: string) =>
   /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]{2}$/i.test(value);
 
@@ -51,10 +49,9 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
     name: string;
     lastname_pat: string;
     lastname_mat: string;
-    ocuparion: string;
     phone: string;
     curp: string; // Agregado
-  }>({ id: 0, name: '', lastname_pat: '', lastname_mat: '', ocuparion: '', phone: '', curp: '' });
+  }>({ id: 0, name: '', lastname_pat: '', lastname_mat: '', phone: '', curp: '' });
 
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
@@ -94,7 +91,6 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
           name: data.name,
           lastname_pat: data.lastname_pat,
           lastname_mat: data.lastname_mat,
-          ocuparion: data.ocuparion,
           phone: data.phone || '',
           curp: data.curp || '',
         });
@@ -123,7 +119,6 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
       name: fullFormData.name.trim(),
       lastname_pat: fullFormData.lastname_pat.trim(),
       lastname_mat: fullFormData.lastname_mat.trim(),
-      ocuparion: fullFormData.ocuparion.trim(),
       phone: fullFormData.phone.trim(),
       curp: fullFormData.curp.trim(), // Agregado
     };
@@ -143,11 +138,6 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
 
     if (!validateName(trimmedData.lastname_mat)) {
       errors.lastname_mat = 'El apellido materno debe contener solo letras y espacios.';
-      hasError = true;
-    }
-
-    if (!validateOccupation(trimmedData.ocuparion)) {
-      errors.ocuparion = 'Selecciona una ocupación válida.';
       hasError = true;
     }
 
@@ -184,7 +174,7 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
       return;
     }
 
-    const { name, lastname_pat, lastname_mat, ocuparion, phone, curp } = trimmedData;
+    const { name, lastname_pat, lastname_mat, phone, curp } = trimmedData;
 
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -201,7 +191,7 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
           lastname_mat,
           email,
           curp, // Enviado desde el formulario
-          ocuparion,
+          ocuparion: "*", // Asignación fija
           password: localPassword,
           phone,
         }),
@@ -219,7 +209,6 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
           name: updatedData.name,
           lastname_pat: updatedData.lastname_pat,
           lastname_mat: updatedData.lastname_mat,
-          ocuparion: updatedData.ocuparion,
           phone: updatedData.phone || '',
           curp: updatedData.curp || '',
         });
@@ -288,7 +277,6 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
           name: fetchedUserDetails.name,
           lastname_pat: fetchedUserDetails.lastname_pat,
           lastname_mat: fetchedUserDetails.lastname_mat,
-          ocuparion: fetchedUserDetails.ocuparion,
           phone: fetchedUserDetails.phone || '',
           curp: fetchedUserDetails.curp || '',
         });
@@ -321,7 +309,7 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
               <p className="text-gray-700"><strong>Apellido Materno:</strong> {userDetails.lastname_mat}</p>
               <p className="text-gray-700"><strong>Email:</strong> {userDetails.email}</p>
               <p className="text-gray-700"><strong>CURP:</strong> {userDetails.curp || 'No especificado'}</p> {/* Opcional */}
-              <p className="text-gray-700"><strong>Ocupación:</strong> {userDetails.ocuparion}</p>
+              <p className="text-gray-700"><strong>Ocupación:</strong> {userDetails.ocuparion || '*'}</p>
               <p className="text-gray-700"><strong>Teléfono:</strong> {userDetails.phone || 'No especificado'}</p>
             </div>
 
@@ -485,37 +473,6 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
                         <p className="text-red-500 text-sm mt-1">
                           {formErrors.phone}
                         </p>
-                      )}
-                    </div>
-
-                    {/* Ocupación */}
-                    <div className="flex flex-col mb-4">
-                      <label htmlFor="ocuparion" className="sr-only">Ocupación</label>
-                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
-                        <span className="material-icons text-black mr-2">work</span>
-                        <select
-                          id="ocuparion"
-                          name="ocuparion"
-                          value={fullFormData.ocuparion}
-                          onChange={handleChangeFull}
-                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800"
-                          required
-                        >
-                          <option value="">Selecciona tu ocupación</option>
-                          <option value="Administrativo">Administrativo</option>
-                          <option value="Comerciante">Comerciante</option>
-                          <option value="Estudiante">Estudiante</option>
-                          <option value="Profesional de la Salud">Profesional de la Salud</option>
-                          <option value="Educador">Educador</option>
-                          <option value="Servicios">Servicios</option>
-                          <option value="Construcción">Construcción</option>
-                          <option value="Tecnologías de la Información">Tecnologías de la Información</option>
-                          <option value="Transporte">Transporte</option>
-                          <option value="Otro">Otro</option>
-                        </select>
-                      </div>
-                      {formErrors.ocuparion && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.ocuparion}</p>
                       )}
                     </div>
 
