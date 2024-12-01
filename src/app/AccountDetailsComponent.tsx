@@ -4,22 +4,59 @@ interface AccountDetailsComponentProps {
   onClose: () => void;
 }
 
-// Validaciones de campos
-const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-const validatePassword = (value: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
-const validateName = (value: string) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value);
-const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
-const validateOccupation = (value: string) => value !== "";
+interface UserDetails {
+  id: number;
+  name: string;
+  lastname_pat: string;
+  lastname_mat: string;
+  ocuparion: string;
+  phone: string;
+  curp: string; // Ahora obligatorio
+  email: string; // Agregado
+}
 
-const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClose }) => {
-  const [userDetails, setUserDetails] = useState({ name: '', lastname_pat: '', lastname_mat: '', ocuparion: '' , phone: ''});
-  const [loading, setLoading] = useState<boolean>(false); 
-  const [error, setError] = useState<string | null>(null); 
+interface FormErrors {
+  name?: string;
+  lastname_pat?: string;
+  lastname_mat?: string;
+  ocuparion?: string;
+  phone?: string;
+  password?: string;
+  curp?: string; // Agregado
+}
+
+// Funciones de validación
+const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const validatePassword = (value: string) =>
+  /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{8,}$/.test(value);
+const validateName = (value: string) =>
+  /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim()) && value.trim() !== '';
+const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
+const validateOccupation = (value: string) => value.trim() !== '';
+const validateCURP = (value: string) =>
+  /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]{2}$/i.test(value);
+
+const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({
+  onClose,
+}) => {
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [password, setPassword] = useState('');  
+  const [password, setPassword] = useState('');
   const [localPassword, setLocalPassword] = useState('');
-  const [showEditModal, setShowEditModal] = useState(false); 
-  const [fullFormData, setFullFormData] = useState({ name: '', lastname_pat: '', lastname_mat: '', ocuparion: '' , phone: ''});
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [fullFormData, setFullFormData] = useState<{
+    id: number;
+    name: string;
+    lastname_pat: string;
+    lastname_mat: string;
+    ocuparion: string;
+    phone: string;
+    curp: string; // Agregado
+  }>({ id: 0, name: '', lastname_pat: '', lastname_mat: '', ocuparion: '', phone: '', curp: '' });
+
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('email');
@@ -37,145 +74,234 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
     try {
-      const response = await fetch(`${apiUrl}/api/userByEmail/${email}`, {// Parametro timestap, se puede utilizar para asegurar que no se almacene en caché
+      const response = await fetch(`${apiUrl}/api/userByEmail/${email}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        cache: 'no-store', // Adicionalmente se puede utilizar para asegurar que no se almacene en caché
+        cache: 'no-store',
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        setError(errorData.message);
+        setError(errorData.message || 'Error al obtener los detalles del usuario.');
       } else {
-        const data = await response.json();
+        const data: UserDetails = await response.json();
+        console.log('Datos del usuario (GET by Email):', data); // Debug
         setUserDetails(data);
+        setFullFormData({
+          id: data.id,
+          name: data.name,
+          lastname_pat: data.lastname_pat,
+          lastname_mat: data.lastname_mat,
+          ocuparion: data.ocuparion,
+          phone: data.phone || '',
+          curp: data.curp || '',
+        });
       }
     } catch (error) {
       setError('No se pudo conectar con la API externa.');
     }
 
     setLoading(false);
-};
-
-  
+  };
 
   const handleEditClick = () => {
     setShowPasswordModal(true);
   };
 
-  const handleChangeFull = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChangeFull = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFullFormData({ ...fullFormData, [e.target.name]: e.target.value });
-  }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const trimmedData = {
+      name: fullFormData.name.trim(),
+      lastname_pat: fullFormData.lastname_pat.trim(),
+      lastname_mat: fullFormData.lastname_mat.trim(),
+      ocuparion: fullFormData.ocuparion.trim(),
+      phone: fullFormData.phone.trim(),
+      curp: fullFormData.curp.trim(), // Agregado
+    };
+
     let hasError = false;
+    const errors: FormErrors = {};
 
-    if (!validateName(fullFormData.name)) {
-      alert("El nombre debe contener solo letras y espacios.");
+    if (!validateName(trimmedData.name)) {
+      errors.name = 'El nombre debe contener solo letras y espacios.';
       hasError = true;
     }
 
-    if (!validateName(fullFormData.lastname_pat)) {
-      alert("El apellido paterno debe contener solo letras y espacios.");
+    if (!validateName(trimmedData.lastname_pat)) {
+      errors.lastname_pat = 'El apellido paterno debe contener solo letras y espacios.';
       hasError = true;
     }
 
-    if (!validateName(fullFormData.lastname_mat)) {
-      alert("El apellido materno debe contener solo letras y espacios.");
+    if (!validateName(trimmedData.lastname_mat)) {
+      errors.lastname_mat = 'El apellido materno debe contener solo letras y espacios.';
       hasError = true;
     }
 
-    if (!validateOccupation(fullFormData.ocuparion)) {
-      alert("Selecciona una ocupación válida.");
+    if (!validateOccupation(trimmedData.ocuparion)) {
+      errors.ocuparion = 'Selecciona una ocupación válida.';
       hasError = true;
     }
 
-    if (fullFormData.phone && !validatePhone(fullFormData.phone)) {
-      alert("El teléfono debe contener 10 dígitos.");
+    if (!trimmedData.phone) {
+      errors.phone = 'El teléfono es obligatorio.';
+      hasError = true;
+    } else if (!validatePhone(trimmedData.phone)) {
+      errors.phone = 'El teléfono debe contener 10 dígitos.';
       hasError = true;
     }
+
+    if (!trimmedData.curp) {
+      errors.curp = 'El CURP es obligatorio.';
+      hasError = true;
+    } else if (!validateCURP(trimmedData.curp)) {
+      errors.curp = 'El CURP no tiene un formato válido.';
+      hasError = true;
+    }
+
+    setFormErrors(errors);
 
     if (hasError) {
-      alert("Por favor, completa todos los campos correctamente.");
       return;
     }
 
     const email = localStorage.getItem('email');
+    if (!email) {
+      setError('No se encontró un correo electrónico en el localStorage.');
+      return;
+    }
 
-    // Continuar con la solicitud a la API para actualizar los datos
-    const id = 0;
-    const curp = "";
+    if (!userDetails) {
+      setError('No se encontraron detalles del usuario.');
+      return;
+    }
 
-    const { name, lastname_pat, lastname_mat, ocuparion, phone } = fullFormData;
+    const { name, lastname_pat, lastname_mat, ocuparion, phone, curp } = trimmedData;
 
-    fetch("/api/update/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id, name, lastname_pat, lastname_mat, email, curp, ocuparion, password: localPassword, phone }),
-    })
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-    // Limpiar los campos del formulario
-    setFullFormData({ name: '', lastname_pat: '', lastname_mat: '', ocuparion: '', phone: '' });
-    setLocalPassword('');
+    try {
+      const response = await fetch(`${apiUrl}/api/update/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: userDetails.id,
+          name,
+          lastname_pat,
+          lastname_mat,
+          email,
+          curp, // Enviado desde el formulario
+          ocuparion,
+          password: localPassword,
+          phone,
+        }),
+      });
 
-    // Cerrar el modal de edición
-    setShowEditModal(false);
-    setShowPasswordModal(false);
-    onClose();
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || 'Error al actualizar el perfil.');
+      } else {
+        const updatedData: UserDetails = await response.json();
+        console.log('Datos actualizados (PUT):', updatedData); // Debug
+        setUserDetails(updatedData);
+        setFullFormData({
+          id: updatedData.id,
+          name: updatedData.name,
+          lastname_pat: updatedData.lastname_pat,
+          lastname_mat: updatedData.lastname_mat,
+          ocuparion: updatedData.ocuparion,
+          phone: updatedData.phone || '',
+          curp: updatedData.curp || '',
+        });
+        setShowEditModal(false);
+        setShowPasswordModal(false);
+        onClose();
+      }
+    } catch (error) {
+      setError('No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.');
+    }
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
+    const trimmedPassword = password.trim();
+
     let hasError = false;
-  
-    if (!validatePassword(password)) {
-      alert("La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.");
+
+    if (!validatePassword(trimmedPassword)) {
+      setFormErrors({
+        password:
+          "La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número. No se permiten caracteres especiales.",
+      });
       hasError = true;
+    } else {
+      setFormErrors((prevErrors) => ({ ...prevErrors, password: undefined }));
     }
-  
+
     if (hasError) {
-      alert("Por favor, completa todos los campos correctamente.");
       return;
     }
-  
-    const email = localStorage.getItem('email');
 
-    // Continuar con la solicitud a la API para verificar la contraseña
+    const email = localStorage.getItem('email');
+    if (!email) {
+      setError('No se encontró un correo electrónico en el localStorage.');
+      return;
+    }
+
     try {
       const response = await fetch("/api/sign-in", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password: trimmedPassword }),
       });
-  
+
       const data = await response.json();
-  
-      if (response.ok && data.id !== null) {
-        // Caso exitoso
-        setUserDetails(data);
-        setFullFormData({ name: data.name, lastname_pat: data.lastname_pat, lastname_mat: data.lastname_mat, ocuparion: data.ocuparion, phone: data.phone || '' });
+      console.log('Respuesta de sign-in:', data); // Debug
+
+      if (response.ok && data.usuario && data.usuario.id !== null) {
+        const fetchedUserDetails: UserDetails = {
+          id: data.usuario.id,
+          name: data.usuario.name,
+          lastname_pat: data.usuario.lastname_pat,
+          lastname_mat: data.usuario.lastname_mat,
+          ocuparion: data.usuario.ocuparion,
+          phone: data.usuario.phone || '',
+          curp: data.usuario.curp || "*",
+          email: data.usuario.email, // Asegurar que email está presente
+        };
+        setUserDetails(fetchedUserDetails);
+        setFullFormData({
+          id: fetchedUserDetails.id,
+          name: fetchedUserDetails.name,
+          lastname_pat: fetchedUserDetails.lastname_pat,
+          lastname_mat: fetchedUserDetails.lastname_mat,
+          ocuparion: fetchedUserDetails.ocuparion,
+          phone: fetchedUserDetails.phone || '',
+          curp: fetchedUserDetails.curp || '',
+        });
+        setLocalPassword(trimmedPassword);
         setShowPasswordModal(false);
         setShowEditModal(true);
       } else {
-        // Caso de datos incorrectos o bad request
-        alert("Ocurrió un error al verificar la contraseña, verifica que los datos sean correctos.");
+        setError("Ocurrió un error al verificar la contraseña o al obtener los detalles del usuario. Verifica que los datos sean correctos.");
       }
     } catch (error) {
-      alert("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
+      setError("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
     }
 
-    setLocalPassword(password);
-
-    // Limpiar el campo de contraseña
     setPassword('');
   };
 
@@ -193,7 +319,8 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
               <p className="text-gray-700"><strong>Nombre:</strong> {userDetails.name}</p>
               <p className="text-gray-700"><strong>Apellido Paterno:</strong> {userDetails.lastname_pat}</p>
               <p className="text-gray-700"><strong>Apellido Materno:</strong> {userDetails.lastname_mat}</p>
-              <p className="text-gray-700"><strong>Email:</strong> {localStorage.getItem('email')}</p>
+              <p className="text-gray-700"><strong>Email:</strong> {userDetails.email}</p>
+              <p className="text-gray-700"><strong>CURP:</strong> {userDetails.curp || 'No especificado'}</p> {/* Opcional */}
               <p className="text-gray-700"><strong>Ocupación:</strong> {userDetails.ocuparion}</p>
               <p className="text-gray-700"><strong>Teléfono:</strong> {userDetails.phone || 'No especificado'}</p>
             </div>
@@ -209,28 +336,31 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 text-black">
                 <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
                   <h2 className="text-xl font-bold text-center text-gray-800 mb-4">Ingrese su contraseña</h2>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Contraseña"
-                    className="w-full px-4 py-2 mt-2 border rounded-lg"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handlePasswordSubmit(e);
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={handlePasswordSubmit}
-                    className="w-full px-4 py-2 mt-4 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Confirmar
-                  </button>
+                  <form onSubmit={handlePasswordSubmit}>
+                    <label htmlFor="password" className="sr-only">Contraseña</label>
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Contraseña"
+                      className="w-full px-4 py-2 mt-2 border rounded-lg"
+                      required
+                    />
+                    {formErrors.password && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+                    )}
+                    <button
+                      type="submit"
+                      className="w-full px-4 py-2 mt-4 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Confirmar
+                    </button>
+                  </form>
                   <button
                     onClick={() => setShowPasswordModal(false)}
                     className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-700 transition"
-                    style={{ width: '40px', height: '40px', top: '10px', right: '10px' }}
+                    style={{ width: '40px', height: '40px' }}
                   >
                     <span className="material-icons">close</span>
                   </button>
@@ -238,59 +368,155 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
               </div>
             )}
 
-
             {showEditModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
                   <h2 className="text-xl font-bold text-center text-gray-800 mb-4">Editar Cuenta</h2>
                   <form onSubmit={handleSubmit}>
-                    {['name', 'lastname_pat', 'lastname_mat', 'phone'].map((field, index) => (
-                      <div key={index} className="flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2]">
-                        <span className="material-icons text-black mr-2">
-                          {field === 'name' ? 'person' : field === 'lastname_pat' ? 'man' : field === 'lastname_mat' ? 'woman' : field === 'phone' ? 'phone' : ''}
-                        </span>
+                    {/* Nombre */}
+                    <div className="flex flex-col mb-4">
+                      <label htmlFor="name" className="sr-only">Nombre</label>
+                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
+                        <span className="material-icons text-black mr-2">person</span>
                         <input
                           type="text"
-                          name={field}
-                          value={fullFormData[field as keyof typeof fullFormData]}
+                          id="name"
+                          name="name"
+                          value={fullFormData.name}
                           onChange={handleChangeFull}
-                          placeholder={
-                            field === 'name' ? 'Nombre' :
-                            field === 'lastname_pat' ? 'Apellido Paterno' :
-                            field === 'lastname_mat' ? 'Apellido Materno' :
-                            field === 'phone' ? 'Teléfono' :
-                            ''
-                          }
+                          placeholder="Nombre"
                           className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleSubmit(e);
-                            }
-                          }}
+                          required
                         />
                       </div>
-                    ))}
+                      {formErrors.name && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.name}
+                        </p>
+                      )}
+                    </div>
 
-                    <div className="flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2]">
-                      <span className="material-icons text-black mr-2">work</span>
-                      <select
-                        name="ocuparion"
-                        value={fullFormData.ocuparion}
-                        onChange={handleChangeFull}
-                        className="flex-1 outline-none bg-[#f2f3f2] text-gray-800"
-                      >
-                        <option value="">Selecciona tu ocupación</option>
-                        <option value="Administrativo">Administrativo</option>
-                        <option value="Comerciante">Comerciante</option>
-                        <option value="Estudiante">Estudiante</option>
-                        <option value="Profesional de la Salud">Profesional de la Salud</option>
-                        <option value="Educador">Educador</option>
-                        <option value="Servicios">Servicios</option>
-                        <option value="Construcción">Construcción</option>
-                        <option value="Tecnologías de la Información">Tecnologías de la Información</option>
-                        <option value="Transporte">Transporte</option>
-                        <option value="Otro">Otro</option>
-                      </select>
+                    {/* Apellido Paterno */}
+                    <div className="flex flex-col mb-4">
+                      <label htmlFor="lastname_pat" className="sr-only">Apellido Paterno</label>
+                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
+                        <span className="material-icons text-black mr-2">man</span>
+                        <input
+                          type="text"
+                          id="lastname_pat"
+                          name="lastname_pat"
+                          value={fullFormData.lastname_pat}
+                          onChange={handleChangeFull}
+                          placeholder="Apellido Paterno"
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                          required
+                        />
+                      </div>
+                      {formErrors.lastname_pat && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.lastname_pat}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Apellido Materno */}
+                    <div className="flex flex-col mb-4">
+                      <label htmlFor="lastname_mat" className="sr-only">Apellido Materno</label>
+                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
+                        <span className="material-icons text-black mr-2">woman</span>
+                        <input
+                          type="text"
+                          id="lastname_mat"
+                          name="lastname_mat"
+                          value={fullFormData.lastname_mat}
+                          onChange={handleChangeFull}
+                          placeholder="Apellido Materno"
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                          required
+                        />
+                      </div>
+                      {formErrors.lastname_mat && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.lastname_mat}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* CURP */}
+                    <div className="flex flex-col mb-4">
+                      <label htmlFor="curp" className="sr-only">CURP</label>
+                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
+                        <span className="material-icons text-black mr-2">assignment_ind</span>
+                        <input
+                          type="text"
+                          id="curp"
+                          name="curp"
+                          value={fullFormData.curp}
+                          onChange={handleChangeFull}
+                          placeholder="CURP"
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                          required
+                        />
+                      </div>
+                      {formErrors.curp && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.curp}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Teléfono */}
+                    <div className="flex flex-col mb-4">
+                      <label htmlFor="phone" className="sr-only">Teléfono</label>
+                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
+                        <span className="material-icons text-black mr-2">phone</span>
+                        <input
+                          type="text"
+                          id="phone"
+                          name="phone"
+                          value={fullFormData.phone}
+                          onChange={handleChangeFull}
+                          placeholder="Teléfono"
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                          required
+                        />
+                      </div>
+                      {formErrors.phone && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Ocupación */}
+                    <div className="flex flex-col mb-4">
+                      <label htmlFor="ocuparion" className="sr-only">Ocupación</label>
+                      <div className="flex items-center border rounded-lg w-full px-4 py-2 bg-[#f2f3f2]">
+                        <span className="material-icons text-black mr-2">work</span>
+                        <select
+                          id="ocuparion"
+                          name="ocuparion"
+                          value={fullFormData.ocuparion}
+                          onChange={handleChangeFull}
+                          className="flex-1 outline-none bg-[#f2f3f2] text-gray-800"
+                          required
+                        >
+                          <option value="">Selecciona tu ocupación</option>
+                          <option value="Administrativo">Administrativo</option>
+                          <option value="Comerciante">Comerciante</option>
+                          <option value="Estudiante">Estudiante</option>
+                          <option value="Profesional de la Salud">Profesional de la Salud</option>
+                          <option value="Educador">Educador</option>
+                          <option value="Servicios">Servicios</option>
+                          <option value="Construcción">Construcción</option>
+                          <option value="Tecnologías de la Información">Tecnologías de la Información</option>
+                          <option value="Transporte">Transporte</option>
+                          <option value="Otro">Otro</option>
+                        </select>
+                      </div>
+                      {formErrors.ocuparion && (
+                        <p className="text-red-500 text-sm mt-1">{formErrors.ocuparion}</p>
+                      )}
                     </div>
 
                     <button
@@ -303,7 +529,7 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
 
                   <button
                     className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-700 transition"
-                    style={{ width: '40px', height: '40px', top: '10px', right: '10px' }}
+                    style={{ width: '40px', height: '40px' }}
                     onClick={() => setShowEditModal(false)}
                   >
                     <span className="material-icons">close</span>
@@ -318,7 +544,7 @@ const AccountDetailsComponent: React.FC<AccountDetailsComponentProps> = ({ onClo
 
         <button
           className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-700 transition"
-          style={{ width: '40px', height: '40px', top: '10px', right: '10px' }}
+          style={{ width: '40px', height: '40px' }}
           onClick={onClose}
         >
           <span className="material-icons">close</span>
