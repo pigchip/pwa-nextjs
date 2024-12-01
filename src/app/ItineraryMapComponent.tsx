@@ -621,7 +621,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   // Ejecutar fetchAllItineraries cuando las coordenadas o filtros cambien
   useEffect(() => {
-    if (fromLat && fromLon && toLat && toLon && !selectedItinerary) {
+    if (fromLat && fromLon && toLat && toLon) {
       fetchAllItineraries();
     }
   }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes]);
