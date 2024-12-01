@@ -76,6 +76,12 @@ export default function AuthForm({
 
   const [hasSeenIt, setHasSeenIt] = useState<boolean>(false);
 
+  // Estados para el modal de "Olvidé mi contraseña"
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState<boolean>(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState<string>('');
+  const [forgotPasswordError, setForgotPasswordError] = useState<boolean>(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState<string>('');
+
   const { setRole } = useRole();
 
   // Funciones de validación
@@ -145,6 +151,57 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       });
     }
     setShowModal(true);
+  };
+
+  // Función para abrir el modal de "Olvidé mi contraseña"
+  const openForgotPasswordModal = (): void => {
+    setForgotPasswordEmail('');
+    setForgotPasswordError(false);
+    setForgotPasswordMessage('');
+    setShowForgotPasswordModal(true);
+  };
+
+  // Función para cerrar el modal de "Olvidé mi contraseña"
+  const closeForgotPasswordModal = (): void => {
+    setShowForgotPasswordModal(false);
+  };
+
+  // Función para manejar el envío del formulario de "Olvidé mi contraseña"
+  const handleForgotPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+
+    // Validar el correo electrónico
+    if (!validateEmail(forgotPasswordEmail)) {
+      setForgotPasswordError(true);
+      setForgotPasswordMessage("El correo electrónico no es válido.");
+      return;
+    }
+
+    // Enviar la solicitud a la API
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/tmp/change`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+
+      if (response.ok) {
+        // Mostrar mensaje de éxito
+        setForgotPasswordMessage("Se ha asignado una contraseña temporal segura a tu correo electrónico.");
+        setForgotPasswordError(false);
+        // Opcional: Puedes cerrar el modal después de un tiempo o al hacer clic en un botón
+      } else {
+        // Manejar errores de la API
+        const errorData = await response.json();
+        setForgotPasswordError(true);
+        setForgotPasswordMessage(errorData.message || "Ocurrió un error al procesar tu solicitud.");
+      }
+    } catch (error) {
+      setForgotPasswordError(true);
+      setForgotPasswordMessage("No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.");
+    }
   };
 
   useEffect(() => {
@@ -1013,6 +1070,18 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                     />
                   </div>
                   {passwordError && <p className="text-red-500">{passwordErrorMessage}</p>}
+
+                  {/* Enlace "Olvidé mi contraseña" */}
+                  <div className="text-right mt-2">
+                    <button
+                      type="button"
+                      className="text-sm text-blue-500 hover:underline"
+                      onClick={openForgotPasswordModal}
+                    >
+                      Olvidé mi contraseña
+                    </button>
+                  </div>
+
                 </>
               )}
 
@@ -1120,6 +1189,93 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
                 </div>
               </div>
             )}
+
+            {/* Nuevo Modal para "Olvidé mi contraseña" */}
+            {showForgotPasswordModal && (
+              <div
+                id="forgot-password-modal-overlay"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).id === "forgot-password-modal-overlay") {
+                    closeForgotPasswordModal();
+                  }
+                }}
+              >
+                <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+                  <button
+                    className="absolute top-2 right-2 bg-[#6ABDA6] text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+                    onClick={closeForgotPasswordModal}
+                  >
+                    <span className="material-icons">close</span>
+                  </button>
+                  <h2 className="text-xl font-bold mb-4 text-gray-900">Olvidé mi Contraseña</h2>
+                  <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                    <div className="flex items-center border rounded-lg mt-1 w-full px-4 py-2 bg-[#f2f3f2]">
+                      <span className="material-icons text-black mr-2">email</span>
+                      <input
+                        type="email"
+                        placeholder="Ingresa tu correo electrónico"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => {
+                          setForgotPasswordEmail(e.target.value);
+                          setForgotPasswordError(false);
+                          setForgotPasswordMessage('');
+                        }}
+                        className="flex-1 outline-none bg-[#f2f3f2] text-gray-800 placeholder-[#79807e]"
+                        required
+                      />
+                    </div>
+                    {forgotPasswordError && <p className="text-red-500">{forgotPasswordMessage}</p>}
+                    {!forgotPasswordError && forgotPasswordMessage && (
+                      <p className="text-green-500">{forgotPasswordMessage}</p>
+                    )}
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        type="button"
+                        className="px-4 py-2 font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                        onClick={closeForgotPasswordModal}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Modal de Éxito para "Olvidé mi contraseña" */}
+            {forgotPasswordMessage && !forgotPasswordError && (
+              <div
+                id="forgot-password-success-modal-overlay"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                onClick={() => {
+                  // Cerrar el modal al hacer clic fuera
+                  setForgotPasswordMessage('');
+                  setShowForgotPasswordModal(false);
+                }}
+              >
+                <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg text-center">
+                  <h2 className="text-xl font-bold mb-4 text-gray-900">Éxito</h2>
+                  <p className="text-gray-700 mb-4">{forgotPasswordMessage}</p>
+                  <button
+                    className="px-4 py-2 font-semibold text-white bg-[#6ABDA6] rounded-lg hover:bg-green-700"
+                    onClick={() => {
+                      setForgotPasswordMessage('');
+                      setShowForgotPasswordModal(false);
+                    }}
+                  >
+                    Volver al Inicio
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Botón flotante */}
