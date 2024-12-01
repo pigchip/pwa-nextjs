@@ -38,7 +38,7 @@ export default function Home() {
       router.push('/navigation');
     }
     else if (role === 'admin') {
-      router.push('/admin/users');
+      router.push('/admin/supervisors');
     }
     else if (role === 'supervisor') {
       router.push('/supervisor');

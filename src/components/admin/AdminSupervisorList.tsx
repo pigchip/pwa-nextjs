@@ -7,21 +7,20 @@ import { IconButton, Button } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useLinesStations } from "@/stores/LinesStationsContext";
+import { fetchSupervisors } from "@/lib/fetchSupervisors";
 
 const AdminSupervisorList = () => {
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { lines, stations } = useLinesStations();
 
   useEffect(() => {
-    const fetchSupervisors = async () => {
+    const loadSupervisors = async () => {
       try {
-        const response = await fetch("/api/supervisors");
-        if (!response.ok) {
-          throw new Error("Failed to fetch supervisors");
-        }
-        const data: Supervisor[] = await response.json();
+        const data = await fetchSupervisors();
         setSupervisors(data);
       } catch (error) {
         setError((error as Error).message);
@@ -30,7 +29,7 @@ const AdminSupervisorList = () => {
       }
     };
 
-    fetchSupervisors();
+    loadSupervisors();
   }, []);
 
   if (loading) {
@@ -59,11 +58,11 @@ const AdminSupervisorList = () => {
           <thead className="bg-[#6ABDA6] text-white">
             <tr>
               <th className="py-3 px-6 border-b">Supervisor ID</th>
-              <th className="py-3 px-6 border-b">User</th>
+              <th className="py-3 px-6 border-b">Usuario</th>
               <th className="py-3 px-6 border-b">Admin</th>
-              <th className="py-3 px-6 border-b">Line</th>
-              <th className="py-3 px-6 border-b">Station</th>
-              <th className="py-3 px-6 border-b">Actions</th>
+              <th className="py-3 px-6 border-b">Línea</th>
+              <th className="py-3 px-6 border-b">Estación</th>
+              <th className="py-3 px-6 border-b">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -79,10 +78,10 @@ const AdminSupervisorList = () => {
                   {supervisor.admin}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
-                  {supervisor.line}
+                  {lines.find(line => line.id === supervisor.line)?.information || supervisor.line}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
-                  {supervisor.station}
+                  {stations.find(station => station.id === supervisor.station)?.name || supervisor.station}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
                   <IconButton

@@ -1,4 +1,3 @@
-// src/app/station-incidents/page.tsx
 import React, { useState, useEffect } from "react";
 import { fetchIncidents } from "@/lib/fetchIncidents";
 import { Incident } from "@/types/incident";
@@ -10,6 +9,7 @@ const StationIncidents: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>("");
+  const [incidentFilter, setIncidentFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const recordsPerPage = 5;
 
@@ -36,10 +36,11 @@ const StationIncidents: React.FC = () => {
   useEffect(() => {
     setFilteredIncidents(
       incidents.filter((incident) => 
-        incident.name.toLowerCase().includes(search.toLowerCase())
+        incident.name.toLowerCase().includes(search.toLowerCase()) &&
+        incident.incident.toLowerCase().includes(incidentFilter.toLowerCase())
     ));
     setCurrentPage(1); // Reset to first page on search
-  }, [search, incidents]);
+  }, [search, incidentFilter, incidents]);
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -79,6 +80,13 @@ const StationIncidents: React.FC = () => {
         placeholder="Buscar por nombre de estación..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        className="mb-4 p-2 border rounded w-full"
+      />
+      <input
+        type="text"
+        placeholder="Filtrar por tipo de incidente..."
+        value={incidentFilter}
+        onChange={(e) => setIncidentFilter(e.target.value)}
         className="mb-4 p-2 border rounded w-full"
       />
       {currentRecords.length === 0 ? (
