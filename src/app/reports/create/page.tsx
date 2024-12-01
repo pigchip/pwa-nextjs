@@ -151,7 +151,7 @@ const CreateEvidenceComponent: React.FC = () => {
 
         <div className="flex flex-col items-center space-y-4">
           <Menu as="div" className="relative inline-block text-left w-64">
-            <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
+            <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2 text-left">
               <DirectionsBusIcon className="ml-2" />
               <span className="flex-grow text-left pl-2 text-gray-400">
                 {selectedTransport ? selectedTransport : "Medio de transporte"}
@@ -166,7 +166,7 @@ const CreateEvidenceComponent: React.FC = () => {
                       <button
                         className={`${
                           focus ? "bg-gray-200" : ""
-                        } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                        } group flex rounded-md items-center w-full px-2 py-2 text-sm text-left`}
                         onClick={() => handleTransportSelect(transport.name)}
                       >
                         {transport.name}
@@ -178,7 +178,7 @@ const CreateEvidenceComponent: React.FC = () => {
           </Menu>
 
           <Menu as="div" className="relative inline-block text-left w-64">
-            <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2">
+            <MenuButton className="w-full py-2 bg-gray-100 text-gray-800 font-semibold rounded-lg flex items-center space-x-2 text-left">
               <SubwayIcon className="ml-2" />
               <span className="flex-grow text-left pl-2 text-gray-400">
                 {selectedLine ? selectedLine.name : "Línea"}
@@ -192,15 +192,15 @@ const CreateEvidenceComponent: React.FC = () => {
                     <button
                       className={`${
                         focus ? "bg-gray-200" : ""
-                      } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                      } group flex rounded-md items-center w-full px-2 py-2 text-sm text-left`}
                       onClick={() => handleLineSelect(line)}
                     >
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">
+                      <div className="flex flex-col text-left">
+                        <span className="font-medium text-gray-900 text-left">
                           {line.name}
                           {lineStations[line.id] &&
                             lineStations[line.id].length > 0 && (
-                              <span className="text-xs text-gray-500 ml-2">
+                              <span className="text-xs text-gray-500 ml-2 text-left">
                                 ({lineStations[line.id][0].name} -{" "}
                                 {
                                   lineStations[line.id][
