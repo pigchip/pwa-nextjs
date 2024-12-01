@@ -1,6 +1,6 @@
 // components/AdminSupervisorForm.tsx
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -16,8 +16,13 @@ const AdminSupervisorForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filteredStations, setFilteredStations] = useState<{ id: number; name: string; line: number }[]>([]);
   const router = useRouter();
   const { lines, stations } = useLinesStations();
+
+  useEffect(() => {
+    setFilteredStations(stations.filter(station => station.line === Number(formData.line)));
+  }, [formData.line, stations]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -160,7 +165,7 @@ const AdminSupervisorForm = () => {
             required
           >
             <option value="">Selecciona una estación</option>
-            {stations.map((station) => (
+            {filteredStations.map((station) => (
               <option key={station.id} value={station.id}>
                 {station.name}
               </option>
