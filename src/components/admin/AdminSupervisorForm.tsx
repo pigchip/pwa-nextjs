@@ -5,18 +5,17 @@ import { useRouter } from 'next/navigation';
 import { IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useLinesStations } from '@/stores/LinesStationsContext';
+import { Station } from '@/types';
 
 const AdminSupervisorForm = () => {
   const [formData, setFormData] = useState({
     email: '',
-    sup: '',
-    admin: '',
     line: 0,
     station: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filteredStations, setFilteredStations] = useState<{ id: number; name: string; line: number }[]>([]);
+  const [filteredStations, setFilteredStations] = useState<Station[]>([]);
   const router = useRouter();
   const { lines, stations } = useLinesStations();
 
@@ -61,9 +60,7 @@ const AdminSupervisorForm = () => {
       // Create supervisor
       const supervisorData = {
         email: formData.email,
-        sup: formData.sup,
         user: userId,
-        admin: formData.admin,
         line: formData.line,
         station: formData.station,
       };
@@ -111,28 +108,6 @@ const AdminSupervisorForm = () => {
             type="email"
             name="email"
             value={formData.email}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-lg"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">ID del Supervisor</label>
-          <input
-            type="text"
-            name="sup"
-            value={formData.sup}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-lg"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Administrador</label>
-          <input
-            type="text"
-            name="admin"
-            value={formData.admin}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
             required

@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, sup, admin, line, station } = await req.json();
+    const { email, line, station } = await req.json();
 
-    console.log(email, sup, admin, line, station);
+    const admin = '0000000000';
 
-    if (!email || !sup || !admin || line === undefined || station === undefined) {
+    if (!email || !admin || line === undefined || station === undefined) {
       return NextResponse.json(
         {
           timestamp: new Date().toISOString(),
@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
 
     // Create supervisor
     const supervisorData = {
-      sup,
       user: userId,
       admin,
       line,
