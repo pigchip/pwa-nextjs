@@ -225,6 +225,32 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (event.request.url.endsWith(MANIFEST_URL)) {
+    // Manejar específicamente la imagen del ícono
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request).catch(() => {
+          console.error("Service Worker: Manifest no disponible en modo offline");
+          return caches.match(MANIFEST_URL); // Devuelve la imagen desde el caché
+        });
+      })
+    );
+    return;
+  }
+
+  if (event.request.url.endsWith(FAVICON_URL)) {
+    // Manejar específicamente la imagen del ícono
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request).catch(() => {
+          console.error("Service Worker: Manifest no disponible en modo offline");
+          return caches.match(FAVICON_URL); // Devuelve la imagen desde el caché
+        });
+      })
+    );
+    return;
+  }
+
   if (event.request.url.includes(TILES_PATH)) {
     // Manejar tiles desde el cache
     event.respondWith(
