@@ -18,11 +18,11 @@ const MapX: React.FC<MapXProps> = ({ routeData }) => {
       maxZoom: 14,
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("/tiles/{z}_{x}_{y}.png", {
       maxZoom: 14,
       minZoom: 12,
-      attribution: "Map data © OpenStreetMap contributors",
-    }).addTo(map);
+      attribution: "Tiles provided by local storage",
+    }).addTo(map);    
 
     if (routeData) {
       const markers: L.Marker[] = [];
