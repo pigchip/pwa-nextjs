@@ -4,40 +4,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Animation from './Animation';
 import AuthForm from './AuthForm';
-import Tutorial from './Tutorial';
-import { useRole } from '@/contexts/RoleContext';
 
 export default function Home() {
+  // Inicializa currentSession desde localStorage, si está disponible
+  const [currentSession, setCurrentSession] = useState(() => {
+    const savedSession = localStorage.getItem('currentSession');
+    return savedSession === 'true'; // Retorna true o false según lo guardado
+  });
+
   const [showAuthForm, setShowAuthForm] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false); // Controla si se debe mostrar el Tutorial o el Container
-  const [currentSession, setCurrentSession] = useState(false); // Nueva variable de estado para currentSession como booleano
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return localStorage.getItem('hasSeenTutorial') !== 'true';
+  });
+
   const router = useRouter();
-  const { role } = useRole(); // Obtener el rol actual
-
-  // Cargar los estados de showTutorial y currentSession desde localStorage al cargar la página
-  useEffect(() => {
-    // Cargar showTutorial
-    const savedShowTutorial = localStorage.getItem('showTutorial');
-    setShowTutorial(savedShowTutorial === 'true');
-    console.log("Show Tutorial State Loaded:", savedShowTutorial === 'true');
-
-    // Cargar currentSession
-    const savedCurrentSession = localStorage.getItem('currentSession');
-    if (savedCurrentSession !== null) {
-      setCurrentSession(savedCurrentSession === 'true');
-      console.log("Current Session Loaded:", savedCurrentSession === 'true');
-    } else {
-      // Si no hay una sesión guardada, inicializarla como false
-      setCurrentSession(false);
-      localStorage.setItem('currentSession', 'false');
-      console.log("Current Session Initialized as False");
-    }
-  }, []);
 
   // Guardar currentSession en localStorage cada vez que cambie
   useEffect(() => {
     localStorage.setItem('currentSession', currentSession.toString());
-    console.log("Current Session Saved:", currentSession);
+    console.log('Current Session Saved:', currentSession);
   }, [currentSession]);
 
   // Mostrar AuthForm después de la animación
@@ -49,24 +34,10 @@ export default function Home() {
     return () => clearTimeout(timer); // Limpia el timeout al desmontar
   }, []);
 
-  const handleTutorialFinish = () => {
-    if (role === 'user') {
-      router.push('/navigation');
-    }
-    else if (role === 'admin') {
-      router.push('/admin/supervisors');
-    }
-    else if (role === 'supervisor') {
-      router.push('/supervisor');
-    }
-  };
-
   return (
     <main>
-      {showTutorial ? (
-        <Tutorial onFinish={handleTutorialFinish} /> 
-      ) : showAuthForm ? (
-        <AuthForm 
+      {showAuthForm ? (
+        <AuthForm
           setShowTutorial={(value) => {
             setShowTutorial(value);
             localStorage.setItem('showTutorial', value.toString()); // Guardar en localStorage

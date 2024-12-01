@@ -3,7 +3,7 @@ import Container from './Container';
 import Image from 'next/image';
 
 interface TutorialProps {
-  onFinish?: () => void;
+  onFinish: () => void;
 }
 
 const Tutorial = ({ onFinish }: TutorialProps) => {

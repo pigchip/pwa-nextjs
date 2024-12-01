@@ -28,6 +28,7 @@ export default function AuthForm({
   const [isUser, setIsUser] = useState<boolean>(true);
   const [isSupervisor, setIsSupervisor] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { role } = useRole(); // Obtener el rol actual
 
   // Estados para campos de registro
   const [name, setName] = useState<string>('');
@@ -72,6 +73,8 @@ export default function AuthForm({
   // Estados para el modal
   const [showModal, setShowModal] = useState<boolean>(false);
   const [modalContent, setModalContent] = useState<ModalContent>({ title: '', description: '' });
+
+  const [hasSeenIt, setHasSeenIt] = useState<boolean>(false);
 
   const { setRole } = useRole();
 
@@ -145,6 +148,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
   };
 
   useEffect(() => {
+    setHasSeenIt(localStorage.getItem('hasSeenTutorial') === 'true');
     localStorage.setItem('latx', '123');
     localStorage.setItem('lonx', '123');
   }, []);
@@ -153,6 +157,20 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
 
   const handleRedirect = () => {
     router.push("/offline");
+  };
+
+  const handleTutorialFinish = () => {
+    localStorage.setItem('hasSeenTutorial', 'true'); // Marcar que el usuario ya vio el tutorial
+    setShowTutorial(false); // Ocultar el tutorial
+    if (role === 'user') {
+      router.push('/navigation');
+    }
+    else if (role === 'admin') {
+      router.push('/admin/supervisors');
+    }
+    else if (role === 'supervisor') {
+      router.push('/supervisor');
+    }
   };
 
   // Función para cerrar el modal
@@ -659,11 +677,14 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     ? "flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100"
     : "flex flex-col items-center justify-center h-[93vh] sm:h-screen p-4 bg-gray-100";
 
-  return (
-    <>
-      {showTutorial ? (
-        <Tutorial />
-      ) : (
+    return (
+      <>
+        {hasSeenIt && currentSession ? (
+          handleTutorialFinish()
+        ) : showTutorial && currentSession ? (
+          <Tutorial onFinish={handleTutorialFinish} />
+        ) : (
+    
         <div className={inputStyle}>
           <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
             {/* Título dinámico */}
