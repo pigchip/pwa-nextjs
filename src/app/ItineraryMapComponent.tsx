@@ -46,6 +46,7 @@ import { fetchItineraries } from '@/utils/fetchItineraries';
 import { getTransportIcon } from '@/utils/getTransportIcon';
 import { Check } from '@mui/icons-material';
 import { Agency, fetchGtfsData } from '@/utils/fetchGtfsData';
+import Modal from './Modal';
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
@@ -103,6 +104,24 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   const [stationList, setStationList] = useState<{ id: string; name: string; routeId: string; routeName: string; agencyName: string }[]>([]);
   const [selectedStations, setSelectedStations] = useState<string[]>([]); // Almacena id de estaciones
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalTitle, setModalTitle] = useState("");
+
+  const showModal = (title: string, message: string) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveRoute = (selectedItinerary: any, startName: string, endName: string) => {
+    saveRouteToLocalStorage(
+      selectedItinerary,
+      startName,
+      endName,
+      (message: string) => showModal("Guardar Ruta", message)
+    );
+  };
 
   useEffect(() => {
     const fetchRouteData = async () => {
@@ -602,10 +621,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
   // Ejecutar fetchAllItineraries cuando las coordenadas o filtros cambien
   useEffect(() => {
-    if (fromLat && fromLon && toLat && toLon) {
+    if (fromLat && fromLon && toLat && toLon && !selectedItinerary) {
       fetchAllItineraries();
     }
-  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes, fetchAllItineraries]);
+  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes]);
 
   // Manejar la selección y trazado de un itinerario
   const handlePlotItinerary = (itinerary: Itinerary) => {
@@ -726,6 +745,14 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
             <ExpandMoreIcon className="text-gray-500" />
           )}
         </div>
+
+        {/* Componente Modal */}
+        <Modal
+          isOpen={isModalOpen}
+          title={modalTitle}
+          message={modalMessage}
+          onClose={() => setIsModalOpen(false)}
+        />
 
         {/* Comboboxes */}
         {isExpanded && (
@@ -1114,9 +1141,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               {/* Botón "Guardar Ruta" */}
                               <button
                                 className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                                onClick={() =>
-                                  saveRouteToLocalStorage(selectedItinerary, startName, endName)
-                                }
+                                onClick={() => handleSaveRoute(selectedItinerary, startName, endName)}
                               >
                                 Guardar Ruta
                               </button>

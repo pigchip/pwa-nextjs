@@ -10,15 +10,13 @@ export const toggleExpand = (
 export const saveRouteToLocalStorage = (
   selectedItinerary: any,
   startName: string,
-  endName: string
+  endName: string,
+  showModal: (message: string) => void
 ) => {
   if (selectedItinerary) {
     const existingRoutes = JSON.parse(
       localStorage.getItem("savedRoutes") || "[]"
     );
-
-    console.log("startName:", startName);
-    console.log("endName:", endName);
 
     const itineraryToSave = {
       ...selectedItinerary,
@@ -27,14 +25,15 @@ export const saveRouteToLocalStorage = (
     };
 
     existingRoutes.push(itineraryToSave);
-
     localStorage.setItem("savedRoutes", JSON.stringify(existingRoutes));
-    alert("Ruta guardada exitosamente");
+
+    showModal("Ruta guardada exitosamente");
     console.log("Ruta guardada:", itineraryToSave);
   } else {
-    alert("No hay ruta seleccionada para guardar");
+    showModal("No hay ruta seleccionada para guardar");
   }
 };
+
 
 // Function to generate random ETA
 export const generateRandomETA = () => {
