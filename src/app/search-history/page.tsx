@@ -42,7 +42,7 @@ const SavedRoutesComponent: React.FC = () => {
       localStorage.getItem("savedRoutes") || "[]"
     );
     setSavedRoutes(existingRoutes);
-  }, []);
+  }, [setSelectedItinerary]);
 
   const deleteRoute = (index: number) => {
     const updatedRoutes = [...savedRoutes];
