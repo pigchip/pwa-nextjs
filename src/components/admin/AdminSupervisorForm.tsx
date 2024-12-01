@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useLinesStations } from '@/stores/LinesStationsContext';
 
 const AdminSupervisorForm = () => {
   const [formData, setFormData] = useState({
@@ -16,8 +17,9 @@ const AdminSupervisorForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { lines, stations } = useLinesStations();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -99,7 +101,7 @@ const AdminSupervisorForm = () => {
       <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
         {error && <div className="mb-4 text-red-500">{error}</div>}
         <div className="mb-4">
-          <label className="block text-gray-700">Email</label>
+          <label className="block text-gray-700">Correo Electrónico</label>
           <input
             type="email"
             name="email"
@@ -110,7 +112,7 @@ const AdminSupervisorForm = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Supervisor ID</label>
+          <label className="block text-gray-700">ID del Supervisor</label>
           <input
             type="text"
             name="sup"
@@ -121,7 +123,7 @@ const AdminSupervisorForm = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Admin</label>
+          <label className="block text-gray-700">Administrador</label>
           <input
             type="text"
             name="admin"
@@ -132,33 +134,45 @@ const AdminSupervisorForm = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Line</label>
-          <input
-            type="number"
+          <label className="block text-gray-700">Línea</label>
+          <select
             name="line"
             value={formData.line}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
             required
-          />
+          >
+            <option value="">Selecciona una línea</option>
+            {lines.map((line) => (
+              <option key={line.id} value={line.id}>
+                {line.transport} - {line.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Station</label>
-          <input
-            type="number"
+          <label className="block text-gray-700">Estación</label>
+          <select
             name="station"
             value={formData.station}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
             required
-          />
+          >
+            <option value="">Selecciona una estación</option>
+            {stations.map((station) => (
+              <option key={station.id} value={station.id}>
+                {station.name}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"
           className="w-full bg-[#6ABDA6] text-white py-2 px-4 rounded-lg hover:bg-[#5aa58e] transition duration-200"
           disabled={loading}
         >
-          {loading ? 'Submitting...' : 'Agregar Supervisor'}
+          {loading ? 'Enviando...' : 'Agregar Supervisor'}
         </button>
       </form>
     </div>
