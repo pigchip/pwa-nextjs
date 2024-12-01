@@ -179,7 +179,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
       }
   
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const response = await fetch(`${apiUrl}api/tmp/change`, {
+      const response = await fetch(`${apiUrl}api/pass`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
