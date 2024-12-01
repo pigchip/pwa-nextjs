@@ -1,3 +1,4 @@
+import { FrequentedRoute } from '@/types/frequentedRoute';
 import { PathOptions } from 'leaflet';
 
 export const toggleExpand = (
@@ -27,6 +28,30 @@ export const saveRouteToLocalStorage = (
     existingRoutes.push(itineraryToSave);
     localStorage.setItem("savedRoutes", JSON.stringify(existingRoutes));
 
+    // Save to frequented routes
+    const frequentedRoutes: FrequentedRoute[] = JSON.parse(
+      localStorage.getItem("frequentedRoutes") || "[]"
+    );
+
+    const existingFrequentedRouteIndex = frequentedRoutes.findIndex(
+      (route) =>
+        route.startNameIti === startName && route.endNameIti === endName
+    );
+
+    if (existingFrequentedRouteIndex !== -1) {
+      // If the route exists, increment its frequency
+      frequentedRoutes[existingFrequentedRouteIndex].frequency += 1;
+    } else {
+      // If the route does not exist, set its frequency to 1
+      const newFrequentedRoute: FrequentedRoute = {
+        ...itineraryToSave,
+        frequency: 1,
+      };
+      frequentedRoutes.push(newFrequentedRoute);
+    }
+
+    localStorage.setItem("frequentedRoutes", JSON.stringify(frequentedRoutes));
+
     showModal("Ruta guardada exitosamente");
     console.log("Ruta guardada:", itineraryToSave);
   } else {
@@ -34,7 +59,36 @@ export const saveRouteToLocalStorage = (
   }
 };
 
+export const incrementRouteFrequency = (
+  startName: string,
+  endName: string,
+  itinerary: any
+) => {
+  const frequentedRoutes: FrequentedRoute[] = JSON.parse(
+    localStorage.getItem("frequentedRoutes") || "[]"
+  );
 
+  const existingFrequentedRouteIndex = frequentedRoutes.findIndex(
+    (route) =>
+      route.startNameIti === startName && route.endNameIti === endName
+  );
+
+  if (existingFrequentedRouteIndex !== -1) {
+    // If the route exists, increment its frequency
+    frequentedRoutes[existingFrequentedRouteIndex].frequency += 1;
+  } else {
+    // If the route does not exist, set its frequency to 1
+    const newFrequentedRoute: FrequentedRoute = {
+      ...itinerary,
+      startNameIti: startName,
+      endNameIti: endName,
+      frequency: 1,
+    };
+    frequentedRoutes.push(newFrequentedRoute);
+  }
+
+  localStorage.setItem("frequentedRoutes", JSON.stringify(frequentedRoutes));
+};
 // Function to generate random ETA
 export const generateRandomETA = () => {
   const baseMinutes = 5;
@@ -51,7 +105,6 @@ export function formatDistance(distance: number) {
   }
   return `${Math.round(distance)} m`;
 }
-
 
 export const formatDuration = (durationInSeconds: number) => {
   const hours = Math.floor(durationInSeconds / 3600);
@@ -80,7 +133,6 @@ export const formatTimeWithAmPm = (timeInMilliseconds: number) => {
 
   return `${hours}:${minutes}:${seconds} ${amPm}`;
 };
-
 
 export const getColorForLeg = (leg: { route?: { color?: string }, mode: string }) => {
   return leg.route?.color ? `#${leg.route.color}` : leg.mode === 'WALK' ? '#00BFFF' : 'gray';
