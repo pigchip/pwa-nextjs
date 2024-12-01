@@ -1,18 +1,17 @@
-// app/admin/layout.tsx
+// search-history/layout.tsx
 
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useRole } from "@/contexts/RoleContext";
 import Animation from "../Animation"; // Asegúrate de que la ruta es correcta
+import Layout from "@/components/Layout"; // Opcional, si deseas reutilizar el Layout principal
 
-const AdminLayout = ({ children }: { children: React.ReactNode }) => {
-  const { role } = useRole();
-  const router = useRouter();
+const SearchHistoryLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
 
-  // Función para manejar el cierre de sesión
+  // Definir la función handleLogout
   const handleLogout = () => {
     try {
       localStorage.removeItem("email");
@@ -25,8 +24,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Verificar la sesión actual
   useEffect(() => {
+    // Función para verificar la sesión actual
     const checkSession = () => {
       try {
         const currentSession = localStorage.getItem("currentSession");
@@ -43,7 +42,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
     checkSession();
 
-    // Escuchar cambios en localStorage para actualizar la autenticación en tiempo real
+    // Opcional: Escuchar cambios en localStorage para actualizar la autenticación en tiempo real
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === "currentSession") {
         checkSession();
@@ -57,17 +56,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Verificar el rol del usuario
-  useEffect(() => {
-    if (isAuthenticated === true && role !== "admin") {
-      router.push("/"); // Redirigir a la página de inicio si no es admin
-    }
-  }, [role, isAuthenticated, router]);
-
-  // Renderización condicional
-
+  // Mientras se verifica la autenticación, mostrar la animación
   if (isAuthenticated === null) {
-    // Verificando la autenticación
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <Animation />
@@ -75,8 +65,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // Si no está autenticado, mostrar mensaje e botón para iniciar sesión
   if (!isAuthenticated) {
-    // No está autenticado
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="p-8 bg-white rounded-lg shadow-lg text-center">
@@ -95,17 +85,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (role !== "admin") {
-    // Está autenticado, pero no tiene el rol adecuado
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <Animation />
-      </div>
-    );
-  }
-
-  // Está autenticado y tiene el rol adecuado
+  // Si está autenticado, renderizar los componentes hijos
   return <>{children}</>;
 };
 
-export default AdminLayout;
+export default SearchHistoryLayout;

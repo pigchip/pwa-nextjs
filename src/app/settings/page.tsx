@@ -34,6 +34,7 @@ const SettingsComponent: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('email');
     localStorage.setItem('showTutorial', 'false');
+    localStorage.setItem('currentSession', 'false');
     router.push('/');
   };
 

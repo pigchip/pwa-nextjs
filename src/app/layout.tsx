@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Knock } from "@knocklabs/node";
 import { Inter } from "next/font/google";
 import useUserStore from "@/stores/useUser";
@@ -10,6 +10,7 @@ import { ReportsProvider } from "@/contexts/ReportsContext";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { LinesStationsProvider } from "@/stores/LinesStationsContext";
+import Animation from "./Animation"; // Asegúrate de ajustar la ruta según tu estructura de carpetas
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -77,7 +78,7 @@ export default function RootLayout({
     return (
       <html lang="en">
         <body>
-          <div>Loading...</div>
+          <Animation />
         </body>
       </html>
     );

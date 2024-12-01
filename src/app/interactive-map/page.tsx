@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Layout from '@/components/Layout';
 import { Close as CloseIcon, Lock, Map } from '@mui/icons-material';
 import LayoutNoHeader from '@/components/LayoutNoHeader';
+import Animation from '../Animation';
 
 interface Geometry {
   lat: number;
@@ -798,7 +799,11 @@ useEffect(() => {
   }
 
   if (!routes.length || !stationsData.length || !linesData.length || !apiRoutesData.length) {
-    return <p className="text-center">Cargando datos...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <Animation />
+      </div>
+    );
   }
 
   // Función para manejar el envío de opiniones

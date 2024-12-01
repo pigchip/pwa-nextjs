@@ -15,9 +15,13 @@ interface ModalContent {
 export default function AuthForm({
   setShowTutorial,
   showTutorial,
+  currentSession,
+  setCurrentSession,
 }: {
   setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>;
   showTutorial: boolean;
+  currentSession: boolean;
+  setCurrentSession: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   // Estados para registro e inicio de sesión
   const [isRegister, setIsRegister] = useState<boolean>(true);
@@ -236,6 +240,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             );
 
             setShowTutorial(true);
+            setCurrentSession(true);
 
             // Limpiar campos
             setEmail('');
@@ -305,6 +310,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
     );
 
     setShowTutorial(true);
+    setCurrentSession(true);
 
     // Limpiar campos y estados de 2FA
     setEmail('');
@@ -377,6 +383,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             );
 
             setShowTutorial(true);
+            setCurrentSession(true);
 
             // Limpiar campos
             setId('');
@@ -467,6 +474,7 @@ Utilizamos técnicas de cifrado avanzadas para proteger la información almacena
             );
 
             setShowTutorial(true);
+            setCurrentSession(true);
 
             // Limpiar campos
             setId('');
