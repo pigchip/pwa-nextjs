@@ -192,9 +192,11 @@ const RoutesMap: React.FC<RoutesMapProps> = () => {
     }
   }, []);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const fetchUserId = async (email: string) => {
     try {
-      const response = await fetch(`/api/userByEmail/${email}?timestamp=${new Date().getTime()}`, {
+      const response = await fetch(`${apiUrl}/api/userByEmail/${email}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
