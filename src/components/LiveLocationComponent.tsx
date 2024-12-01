@@ -19,8 +19,16 @@ const LiveLocationComponent: React.FC = () => {
     const success = (position: GeolocationPosition) => {
       const { latitude, longitude } = position.coords;
       setLocation({ latitude, longitude });
-      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      setShareUrl(url);
+
+      // Generar URL con el formato requerido
+      const url = new URL(window.location.href);
+      url.pathname = "/navigation";
+      url.searchParams.set("endLat", latitude.toString());
+      url.searchParams.set("endLon", longitude.toString());
+      url.searchParams.set("endName", "Ubicación compartida");
+      url.searchParams.set("endDisplayName", "Ubicación compartida");
+
+      setShareUrl(url.toString());
     };
 
     const error = () => {
@@ -37,6 +45,11 @@ const LiveLocationComponent: React.FC = () => {
     }
   };
 
+  const truncateUrl = (url: string | null, maxLength: number) => {
+    if (!url) return '';
+    return url.length > maxLength ? `${url.substring(0, maxLength)}...` : url;
+  };
+
   return (
     <div className="p-4">
       {error && <p className="text-red-500">{error}</p>}
@@ -45,10 +58,22 @@ const LiveLocationComponent: React.FC = () => {
           <p>Latitud: {location.latitude}</p>
           <p>Longitud: {location.longitude}</p>
           <p>
-            Comparte este enlace: {shareUrl && <Link href={shareUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{shareUrl}</Link>}
+            Comparte este enlace: {shareUrl && (
+              <Link
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                {truncateUrl(shareUrl, 50)}
+              </Link>
+            )}
           </p>
           <div className="flex space-x-2 mt-2">
-            <button onClick={handleCopyToClipboard} className="bg-[#6ABDA6] text-white px-4 py-2 rounded flex items-center space-x-1 hover:bg-[#5aa58e]">
+            <button
+              onClick={handleCopyToClipboard}
+              className="bg-[#6ABDA6] text-white px-4 py-2 rounded flex items-center space-x-1 hover:bg-[#5aa58e]"
+            >
               <ContentCopyIcon />
               <span>Copiar enlace</span>
             </button>

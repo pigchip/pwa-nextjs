@@ -130,16 +130,36 @@ const NavigationComponent: React.FC = () => {
           <button
             className="bg-[#6ABDA6] text-white p-3 rounded-full shadow-lg hover:bg-[#5aa18e] focus:outline-none transition duration-300 ease-in-out transform hover:scale-105"
             onClick={() => {
-              if (navigator.share) {
-                navigator
-                  .share({
-                    title: "Mi Ubicación Actual",
-                    text: "Aquí me encuentro",
-                    url: `https://www.google.com/maps?q=${startLocation?.lat},${startLocation?.lon}`,
-                  })
-                  .catch((error) => console.error("Error compartiendo", error));
+              if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                  (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const shareUrl = new URL(window.location.href);
+                    shareUrl.pathname = "/navigation";
+                    shareUrl.searchParams.set("endLat", latitude.toString());
+                    shareUrl.searchParams.set("endLon", longitude.toString());
+                    shareUrl.searchParams.set("endName", "Ubicación compartida");
+                    shareUrl.searchParams.set("endDisplayName", "Ubicación compartida");
+
+                    if (navigator.share) {
+                      navigator
+                        .share({
+                          title: "Mi Ubicación Actual",
+                          text: "Aquí me encuentro",
+                          url: shareUrl.toString(),
+                        })
+                        .catch((error) => console.error("Error compartiendo", error));
+                    } else {
+                      alert("Compartir no es soportado en este dispositivo");
+                    }
+                  },
+                  (error) => {
+                    console.error("Error obteniendo ubicación", error);
+                    alert("No se pudo obtener tu ubicación. Asegúrate de permitir el acceso.");
+                  }
+                );
               } else {
-                alert("Compartir no es soportado en este dispositivo");
+                alert("Geolocalización no es soportada en este dispositivo");
               }
             }}
           >
