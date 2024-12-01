@@ -25,7 +25,7 @@ import { Itinerary } from "@/types/map";
 import MostFrequentedRoutes from "@/components/MostFrequentedRoutes";
 import DownloadRouteButton from "@/components/DownloadRouteButton";
 import { DirectionsRailwayFilled } from "@mui/icons-material";
-import { formatDuration } from "@/utils/itineraryUtils";
+import { formatDuration, incrementRouteFrequency } from "@/utils/itineraryUtils";
 
 const SavedRoutesComponent: React.FC = () => {
   const [savedRoutes, setSavedRoutes] = useState<Itinerary[]>([]);
@@ -42,7 +42,7 @@ const SavedRoutesComponent: React.FC = () => {
       localStorage.getItem("savedRoutes") || "[]"
     );
     setSavedRoutes(existingRoutes);
-  }, []);
+  }, [setSelectedItinerary]);
 
   const deleteRoute = (index: number) => {
     const updatedRoutes = [...savedRoutes];
@@ -57,6 +57,7 @@ const SavedRoutesComponent: React.FC = () => {
 
   const mapSavedRoute = (itinerary: Itinerary) => {
     setSelectedItinerary(itinerary);
+    incrementRouteFrequency(itinerary.startNameIti, itinerary.endNameIti, itinerary);
     router.push("/navigation");
   };
 

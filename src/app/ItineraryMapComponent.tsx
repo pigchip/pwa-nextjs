@@ -1,21 +1,27 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react'; 
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import polyline from '@mapbox/polyline';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import MapIcon from '@mui/icons-material/Map';
-import Checkbox from '@mui/material/Checkbox';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import { Itinerary, ItineraryMapComponentProps, Leg } from '@/types/map';
-import { SelectedItineraryContext } from '@/contexts/SelectedItineraryContext';
-import { createEndIcon, createStartIcon, MapView } from '@/utils/map';
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import polyline from "@mapbox/polyline";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import MapIcon from "@mui/icons-material/Map";
+import Checkbox from "@mui/material/Checkbox";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import { Itinerary, ItineraryMapComponentProps, Leg } from "@/types/map";
+import { SelectedItineraryContext } from "@/contexts/SelectedItineraryContext";
+import { createEndIcon, createStartIcon, MapView } from "@/utils/map";
 import {
   formatDistance,
   formatDuration,
@@ -23,9 +29,10 @@ import {
   generateRandomETA,
   getColorForLeg,
   getPolylineStyle,
+  incrementRouteFrequency,
   saveRouteToLocalStorage,
   toggleExpand,
-} from '@/utils/itineraryUtils';
+} from "@/utils/itineraryUtils";
 import {
   ITINERARY_QUERY,
   ITINERARY_QUERY_WALK_ONLY,
@@ -41,67 +48,115 @@ import {
   ITINERARY_QUERY_SUBWAY_TRAM_WALK,
   ITINERARY_QUERY_ALL_MODES_WALK,
   generateBannedBlocks,
-} from '@/queries/queries';
-import { fetchItineraries } from '@/utils/fetchItineraries';
-import { getTransportIcon } from '@/utils/getTransportIcon';
-import { Check } from '@mui/icons-material';
-import { Agency, fetchGtfsData } from '@/utils/fetchGtfsData';
-import Modal from './Modal';
+} from "@/queries/queries";
+import { fetchItineraries } from "@/utils/fetchItineraries";
+import { getTransportIcon } from "@/utils/getTransportIcon";
+import { Check } from "@mui/icons-material";
+import { Agency, fetchGtfsData } from "@/utils/fetchGtfsData";
+import Modal from "./Modal";
 
 const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   startLocation,
   endLocation,
 }) => {
-  const { selectedItinerary, setSelectedItinerary } = useContext(SelectedItineraryContext);
+  const { selectedItinerary, setSelectedItinerary } = useContext(
+    SelectedItineraryContext
+  );
 
   const defaultPosition: L.LatLngExpression = [19.432608, -99.133209];
   const startIcon = createStartIcon();
   const endIcon = createEndIcon();
 
-  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; name: string } | null>(
-    null
-  );
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lon: number;
+    name: string;
+  } | null>(null);
   const [itineraryData, setItineraryData] = useState<Itinerary[]>([]);
-  const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>([]);
+  const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>(
+    []
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [expandedLegIndex, setExpandedLegIndex] = useState<number | null>(null);
   const [currentLegIndex, setCurrentLegIndex] = useState<number>(0);
 
-  const [fromLat, setFromLat] = useState<string>(startLocation ? startLocation.lat.toString() : '');
-  const [fromLon, setFromLon] = useState<string>(startLocation ? startLocation.lon.toString() : '');
-  const [toLat, setToLat] = useState<string>(endLocation ? endLocation.lat.toString() : '');
-  const [toLon, setToLon] = useState<string>(endLocation ? endLocation.lon.toString() : '');
+  const [fromLat, setFromLat] = useState<string>(
+    startLocation ? startLocation.lat.toString() : ""
+  );
+  const [fromLon, setFromLon] = useState<string>(
+    startLocation ? startLocation.lon.toString() : ""
+  );
+  const [toLat, setToLat] = useState<string>(
+    endLocation ? endLocation.lat.toString() : ""
+  );
+  const [toLon, setToLon] = useState<string>(
+    endLocation ? endLocation.lon.toString() : ""
+  );
 
-  const [startName, setStartName] = useState<string>(startLocation?.name || '');
-  const [endName, setEndName] = useState<string>(endLocation?.name || '');
+  const [startName, setStartName] = useState<string>(startLocation?.name || "");
+  const [endName, setEndName] = useState<string>(endLocation?.name || "");
   const [routeData, setRouteData] = useState<Agency[] | null>(null);
 
   // State for custom marker
-  const [customMarker, setCustomMarker] = useState<{ lat: number; lon: number } | null>(null);
+  const [customMarker, setCustomMarker] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
 
   // State para filtrado de agencias
   const [agencyList, setAgencyList] = useState([
-    { id: 'QWdlbmN5OjE6U1VC', name: 'Ferrocarriles Suburbanos', gtfsId: "1:SUB" },
-    { id: 'QWdlbmN5OjE6Q0M', name: 'Corredores Concesionados', gtfsId: "1:CC" },
-    { id: 'QWdlbmN5OjE6SU5URVJVUkJBTk8', name: 'Tren El Insurgente', gtfsId: "1:INTERURBANO" },
-    { id: 'QWdlbmN5OjE6Q0JC', name: 'Cablebus', gtfsId: "1:CBB" },
-    { id: 'QWdlbmN5OjE6TUI', name: 'Metrobús', gtfsId: "1:MB" },
-    { id: 'QWdlbmN5OjE6TUVUUk8', name: 'Sistema de Transporte Colectivo Metro', gtfsId: "1:METRO" },
-    { id: 'QWdlbmN5OjE6VEw', name: 'Servicio de Tren Ligero', gtfsId: "1:TL" },
-    { id: 'QWdlbmN5OjE6UFVNQUJVUw', name: 'Pumabús', gtfsId: "1:PUMABUS" },
-    { id: 'QWdlbmN5OjE6VFJPTEU', name: 'Trolebús', gtfsId: "1:TROLE" },
-    { id: 'QWdlbmN5OjE6UlRQ', name: 'Red de Transporte de Pasajeros', gtfsId: "1:RTP" },
+    {
+      id: "QWdlbmN5OjE6U1VC",
+      name: "Ferrocarriles Suburbanos",
+      gtfsId: "1:SUB",
+    },
+    { id: "QWdlbmN5OjE6Q0M", name: "Corredores Concesionados", gtfsId: "1:CC" },
+    {
+      id: "QWdlbmN5OjE6SU5URVJVUkJBTk8",
+      name: "Tren El Insurgente",
+      gtfsId: "1:INTERURBANO",
+    },
+    { id: "QWdlbmN5OjE6Q0JC", name: "Cablebus", gtfsId: "1:CBB" },
+    { id: "QWdlbmN5OjE6TUI", name: "Metrobús", gtfsId: "1:MB" },
+    {
+      id: "QWdlbmN5OjE6TUVUUk8",
+      name: "Sistema de Transporte Colectivo Metro",
+      gtfsId: "1:METRO",
+    },
+    { id: "QWdlbmN5OjE6VEw", name: "Servicio de Tren Ligero", gtfsId: "1:TL" },
+    { id: "QWdlbmN5OjE6UFVNQUJVUw", name: "Pumabús", gtfsId: "1:PUMABUS" },
+    { id: "QWdlbmN5OjE6VFJPTEU", name: "Trolebús", gtfsId: "1:TROLE" },
+    {
+      id: "QWdlbmN5OjE6UlRQ",
+      name: "Red de Transporte de Pasajeros",
+      gtfsId: "1:RTP",
+    },
   ]);
 
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]); // Almacena gtfsId
 
   // State para filtrado de rutas
-  const [routeList, setRouteList] = useState<{ gtfsId: string; shortName: string; longName: string; agencyName: string }[]>([]);
+  const [routeList, setRouteList] = useState<
+    {
+      gtfsId: string;
+      shortName: string;
+      longName: string;
+      agencyName: string;
+    }[]
+  >([]);
   const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]); // Almacena gtfsId
 
   // State para filtrado de estaciones
-  const [stationList, setStationList] = useState<{ id: string; name: string; routeId: string; routeName: string; agencyName: string }[]>([]);
+  const [stationList, setStationList] = useState<
+    {
+      id: string;
+      name: string;
+      routeId: string;
+      routeName: string;
+      agencyName: string;
+    }[]
+  >([]);
   const [selectedStations, setSelectedStations] = useState<string[]>([]); // Almacena id de estaciones
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,7 +181,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleSaveRoute = (selectedItinerary: any, startName: string, endName: string) => {
+  const handleSaveRoute = (
+    selectedItinerary: any,
+    startName: string,
+    endName: string
+  ) => {
     saveRouteToLocalStorage(
       selectedItinerary,
       startName,
@@ -138,7 +197,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   useEffect(() => {
     const fetchRouteData = async () => {
       const data = await fetchGtfsData();
-      console.log('Route Data Fetched:', data); // Verificar estructura de datos
+      console.log("Route Data Fetched:", data); // Verificar estructura de datos
       setRouteData(data);
     };
     fetchRouteData();
@@ -157,7 +216,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
     if (selectedAgencies.length > 0) {
       routeData?.forEach((agency) => {
-        if (selectedAgencies.includes(agency.gtfsId)) { // Usar gtfsId
+        if (selectedAgencies.includes(agency.gtfsId)) {
+          // Usar gtfsId
           agency.routes.forEach((route) => {
             routes.push({
               gtfsId: route.gtfsId,
@@ -183,7 +243,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
 
     // Eliminar rutas duplicadas por gtfsId (si es necesario)
-    const uniqueRoutes = Array.from(new Map(routes.map(route => [route.gtfsId, route])).values());
+    const uniqueRoutes = Array.from(
+      new Map(routes.map((route) => [route.gtfsId, route])).values()
+    );
 
     // Ordenar rutas alfabéticamente por agencyName y luego por shortName
     uniqueRoutes.sort((a, b) => {
@@ -195,7 +257,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     });
 
     setRouteList(uniqueRoutes);
-    console.log('Route List:', uniqueRoutes); // Depuración
+    console.log("Route List:", uniqueRoutes); // Depuración
   }, [selectedAgencies, routeData]);
 
   // Filtrar estaciones basado en rutas seleccionadas
@@ -213,7 +275,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     if (selectedRoutes.length > 0) {
       routeData?.forEach((agency) => {
         agency.routes.forEach((route) => {
-          if (selectedRoutes.includes(route.gtfsId) && route.stops) { // Usar gtfsId
+          if (selectedRoutes.includes(route.gtfsId) && route.stops) {
+            // Usar gtfsId
             route.stops.forEach((stop) => {
               stations.push({
                 id: stop.id,
@@ -246,7 +309,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     }
 
     // Eliminar estaciones duplicadas basadas en el id
-    const uniqueStations = Array.from(new Map(stations.map(station => [station.id, station])).values());
+    const uniqueStations = Array.from(
+      new Map(stations.map((station) => [station.id, station])).values()
+    );
 
     // Ordenar estaciones alfabéticamente por agencyName, routeName y luego por nombre
     uniqueStations.sort((a, b) => {
@@ -260,7 +325,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     });
 
     setStationList(uniqueStations);
-    console.log('Station List:', uniqueStations); // Depuración
+    console.log("Station List:", uniqueStations); // Depuración
   }, [selectedRoutes, routeData]);
 
   // Filtrar itinerarios basado en agencias, rutas y estaciones excluidas
@@ -269,26 +334,28 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       setFilteredItineraries(itineraryData);
       return;
     }
-  
+
     // Sets para almacenar las agencias y rutas a excluir
     const agenciesToExclude = new Set<string>();
     const routesToExclude = new Set<string>();
     const routesToExcludeWithStation = new Set<string>();
-  
+
     // Procesar las agencias seleccionadas
-    selectedAgencies.forEach(agencyGtfsId => {
-      const agency = routeData.find(a => a.gtfsId === agencyGtfsId);
-      const agencyRoutes = agency?.routes.map(r => r.gtfsId) || [];
-      
+    selectedAgencies.forEach((agencyGtfsId) => {
+      const agency = routeData.find((a) => a.gtfsId === agencyGtfsId);
+      const agencyRoutes = agency?.routes.map((r) => r.gtfsId) || [];
+
       // Rutas seleccionadas dentro de la agencia
-      const selectedRoutesForAgency = selectedRoutes.filter(routeGtfsId => agencyRoutes.includes(routeGtfsId));
-  
+      const selectedRoutesForAgency = selectedRoutes.filter((routeGtfsId) =>
+        agencyRoutes.includes(routeGtfsId)
+      );
+
       if (selectedRoutesForAgency.length === 0) {
         // Si no se seleccionaron rutas dentro de la agencia, excluir toda la agencia
         agenciesToExclude.add(agencyGtfsId);
       } else {
         // Si se seleccionaron rutas dentro de la agencia
-        selectedRoutesForAgency.forEach(routeGtfsId => {
+        selectedRoutesForAgency.forEach((routeGtfsId) => {
           if (selectedStations.length > 0) {
             // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
             routesToExcludeWithStation.add(routeGtfsId);
@@ -299,17 +366,17 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         });
       }
     });
-  
+
     // Procesar las rutas seleccionadas que no están asociadas a ninguna agencia seleccionada
-    const selectedRoutesNotInAgencies = selectedRoutes.filter(routeGtfsId => {
-      return !selectedAgencies.some(agencyGtfsId => {
-        const agency = routeData.find(a => a.gtfsId === agencyGtfsId);
-        const agencyRoutes = agency?.routes.map(r => r.gtfsId) || [];
+    const selectedRoutesNotInAgencies = selectedRoutes.filter((routeGtfsId) => {
+      return !selectedAgencies.some((agencyGtfsId) => {
+        const agency = routeData.find((a) => a.gtfsId === agencyGtfsId);
+        const agencyRoutes = agency?.routes.map((r) => r.gtfsId) || [];
         return agencyRoutes.includes(routeGtfsId);
       });
     });
-  
-    selectedRoutesNotInAgencies.forEach(routeGtfsId => {
+
+    selectedRoutesNotInAgencies.forEach((routeGtfsId) => {
       if (selectedStations.length > 0) {
         // Si se seleccionaron estaciones, excluir solo las rutas que pasan por esas estaciones
         routesToExcludeWithStation.add(routeGtfsId);
@@ -318,61 +385,72 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         routesToExclude.add(routeGtfsId);
       }
     });
-  
+
     // Filtrar los itinerarios
-    const filtered = itineraryData.filter(itinerary => {
+    const filtered = itineraryData.filter((itinerary) => {
       // Excluir itinerarios que tengan al menos un leg que coincida con los criterios de exclusión
-      return !itinerary.legs.some(leg => {
+      return !itinerary.legs.some((leg) => {
         const agencyGtfsId = leg.route?.agency?.gtfsId;
         const routeGtfsId = leg.route?.gtfsId;
-        const stationIds = leg.stops ? leg.stops.map(stop => stop.id) : [];
-  
+        const stationIds = leg.stops ? leg.stops.map((stop) => stop.id) : [];
+
         // 1. Excluir itinerarios por agencia completa
         if (agencyGtfsId && agenciesToExclude.has(agencyGtfsId)) {
           return true;
         }
-  
+
         // 2. Excluir itinerarios por rutas completas
         if (routeGtfsId && routesToExclude.has(routeGtfsId)) {
           return true;
         }
-  
+
         // 3. Excluir itinerarios por rutas y estaciones seleccionadas
         if (routeGtfsId && routesToExcludeWithStation.has(routeGtfsId)) {
           // Verificar si el itinerario pasa por alguna de las estaciones seleccionadas
-          if (stationIds.some(id => selectedStations.includes(id))) {
+          if (stationIds.some((id) => selectedStations.includes(id))) {
             return true;
           }
         }
-  
+
         // Si no coincide con ningún criterio de exclusión
         return false;
       });
     });
-  
-    console.log('Agencies to Exclude:', Array.from(agenciesToExclude));
-    console.log('Routes to Exclude:', Array.from(routesToExclude));
-    console.log('Routes to Exclude with Station:', Array.from(routesToExcludeWithStation));
-    console.log('Filtered Itineraries:', filtered); // Depuración
+
+    console.log("Agencies to Exclude:", Array.from(agenciesToExclude));
+    console.log("Routes to Exclude:", Array.from(routesToExclude));
+    console.log(
+      "Routes to Exclude with Station:",
+      Array.from(routesToExcludeWithStation)
+    );
+    console.log("Filtered Itineraries:", filtered); // Depuración
     setFilteredItineraries(filtered);
-  }, [selectedAgencies, selectedRoutes, selectedStations, itineraryData, routeData]);
+  }, [
+    selectedAgencies,
+    selectedRoutes,
+    selectedStations,
+    itineraryData,
+    routeData,
+  ]);
 
   // Actualizar ubicaciones de inicio y fin
   useEffect(() => {
     if (startLocation) {
       setFromLat(startLocation.lat.toString());
       setFromLon(startLocation.lon.toString());
-      setStartName(startLocation.display_name || startLocation.name || 'Inicio');
+      setStartName(
+        startLocation.display_name || startLocation.name || "Inicio"
+      );
     } else if (userLocation && !startLocation) {
       setFromLat(userLocation.lat.toString());
       setFromLon(userLocation.lon.toString());
-      setStartName('Mi Ubicación');
+      setStartName("Mi Ubicación");
     }
 
     if (endLocation) {
       setToLat(endLocation.lat.toString());
       setToLon(endLocation.lon.toString());
-      setEndName(endLocation.display_name || endLocation.name || 'Destino');
+      setEndName(endLocation.display_name || endLocation.name || "Destino");
     }
   }, [startLocation, endLocation, userLocation]);
 
@@ -382,12 +460,20 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lon: longitude, name: 'Current Location' });
+          setUserLocation({
+            lat: latitude,
+            lon: longitude,
+            name: "Current Location",
+          });
         },
         (error) => {
-          console.error('Error al obtener la ubicación', error);
+          console.error("Error al obtener la ubicación", error);
           openModal("Error", `Error (${error.code}): ${error.message}`);
-          setUserLocation({ lat: 19.432608, lon: -99.133209, name: 'Default Location' });
+          setUserLocation({
+            lat: 19.432608,
+            lon: -99.133209,
+            name: "Default Location",
+          });
         },
         {
           enableHighAccuracy: true,
@@ -402,11 +488,11 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
   function generateSimplifiedItineraryKey(itinerary: Itinerary): string {
     return `${itinerary.legs
       .map((leg) => `${leg.mode}-${leg.from.name}-${leg.to.name}`)
-      .join('|')}`;
+      .join("|")}`;
   }
 
   // Eliminar itinerarios duplicados
-  function removeDuplicateItineraries(itineraries: Itinerary[]) {
+  const removeDuplicateItineraries = useCallback((itineraries: Itinerary[]) => {
     const seen = new Set();
     return itineraries.filter((itinerary) => {
       const key = generateSimplifiedItineraryKey(itinerary);
@@ -417,7 +503,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
         return true; // Itinerario único
       }
     });
-  }
+  }, []);
 
   // Función para obtener itinerarios
   const fetchAllItineraries = useCallback(async () => {
@@ -428,11 +514,13 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
     setLoading(true);
     setIsExpanded(true);
 
-    const currentDate = new Date().toLocaleDateString('en-US'); // Formato MM/DD/YYYY
-    console.log('Current Local Date:', currentDate);
-    const currentTime = new Date().toLocaleTimeString('en-US', { hour12: true });
-    console.log('Current Local Time:', currentTime);  
-    
+    const currentDate = new Date().toLocaleDateString("en-US"); // Formato MM/DD/YYYY
+    console.log("Current Local Date:", currentDate);
+    const currentTime = new Date().toLocaleTimeString("en-US", {
+      hour12: true,
+    });
+    console.log("Current Local Time:", currentTime);
+
     const maxTransfers = 10; // Aumentar para permitir más transferencias
     const numItineraries = 30; // Obtener más itinerarios
 
@@ -465,7 +553,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           currentDate,
           currentTime,
           maxTransfers,
-          numItineraries,
+          numItineraries
         ),
         ITINERARY_QUERY_BUS_WALK(
           Number(fromLat),
@@ -602,7 +690,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       ];
 
       // Ejecutar todas las consultas y recopilar respuestas
-      const results = await Promise.all(queries.map((query) => fetchItineraries(query)));
+      const results = await Promise.all(
+        queries.map((query) => fetchItineraries(query))
+      );
 
       // Combinar todos los itinerarios
       let allItineraries = results.flat();
@@ -611,35 +701,57 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       const uniqueItineraries = removeDuplicateItineraries(allItineraries);
 
       // Ordenar itinerarios por duración (más rápido a más largo)
-      const sortedItineraries = uniqueItineraries.sort((a, b) => a.duration - b.duration);
+      const sortedItineraries = uniqueItineraries.sort(
+        (a, b) => a.duration - b.duration
+      );
 
       setItineraryData(sortedItineraries);
-      console.log('Itinerary Data Set:', sortedItineraries); // Depuración
+      console.log("Itinerary Data Set:", sortedItineraries); // Depuración
 
       // Verificar si los itinerarios tienen legGeometry.points
       sortedItineraries.forEach((itinerary, index) => {
         itinerary.legs.forEach((leg, legIndex) => {
           if (!leg.legGeometry?.points) {
-            console.warn(`Itinerary ${index}, Leg ${legIndex} no tiene legGeometry.points`);
+            console.warn(
+              `Itinerary ${index}, Leg ${legIndex} no tiene legGeometry.points`
+            );
           }
         });
       });
     } catch (error) {
-      console.error('Error fetching itineraries:', error);
+      console.error("Error fetching itineraries:", error);
     } finally {
       setLoading(false);
     }
-  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes, routeData]);
+  }, [
+    fromLat,
+    fromLon,
+    toLat,
+    toLon,
+    selectedAgencies,
+    selectedRoutes,
+    routeData,
+    removeDuplicateItineraries,
+  ]);
 
   // Ejecutar fetchAllItineraries cuando las coordenadas o filtros cambien
   useEffect(() => {
     if (fromLat && fromLon && toLat && toLon) {
       fetchAllItineraries();
     }
-  }, [fromLat, fromLon, toLat, toLon, selectedAgencies, selectedRoutes]);
+  }, [
+    fromLat,
+    fromLon,
+    toLat,
+    toLon,
+    selectedAgencies,
+    selectedRoutes,
+    fetchAllItineraries,
+  ]);
 
   // Manejar la selección y trazado de un itinerario
   const handlePlotItinerary = (itinerary: Itinerary) => {
+    incrementRouteFrequency(startName, endName, itinerary);
     if (!itinerary) {
       setSelectedItinerary(itinerary);
     } else {
@@ -648,12 +760,14 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
       setSelectedItinerary(itinerary);
     }
-    console.log('Itinerario seleccionado para trazar:', itinerary);
+    console.log("Itinerario seleccionado para trazar:", itinerary);
 
     // Verificar si el itinerario tiene legs con legGeometry.points
     itinerary.legs.forEach((leg, index) => {
       if (!leg.legGeometry?.points) {
-        console.warn(`Leg ${index} del itinerario seleccionado no tiene legGeometry.points`);
+        console.warn(
+          `Leg ${index} del itinerario seleccionado no tiene legGeometry.points`
+        );
       }
     });
 
@@ -680,7 +794,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
       />
 
       <div
-        className={`flex-grow min-h-[100px] z-10 ${isExpanded ? 'h-[145px]' : 'h-[420px]'}`}
+        className={`flex-grow min-h-[100px] z-10 ${
+          isExpanded ? "h-[145px]" : "h-[420px]"
+        }`}
       >
         <MapContainer
           center={
@@ -692,7 +808,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           }
           minZoom={10}
           zoom={10}
-          style={{ height: '100%', width: '100%' }}
+          style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -704,17 +820,26 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           />
 
           {startLocation && (
-            <Marker position={[startLocation.lat, startLocation.lon]} icon={startIcon}>
+            <Marker
+              position={[startLocation.lat, startLocation.lon]}
+              icon={startIcon}
+            >
               <Popup>Inicio</Popup>
             </Marker>
           )}
           {endLocation && (
-            <Marker position={[endLocation.lat, endLocation.lon]} icon={endIcon}>
+            <Marker
+              position={[endLocation.lat, endLocation.lon]}
+              icon={endIcon}
+            >
               <Popup>Destino</Popup>
             </Marker>
           )}
           {!startLocation && userLocation && (
-            <Marker position={[userLocation.lat, userLocation.lon]} icon={startIcon}>
+            <Marker
+              position={[userLocation.lat, userLocation.lon]}
+              icon={startIcon}
+            >
               <Popup>Ubicación actual</Popup>
             </Marker>
           )}
@@ -726,7 +851,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                 return (
                   <Polyline
                     key={`${selectedItinerary.id}-${leg.gtfsId}`} // Clave única usando gtfsId
-                    positions={decodedPolyline.map((coord) => [coord[0], coord[1]])}
+                    positions={decodedPolyline.map((coord) => [
+                      coord[0],
+                      coord[1],
+                    ])}
                     pathOptions={getPolylineStyle(leg)}
                   />
                 );
@@ -751,7 +879,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
 
       <div
         className={`overflow-y-auto bg-white transition-all duration-300 ease-in-out rounded-t-lg shadow-lg flex-none ${
-          isExpanded ? 'h-[454px]' : 'h-[180px]'
+          isExpanded ? "h-[454px]" : "h-[180px]"
         }`}
       >
         <div
@@ -778,21 +906,28 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
           <div className="p-4 bg-white shadow-md">
             {/* Combobox de agencias */}
             <Autocomplete
-              id='agenciess'
+              id="agenciess"
               multiple
               options={agencyList}
               disableCloseOnSelect
-              value={agencyList.filter(agency => selectedAgencies.includes(agency.gtfsId))}
+              value={agencyList.filter((agency) =>
+                selectedAgencies.includes(agency.gtfsId)
+              )}
               getOptionLabel={(option) => option.name}
               onChange={(event, value) => {
                 setSelectedAgencies(value.map((agency) => agency.gtfsId)); // Usar gtfsId
-                console.log('Selected Agencies:', value.map((agency) => agency.gtfsId));
+                console.log(
+                  "Selected Agencies:",
+                  value.map((agency) => agency.gtfsId)
+                );
                 // Reset selected routes and stations when agencies change
                 setSelectedRoutes([]);
                 setSelectedStations([]);
               }}
               renderOption={(props, option, { selected }) => (
-                <li {...props} key={option.gtfsId}> {/* Asegurar clave única */}
+                <li {...props} key={option.gtfsId}>
+                  {" "}
+                  {/* Asegurar clave única */}
                   <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                     checkedIcon={<Check fontSize="small" />}
@@ -802,7 +937,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                   {option.name}
                 </li>
               )}
-              style={{ width: '100%', marginBottom: '16px' }}
+              style={{ width: "100%", marginBottom: "16px" }}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -821,16 +956,25 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
               options={routeList}
               groupBy={(option) => option.agencyName}
               disableCloseOnSelect
-              value={routeList.filter(route => selectedRoutes.includes(route.gtfsId))}
-              getOptionLabel={(option) => `${option.shortName} - ${option.longName}`}
+              value={routeList.filter((route) =>
+                selectedRoutes.includes(route.gtfsId)
+              )}
+              getOptionLabel={(option) =>
+                `${option.shortName} - ${option.longName}`
+              }
               onChange={(event, value) => {
                 setSelectedRoutes(value.map((route) => route.gtfsId)); // Usar gtfsId
-                console.log('Selected Routes:', value.map((route) => route.gtfsId));
+                console.log(
+                  "Selected Routes:",
+                  value.map((route) => route.gtfsId)
+                );
                 // Reset selected stations cuando las rutas cambian
                 setSelectedStations([]);
               }}
               renderOption={(props, option, { selected }) => (
-                <li {...props} key={option.gtfsId}> {/* Asegurar clave única */}
+                <li {...props} key={option.gtfsId}>
+                  {" "}
+                  {/* Asegurar clave única */}
                   <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                     checkedIcon={<Check fontSize="small" />}
@@ -840,19 +984,18 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                   {`${option.shortName} - ${option.longName}`}
                 </li>
               )}
-              style={{ width: '100%', marginBottom: '16px' }}
+              style={{ width: "100%", marginBottom: "16px" }}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   variant="outlined"
                   label="Excluir por Línea/Ruta"
                   placeholder="Selecciona rutas"
-                  id='routes-autocomplete'
-                  name='routes'
+                  id="routes-autocomplete"
+                  name="routes"
                 />
               )}
             />
-
           </div>
         )}
 
@@ -867,7 +1010,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                   {/* Si el menú está expandido, mostrar todos los itinerarios */}
                   {isExpanded
                     ? filteredItineraries.map((itinerary, index) => (
-                        <div key={itinerary.id} className="bg-green-100 p-3 rounded-lg max-w-full">
+                        <div
+                          key={itinerary.id}
+                          className="bg-green-100 p-3 rounded-lg max-w-full"
+                        >
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                             {/* Visualización de legs con íconos */}
                             <div className="flex items-center flex-wrap">
@@ -875,23 +1021,25 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                 const color = getColorForLeg(leg);
                                 const Icon = getTransportIcon(leg.mode);
                                 return (
-                                  <React.Fragment key={`${itinerary.id}-${leg.gtfsId}`}>
+                                  <React.Fragment
+                                    key={`${itinerary.id}-${leg.gtfsId}`}
+                                  >
                                     <div
                                       style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        marginRight: '10px',
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        marginRight: "10px",
                                       }}
                                       title={`ETA: ${generateRandomETA()}`}
                                     >
                                       {/* Duración encima del ícono */}
                                       <span
                                         style={{
-                                          fontSize: '12px',
-                                          marginBottom: '6px',
-                                          color: 'black',
-                                          fontWeight: 'bold',
+                                          fontSize: "12px",
+                                          marginBottom: "6px",
+                                          color: "black",
+                                          fontWeight: "bold",
                                         }}
                                       >
                                         {formatDuration(leg.duration)}
@@ -900,13 +1048,13 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       <div
                                         style={{
                                           backgroundColor: color,
-                                          borderRadius: '50%',
-                                          color: 'white',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          width: '50px',
-                                          height: '50px',
+                                          borderRadius: "50%",
+                                          color: "white",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          width: "50px",
+                                          height: "50px",
                                         }}
                                       >
                                         {Icon}
@@ -914,17 +1062,19 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       {/* Distancia debajo del ícono */}
                                       <span
                                         style={{
-                                          fontSize: '12px',
-                                          marginTop: '6px',
-                                          color: 'black',
-                                          fontWeight: 'bold',
+                                          fontSize: "12px",
+                                          marginTop: "6px",
+                                          color: "black",
+                                          fontWeight: "bold",
                                         }}
                                       >
                                         {formatDistance(leg.distance)}
                                       </span>
                                     </div>
                                     {legIndex < itinerary.legs.length - 1 && (
-                                      <ArrowForwardIcon style={{ color: 'gray' }} />
+                                      <ArrowForwardIcon
+                                        style={{ color: "gray" }}
+                                      />
                                     )}
                                   </React.Fragment>
                                 );
@@ -936,7 +1086,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               <div className="flex flex-col items-start mb-2 sm:mb-0">
                                 {itinerary.waitingTime > 0 && (
                                   <p className="text-sm font-medium">
-                                    Espera: {formatDuration(itinerary.waitingTime)}
+                                    Espera:{" "}
+                                    {formatDuration(itinerary.waitingTime)}
                                   </p>
                                 )}
                                 <div className="flex items-center">
@@ -955,8 +1106,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               >
                                 <InfoOutlinedIcon className="mr-2" />
                                 {expandedLegIndex === index
-                                  ? 'Ocultar Detalles'
-                                  : 'Ver Detalles'}
+                                  ? "Ocultar Detalles"
+                                  : "Ver Detalles"}
                               </button>
                               <button
                                 className="bg-green-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
@@ -996,51 +1147,86 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                       }}
                                     >
                                       {/* Detalles del leg */}
-                                      {itinerary.legs[currentLegIndex].route?.agency && (
+                                      {itinerary.legs[currentLegIndex].route
+                                        ?.agency && (
                                         <p>
-                                          <strong>Agencia:</strong>{' '}
-                                          {itinerary.legs[currentLegIndex].route!.agency!.name}
+                                          <strong>Agencia:</strong>{" "}
+                                          {
+                                            itinerary.legs[currentLegIndex]
+                                              .route!.agency!.name
+                                          }
                                         </p>
                                       )}
-                                      {itinerary.legs[currentLegIndex].route?.longName &&
-                                        itinerary.legs[currentLegIndex].route?.shortName && (
+                                      {itinerary.legs[currentLegIndex].route
+                                        ?.longName &&
+                                        itinerary.legs[currentLegIndex].route
+                                          ?.shortName && (
                                           <p>
-                                            <strong>Línea/Ruta:</strong>{' '}
-                                            {itinerary.legs[currentLegIndex].route!.shortName} -{' '}
-                                            {itinerary.legs[currentLegIndex].route!.longName}
+                                            <strong>Línea/Ruta:</strong>{" "}
+                                            {
+                                              itinerary.legs[currentLegIndex]
+                                                .route!.shortName
+                                            }{" "}
+                                            -{" "}
+                                            {
+                                              itinerary.legs[currentLegIndex]
+                                                .route!.longName
+                                            }
                                           </p>
                                         )}
                                       <p>
-                                        <strong>Desde:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].from.name === 'Origin' || !itinerary.legs[currentLegIndex].from.name
+                                        <strong>Desde:</strong>{" "}
+                                        {itinerary.legs[currentLegIndex].from
+                                          .name === "Origin" ||
+                                        !itinerary.legs[currentLegIndex].from
+                                          .name
                                           ? startLocation?.display_name
-                                          : itinerary.legs[currentLegIndex].from.stop?.name 
-                                            ? itinerary.legs[currentLegIndex].from.stop.name 
-                                            : itinerary.legs[currentLegIndex].from.name}
+                                          : itinerary.legs[currentLegIndex].from
+                                              .stop?.name
+                                          ? itinerary.legs[currentLegIndex].from
+                                              .stop.name
+                                          : itinerary.legs[currentLegIndex].from
+                                              .name}
                                       </p>
                                       <p>
-                                        <strong>Hasta:</strong>{' '}
-                                        {itinerary.legs[currentLegIndex].to.name === 'Destination'
+                                        <strong>Hasta:</strong>{" "}
+                                        {itinerary.legs[currentLegIndex].to
+                                          .name === "Destination"
                                           ? endLocation?.display_name
-                                          : itinerary.legs[currentLegIndex].to.stop?.name 
-                                            ? itinerary.legs[currentLegIndex].to.stop.name
-                                            : itinerary.legs[currentLegIndex].to.name}
+                                          : itinerary.legs[currentLegIndex].to
+                                              .stop?.name
+                                          ? itinerary.legs[currentLegIndex].to
+                                              .stop.name
+                                          : itinerary.legs[currentLegIndex].to
+                                              .name}
                                       </p>
                                       <p>
-                                        <strong>Distancia:</strong>{' '}
-                                        {formatDistance(itinerary.legs[currentLegIndex].distance)}
+                                        <strong>Distancia:</strong>{" "}
+                                        {formatDistance(
+                                          itinerary.legs[currentLegIndex]
+                                            .distance
+                                        )}
                                       </p>
                                       <p>
-                                        <strong>Duración:</strong>{' '}
-                                        {formatDuration(itinerary.legs[currentLegIndex].duration)}
+                                        <strong>Duración:</strong>{" "}
+                                        {formatDuration(
+                                          itinerary.legs[currentLegIndex]
+                                            .duration
+                                        )}
                                       </p>
                                       <p>
-                                        <strong>Hora al empezar:</strong>{' '}
-                                        {formatTimeWithAmPm(itinerary.legs[currentLegIndex].startTime)}
+                                        <strong>Hora al empezar:</strong>{" "}
+                                        {formatTimeWithAmPm(
+                                          itinerary.legs[currentLegIndex]
+                                            .startTime
+                                        )}
                                       </p>
                                       <p>
-                                        <strong>Hora al terminar:</strong>{' '}
-                                        {formatTimeWithAmPm(itinerary.legs[currentLegIndex].endTime)}
+                                        <strong>Hora al terminar:</strong>{" "}
+                                        {formatTimeWithAmPm(
+                                          itinerary.legs[currentLegIndex]
+                                            .endTime
+                                        )}
                                       </p>
                                     </div>
                                   )}
@@ -1048,7 +1234,8 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                 <button
                                   onClick={() =>
                                     setCurrentLegIndex(
-                                      (currentLegIndex + 1) % itinerary.legs.length
+                                      (currentLegIndex + 1) %
+                                        itinerary.legs.length
                                     )
                                   }
                                   className="p-2 bg-gray-300 rounded-full"
@@ -1062,7 +1249,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   <div
                                     key={idx}
                                     className={`h-2 w-2 rounded-full mx-1 ${
-                                      currentLegIndex === idx ? 'bg-blue-500' : 'bg-gray-300'
+                                      currentLegIndex === idx
+                                        ? "bg-blue-500"
+                                        : "bg-gray-300"
                                     }`}
                                   />
                                 ))}
@@ -1071,8 +1260,7 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                           )}
                         </div>
                       ))
-                    : 
-                      // Si el menú está colapsado, solo mostrar el itinerario seleccionado
+                    : // Si el menú está colapsado, solo mostrar el itinerario seleccionado
                       selectedItinerary && (
                         <div className="bg-green-100 p-3 rounded-lg max-w-full">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
@@ -1083,22 +1271,24 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                   const color = getColorForLeg(leg);
                                   const Icon = getTransportIcon(leg.mode);
                                   return (
-                                    <React.Fragment key={`${selectedItinerary.id}-${leg.gtfsId}`}>
+                                    <React.Fragment
+                                      key={`${selectedItinerary.id}-${leg.gtfsId}`}
+                                    >
                                       <div
                                         style={{
-                                          display: 'flex',
-                                          flexDirection: 'column',
-                                          alignItems: 'center',
-                                          marginRight: '10px',
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "center",
+                                          marginRight: "10px",
                                         }}
                                         title={`ETA: ${generateRandomETA()}`}
                                       >
                                         <span
                                           style={{
-                                            fontSize: '12px',
-                                            marginBottom: '6px',
-                                            color: 'black',
-                                            fontWeight: 'bold',
+                                            fontSize: "12px",
+                                            marginBottom: "6px",
+                                            color: "black",
+                                            fontWeight: "bold",
                                           }}
                                         >
                                           {formatDuration(leg.duration)}
@@ -1107,31 +1297,34 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                                         <div
                                           style={{
                                             backgroundColor: color,
-                                            borderRadius: '50%',
-                                            padding: '8px',
-                                            color: 'white',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            width: '50px',
-                                            height: '50px',
+                                            borderRadius: "50%",
+                                            padding: "8px",
+                                            color: "white",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: "50px",
+                                            height: "50px",
                                           }}
                                         >
                                           {Icon}
                                         </div>
                                         <span
                                           style={{
-                                            fontSize: '12px',
-                                            marginTop: '6px',
-                                            color: 'black',
-                                            fontWeight: 'bold',
+                                            fontSize: "12px",
+                                            marginTop: "6px",
+                                            color: "black",
+                                            fontWeight: "bold",
                                           }}
                                         >
                                           {Math.round(leg.distance)}m
                                         </span>
                                       </div>
-                                      {legIndex < selectedItinerary.legs.length - 1 && (
-                                        <ArrowForwardIcon style={{ color: 'gray' }} />
+                                      {legIndex <
+                                        selectedItinerary.legs.length - 1 && (
+                                        <ArrowForwardIcon
+                                          style={{ color: "gray" }}
+                                        />
                                       )}
                                     </React.Fragment>
                                   );
@@ -1144,7 +1337,10 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               <div className="flex flex-col items-start mb-2 sm:mb-0">
                                 {selectedItinerary.waitingTime > 0 && (
                                   <p className="text-sm font-medium">
-                                    Espera: {formatDuration(selectedItinerary.waitingTime)}
+                                    Espera:{" "}
+                                    {formatDuration(
+                                      selectedItinerary.waitingTime
+                                    )}
                                   </p>
                                 )}
                                 <div className="flex items-center">
@@ -1160,7 +1356,13 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                               {/* Botón "Guardar Ruta" */}
                               <button
                                 className="bg-purple-500 text-white p-2 rounded w-full sm:w-auto flex items-center justify-center"
-                                onClick={() => handleSaveRoute(selectedItinerary, startName, endName)}
+                                onClick={() =>
+                                  handleSaveRoute(
+                                    selectedItinerary,
+                                    startName,
+                                    endName
+                                  )
+                                }
                               >
                                 Guardar Ruta
                               </button>
@@ -1170,7 +1372,9 @@ const ItineraryMapComponent: React.FC<ItineraryMapComponentProps> = ({
                       )}
                 </div>
               ) : (
-                <p className="text-center text-gray-500 mt-4">Sin itinerarios</p>
+                <p className="text-center text-gray-500 mt-4">
+                  Sin itinerarios
+                </p>
               )}
             </>
           )}
