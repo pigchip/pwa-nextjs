@@ -24,6 +24,8 @@ const RegisterList: React.FC = () => {
   const { reports, setSelectedReport } = useReports();
   const { lines, stations, getFirstAndLastStations } = useLinesStations();
   const [filteredStations, setFilteredStations] = useState<Station[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<Status | "">("");
 
   const filterRegisters = useCallback(() => {
     let filtered = reports;
@@ -143,6 +145,36 @@ const RegisterList: React.FC = () => {
   const handleViewMore = (register: Register) => {
     setSelectedReport(register);
     router.push("/reports/details");
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selectedStatus) return;
+
+    try {
+      for (const register of filteredRegisters) {
+        const response = await fetch('/api/reports/update/status', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: register.id,
+            status: selectedStatus,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to update status for register ID ${register.id}`);
+        }
+      }
+
+      alert('Estado de los reportes actualizado correctamente');
+      filterRegisters(); // Refresh the filtered registers
+      setShowModal(false); // Close the modal
+    } catch (error) {
+      console.error(error);
+      alert('Error updating status');
+    }
   };
 
   return (
@@ -270,6 +302,12 @@ const RegisterList: React.FC = () => {
       >
         Reiniciar filtros
       </button>
+      <button
+        onClick={() => setShowModal(true)}
+        className="ml-6 mb-4 p-2 bg-[#6ABDA6] text-white rounded"
+      >
+        Actualizar estado de los reportes filtrados
+      </button>
       <ul className="space-y-4">
         {paginatedRegisters.map((register) => (
           <li
@@ -343,6 +381,40 @@ const RegisterList: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Seleccionar nuevo estado</h2>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value as Status)}
+              className="p-2 border border-gray-300 rounded mb-4"
+            >
+              <option value="">Seleccione un estado</option>
+              {Object.values(Status).map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="mr-2 p-2 bg-gray-300 text-black rounded"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateStatus}
+                className="p-2 bg-[#6ABDA6] text-white rounded"
+              >
+                Actualizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
