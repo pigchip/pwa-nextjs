@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Supervisor } from "@/types/supervisor";
 import { IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useLinesStations } from '@/stores/LinesStationsContext';
 
 const AdminSupervisorEdit = () => {
   const [formData, setFormData] = useState<Supervisor | null>(null);
@@ -13,6 +14,8 @@ const AdminSupervisorEdit = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const id = useParams().id;
   const router = useRouter();
+  const { lines, stations, getFirstAndLastStations } = useLinesStations();
+  const [filteredStations, setFilteredStations] = useState<Station[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -29,6 +32,7 @@ const AdminSupervisorEdit = () => {
           throw new Error("Supervisor not found");
         }
         setFormData(foundSupervisor);
+        setFilteredStations(stations.filter(station => station.line === foundSupervisor.line));
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -41,15 +45,20 @@ const AdminSupervisorEdit = () => {
     };
 
     fetchSupervisor();
-  }, [id]);
+  }, [id, stations]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!formData) return;
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+
+    if (name === 'line') {
+      const lineId = Number(value);
+      setFilteredStations(stations.filter(station => station.line === lineId));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,25 +169,40 @@ const AdminSupervisorEdit = () => {
         </div>
         <div className="mb-4">
           <label className="block text-gray-700">Línea</label>
-          <input
-            type="number"
+          <select
             name="line"
             value={formData.line}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
             required
-          />
+          >
+            <option value="">Selecciona una línea</option>
+            {lines.map((line) => {
+              const { firstStation, lastStation } = getFirstAndLastStations(line.id);
+              return (
+                <option key={line.id} value={line.id}>
+                  {line.transport} {line.name} ({firstStation?.name} - {lastStation?.name})
+                </option>
+              );
+            })}
+          </select>
         </div>
         <div className="mb-4">
           <label className="block text-gray-700">Estación</label>
-          <input
-            type="number"
+          <select
             name="station"
             value={formData.station}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
             required
-          />
+          >
+            <option value="">Selecciona una estación</option>
+            {filteredStations.map((station) => (
+              <option key={station.id} value={station.id}>
+                {station.name}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"
