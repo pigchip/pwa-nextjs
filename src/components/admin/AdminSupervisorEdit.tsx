@@ -142,6 +142,7 @@ const AdminSupervisorEdit = () => {
             value={formData.sup}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
+            readOnly
             required
           />
         </div>
@@ -153,6 +154,7 @@ const AdminSupervisorEdit = () => {
             value={formData.user}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
+            readOnly
             required
           />
         </div>
@@ -164,6 +166,7 @@ const AdminSupervisorEdit = () => {
             value={formData.admin}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
+            readOnly
             required
           />
         </div>
