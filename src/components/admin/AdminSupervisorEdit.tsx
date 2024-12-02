@@ -58,22 +58,23 @@ const AdminSupervisorEdit = () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
-
+  
     try {
-      const response = await fetch(`/api/supervisors/${id}`, {
+      const response = await fetch(`/api/supervisor/update/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update supervisor");
       }
-
+  
       const result = await response.json();
+      console.log(result);
       setSuccess("Supervisor updated successfully");
       router.push("/admin/supervisors");
     } catch (error) {
@@ -125,7 +126,7 @@ const AdminSupervisorEdit = () => {
         className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md"
       >
         <div className="mb-4">
-          <label className="block text-gray-700">Supervisor ID</label>
+          <label className="block text-gray-700">ID del Supervisor</label>
           <input
             type="text"
             name="sup"
@@ -136,7 +137,7 @@ const AdminSupervisorEdit = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">User</label>
+          <label className="block text-gray-700">Usuario</label>
           <input
             type="number"
             name="user"
@@ -158,7 +159,7 @@ const AdminSupervisorEdit = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Line</label>
+          <label className="block text-gray-700">Línea</label>
           <input
             type="number"
             name="line"
@@ -169,7 +170,7 @@ const AdminSupervisorEdit = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Station</label>
+          <label className="block text-gray-700">Estación</label>
           <input
             type="number"
             name="station"
