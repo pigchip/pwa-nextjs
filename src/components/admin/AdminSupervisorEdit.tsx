@@ -6,6 +6,7 @@ import { Supervisor } from "@/types/supervisor";
 import { IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useLinesStations } from '@/stores/LinesStationsContext';
+import { Station } from "@/types";
 
 const AdminSupervisorEdit = () => {
   const [formData, setFormData] = useState<Supervisor | null>(null);
