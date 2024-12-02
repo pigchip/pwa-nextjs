@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useReports } from "@/contexts/ReportsContext";
 import { useLinesStations } from "@/stores/LinesStationsContext";
 import { Station } from "@/types";
+import sendKnockNotification, { recipients } from "@/utils/knock/sendNotification";
 
 const RegisterList: React.FC = () => {
   const [filteredRegisters, setFilteredRegisters] = useState<Register[]>([]);
@@ -162,6 +163,15 @@ const RegisterList: React.FC = () => {
             status: selectedStatus,
           }),
         });
+
+        if (selectedStatus === Status.Validado && response.ok) {
+          sendKnockNotification(recipients, {
+            value: register.body,
+            station: stations.find(
+              (station) => station.id === Number(register.station)
+            )?.name || register.station.toString(),
+          });
+        }
 
         if (!response.ok) {
           throw new Error(`Failed to update status for register ID ${register.id}`);
