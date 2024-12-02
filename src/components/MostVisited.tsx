@@ -1,4 +1,3 @@
-// FILE: components/MostVisited.tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -13,7 +12,27 @@ const MostVisited: React.FC = () => {
 
   useEffect(() => {
     const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-    const lines = savedRoutes.filter((route: any) => route.type === 'line');
+    console.log(savedRoutes);
+
+    const lines = savedRoutes.flatMap((route: any) =>
+      route.legs
+        .filter((leg: any) => leg.mode !== 'WALK')
+        .map((leg: any) => ({
+          agency: leg.route?.agency?.name || 'Unknown',
+          longName: leg.route?.longName || 'Unknown',
+          shortName: leg.route?.shortName || 'Unknown'
+        }))
+    );
+
+    const lineFrequency = lines.reduce((acc: any, line: any) => {
+      const key = `${line.agency}-${line.longName}-${line.shortName}`;
+      acc[key] = acc[key] || { ...line, frequency: 0 };
+      acc[key].frequency += 1;
+      return acc;
+    }, {});
+
+    const uniqueLines = Object.keys(lineFrequency).map(key => lineFrequency[key]);
+
     const stations = savedRoutes.flatMap((route: any) => 
       route.legs.map((leg: any) => ({
         name: leg.to.name,
@@ -33,7 +52,7 @@ const MostVisited: React.FC = () => {
       agency: stationFrequency[station].agency
     }));
 
-    setMostVisited({ lines, stations: uniqueStations });
+    setMostVisited({ lines: uniqueLines, stations: uniqueStations });
   }, []);
 
   const handleBackClick = () => {
@@ -79,7 +98,7 @@ const MostVisited: React.FC = () => {
                 {mostVisited.lines.map((line, index) => (
                   <li key={index} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center justify-between">
-                      <span>{line.startNameIti} - {line.endNameIti}</span>
+                      <span>{line.agency} {line.shortName}: {line.longName} </span>
                       <span className="text-sm text-gray-500">Frecuencia: {line.frequency}</span>
                     </div>
                   </li>
