@@ -32,9 +32,9 @@ async function sendKnockNotification(
 
 export const recipients = [
   "iespinosas1700@alumno.ipn.mx",
-  "jangeles1700@alumno.ipn.mx",
-  "aguzman1702@alumno.ipn.mx",
-  "agarciaz1703@alumno.ipn.mx",
+  "guzmancruzandresmiguel@gmail.com",
+  "andresmgc33@gmail.com",
+  "a@gmail.com",
 ];
 
 export default sendKnockNotification;
