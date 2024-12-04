@@ -3,7 +3,9 @@ import { Register, Status } from "@/types/register";
 import { useRouter } from "next/navigation";
 import { useReports } from "@/contexts/ReportsContext";
 import { useLinesStations } from "@/stores/LinesStationsContext";
-import { Station } from "@/types";
+import { useUsers } from "@/contexts/UsersContext";
+import { useRoutes } from "@/contexts/RoutesContext";
+import { Route, Station } from "@/types";
 import sendKnockNotification, {
   recipients,
 } from "@/utils/knock/sendNotification";
@@ -26,25 +28,27 @@ const RegisterList: React.FC = () => {
   const router = useRouter();
   const { reports, setSelectedReport } = useReports();
   const { lines, stations, getFirstAndLastStations } = useLinesStations();
+  const { users } = useUsers();
+  const { routes } = useRoutes();
   const [filteredStations, setFilteredStations] = useState<Station[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<Status | "">("");
 
-  const fetchUserById = async (userId: number) => {
-    const response = await fetch(`/api/user/${userId}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch user details");
+  const fetchUserById = useCallback(async (userId: number) => {
+    const user = users.find((user) => user.id === userId);
+    if (!user) {
+      throw new Error("User not found");
     }
-    return response.json();
-  };
+    return user;
+  }, [users]);
 
-  const fetchRouteById = async (routeId: number) => {
-    const response = await fetch(`/api/routes/${routeId}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch route details");
+  const fetchRouteById = useCallback(async (routeId: number) => {
+    const route = routes.find((route: Route) => route.id === routeId);
+    if (!route) {
+      throw new Error("Route not found");
     }
-    return response.json();
-  };
+    return route;
+  }, [routes]);
 
   const filterRegisters = useCallback(async () => {
     let filtered = reports;
@@ -118,7 +122,7 @@ const RegisterList: React.FC = () => {
     );
 
     setFilteredRegisters(registersWithDetails);
-  }, [reports, filters]);
+  }, [reports, filters, fetchUserById, fetchRouteById]);
 
   useEffect(() => {
     filterRegisters();
@@ -127,7 +131,7 @@ const RegisterList: React.FC = () => {
     );
   }, [filters, currentPage, filterRegisters, lines, stations]);
 
-  const handleFilterChange = (
+  const handleFilterChange = async (
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
   ) => {
     const { name, value } = e.target;
@@ -234,22 +238,11 @@ const RegisterList: React.FC = () => {
           className="p-2 border border-gray-300 rounded"
         >
           <option value="">Todos los usuarios</option>
-          {uniqueValues("user").map((user) => {
-            const userDetails = filteredRegisters.find(
-              (register) => register.user === user
-            )?.userDetails;
-            const displayName = userDetails
-              ? `${userDetails.name} ${userDetails.lastname_pat}`
-              : String(user);
-            return (
-              <option
-                key={String(user)}
-                value={user !== null && user !== undefined ? String(user) : ""}
-              >
-                {displayName}
-              </option>
-            );
-          })}
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name} {user.lastname_pat}
+            </option>
+          ))}
         </select>
         <select
           name="transport"
@@ -299,22 +292,11 @@ const RegisterList: React.FC = () => {
           className="p-2 border border-gray-300 rounded"
         >
           <option value="">Todas las rutas</option>
-          {uniqueValues("route").map((route) => {
-            const routeDetails = filteredRegisters.find(
-              (register) => register.route === route
-            )?.routeDetails;
-            const displayName = routeDetails
-              ? `${routeDetails.name}`
-              : String(route);
-            return (
-              <option
-                key={String(route)}
-                value={route !== null && route !== undefined ? String(route) : ""}
-              >
-                {displayName}
-              </option>
-            );
-          })}
+          {routes.map((route) => (
+            <option key={route.id} value={route.id}>
+              {route.name}
+            </option>
+          ))}
         </select>
         <select
           name="station"
