@@ -182,7 +182,7 @@ const EvidenceDetails: React.FC = () => {
             <MapWithMarker lat={x} lon={y} />
           </div>
 
-          {role === "supervisor" && (
+          {(role === "supervisor" || role === "admin") && (
             <div className="mt-6">
               <select
                 value={newStatus || ""}
