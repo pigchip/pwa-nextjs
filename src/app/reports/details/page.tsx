@@ -11,6 +11,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import MapWithMarker from "@/components/MapWithMarker"; // Importa el componente del mapa
 import { Knock } from "@knocklabs/node";
 import { useLinesStations } from "@/stores/LinesStationsContext";
+import sendKnockNotification, { recipients } from "@/utils/knock/sendNotification";
 
 const EvidenceDetails: React.FC = () => {
   const { selectedReport, setSelectedReport, updateReport } = useReports();
@@ -93,14 +94,9 @@ const EvidenceDetails: React.FC = () => {
         throw new Error("Failed to update station incident");
       }
 
-      await knockNode.workflows.trigger("mts", {
-        recipients: ["iespinosas1700@alumno.ipn.mx", "jangeles1700@alumno.ipn.mx", "aguzman1702@alumno.ipn.mx", "agarciaz1703@alumno.ipn.mx"],
-        data: {
-          incident: {
-            value: incident,
-            station: stationId
-          }
-        }
+      sendKnockNotification(recipients, {
+        value: incident,
+        station: stationId
       });
     } catch (error) {
       console.error("Error updating station incident:", error);
