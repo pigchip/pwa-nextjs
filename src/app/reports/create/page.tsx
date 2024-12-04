@@ -1,37 +1,32 @@
-// pages/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Layout from "@/components/Layout";
-import { Transport, Line, Station, Register, Status } from "@/types";
-import { useTransportLinesStore } from "@/stores/useTransportLinesStore";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import SubwayIcon from "@mui/icons-material/Subway";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import { getMexicoCityDateTime } from "@/utils/date";
-import { incidents } from "@/utils/incidents";
-import { useLineStationsStore } from "@/stores/useLineStations";
-import { TransportName } from "@/types/transport";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
+import SubwayIcon from '@mui/icons-material/Subway';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import Layout from '@/components/Layout';
+import { Register, Status, Transport, Line, Station } from '@/types';
+import { useTransportLinesStore } from '@/stores/useTransportLinesStore';
+import { useLineStationsStore } from '@/stores/useLineStations';
+import { TransportName } from '@/types/transport';
+import { getMexicoCityDateTime } from '@/utils/date';
+import { incidents } from '@/utils/incidents';
 
 const CreateEvidenceComponent: React.FC = () => {
   const router = useRouter();
   const [transports, setTransports] = useState<Transport[]>([]);
-  const [selectedTransport, setSelectedTransport] = useState<string | null>(
-    null
-  );
+  const [selectedTransport, setSelectedTransport] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<Line | null>(null);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [selectedIncident, setSelectedIncident] = useState<{
-    id: number;
-    name: string;
-    description: string;
-  } | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<{ id: number; name: string; description: string } | null>(null);
   const [stationsDisabled, setStationsDisabled] = useState<boolean>(false);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const { lines, fetchTransportLines } = useTransportLinesStore();
   const { lineStations, fetchStationsForLine } = useLineStationsStore();
@@ -48,6 +43,24 @@ const CreateEvidenceComponent: React.FC = () => {
       lines.forEach((line) => fetchStationsForLine(line.id));
     }
   }, [lines, fetchStationsForLine]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setError('La geolocalización no es compatible con tu navegador');
+      return;
+    }
+
+    const success = (position: GeolocationPosition) => {
+      const { latitude, longitude } = position.coords;
+      setLocation({ latitude, longitude });
+    };
+
+    const error = () => {
+      setError('No se puede obtener tu ubicación');
+    };
+
+    navigator.geolocation.getCurrentPosition(success, error);
+  }, []);
 
   const handleTransportSelect = async (transportName: string) => {
     setSelectedTransport(transportName);
@@ -87,9 +100,7 @@ const CreateEvidenceComponent: React.FC = () => {
       const userData = await userResponse.json();
       const userId = userData.id;
 
-      const routeResponse = await fetch(
-        `/api/lines/${selectedLine?.id}/routes`
-      );
+      const routeResponse = await fetch(`/api/lines/${selectedLine?.id}/routes`);
       const routeData = await routeResponse.json();
       const routeId = routeData[0]?.id;
 
@@ -106,8 +117,8 @@ const CreateEvidenceComponent: React.FC = () => {
         time,
         body: selectedIncident!.description,
         status: Status.SinValidar,
-        x: "0", // Assuming default values for x and y
-        y: "0",
+        x: location ? location.latitude.toString() : "0",
+        y: location ? location.longitude.toString() : "0",
       };
 
       const response = await fetch("/api/reports/register", {
@@ -164,9 +175,7 @@ const CreateEvidenceComponent: React.FC = () => {
                   <MenuItem key={index}>
                     {({ focus }) => (
                       <button
-                        className={`${
-                          focus ? "bg-gray-200" : ""
-                        } group flex rounded-md items-center w-full px-2 py-2 text-sm text-left`}
+                        className={`${focus ? "bg-gray-200" : ""} group flex rounded-md items-center w-full px-2 py-2 text-sm text-left`}
                         onClick={() => handleTransportSelect(transport.name)}
                       >
                         {transport.name}
@@ -190,9 +199,7 @@ const CreateEvidenceComponent: React.FC = () => {
                 <MenuItem key={index}>
                   {({ focus }) => (
                     <button
-                      className={`${
-                        focus ? "bg-gray-200" : ""
-                      } group flex rounded-md items-center w-full px-2 py-2 text-sm text-left`}
+                      className={`${focus ? "bg-gray-200" : ""} group flex rounded-md items-center w-full px-2 py-2 text-sm text-left`}
                       onClick={() => handleLineSelect(line)}
                     >
                       <div className="flex flex-col text-left">
@@ -202,12 +209,7 @@ const CreateEvidenceComponent: React.FC = () => {
                             lineStations[line.id].length > 0 && (
                               <span className="text-xs text-gray-500 ml-2 text-left">
                                 ({lineStations[line.id][0].name} -{" "}
-                                {
-                                  lineStations[line.id][
-                                    lineStations[line.id].length - 1
-                                  ].name
-                                }
-                                )
+                                {lineStations[line.id][lineStations[line.id].length - 1].name})
                               </span>
                             )}
                         </span>
@@ -222,9 +224,7 @@ const CreateEvidenceComponent: React.FC = () => {
           <Menu as="div" className="relative inline-block text-left w-64">
             <MenuButton
               className={`w-full py-2 ${
-                stationsDisabled
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-100 text-gray-800"
+                stationsDisabled ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-100 text-gray-800"
               } font-semibold rounded-lg flex items-center space-x-2`}
               disabled={stationsDisabled}
             >
@@ -240,9 +240,7 @@ const CreateEvidenceComponent: React.FC = () => {
                   <MenuItem key={index}>
                     {({ focus }) => (
                       <button
-                        className={`${
-                          focus ? "bg-gray-200" : ""
-                        } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                        className={`${focus ? "bg-gray-200" : ""} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                         onClick={() => setSelectedStation(station)}
                       >
                         {station.name}
@@ -266,9 +264,7 @@ const CreateEvidenceComponent: React.FC = () => {
                 <MenuItem key={index}>
                   {({ focus }) => (
                     <button
-                      className={`${
-                        focus ? "bg-gray-200" : ""
-                      } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                      className={`${focus ? "bg-gray-200" : ""} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                       onClick={() => setSelectedIncident(incident)}
                       title={incident.description}
                     >
@@ -282,10 +278,7 @@ const CreateEvidenceComponent: React.FC = () => {
         </div>
 
         <div className="flex justify-center mt-6">
-          <button
-            onClick={handleSubmit}
-            className="w-64 py-2 bg-[#6ABDA6] text-white font-semibold rounded-lg mb-32"
-          >
+          <button onClick={handleSubmit} className="w-64 py-2 bg-[#6ABDA6] text-white font-semibold rounded-lg mb-32">
             Solicitar
           </button>
         </div>
