@@ -1,9 +1,11 @@
 "use client";
 
-import Layout from '@/components/Layout'
-import React, { useEffect, useState } from 'react'
-import { useRole } from '@/contexts/RoleContext';
-import RegisterList from '@/components/RegisterList';
+import Layout from "@/components/Layout";
+import React, { useEffect, useState } from "react";
+import { useRole } from "@/contexts/RoleContext";
+import RegisterList from "@/components/RegisterList";
+import { RoutesProvider } from "@/stores/RoutesContext";
+import { UsersProvider } from "@/contexts/UsersContext";
 
 const Page = () => {
   const { role } = useRole();
@@ -17,15 +19,15 @@ const Page = () => {
     return null; // Render nothing on the server
   }
 
-  if (role !== 'supervisor' && role !== 'admin') {
+  if (role !== "supervisor" && role !== "admin") {
     return null; // Render nothing if not a supervisor
   }
 
   return (
     <Layout>
-      <RegisterList />
+        <RegisterList />
     </Layout>
-  )
-}
+  );
+};
 
 export default Page;

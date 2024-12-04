@@ -11,7 +11,8 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { LinesStationsProvider } from "@/stores/LinesStationsContext";
 import Animation from "./Animation"; // Asegúrate de ajustar la ruta según tu estructura de carpetas
-import { RoutesProvider } from "@/stores/RoutesContext";
+import { RoutesProvider } from "@/contexts/RoutesContext";
+import { UsersProvider } from "@/contexts/UsersContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -115,13 +116,15 @@ export default function RootLayout({
       </head>
       <body>
         <RoleProvider>
-          <LinesStationsProvider>
-            <RoutesProvider>
-              <SelectedItineraryProvider>
-                <ReportsProvider>{children}</ReportsProvider>
-              </SelectedItineraryProvider>
-            </RoutesProvider>
-          </LinesStationsProvider>
+          <RoutesProvider>
+            <LinesStationsProvider>
+              <UsersProvider>
+                <SelectedItineraryProvider>
+                  <ReportsProvider>{children}</ReportsProvider>
+                </SelectedItineraryProvider>
+              </UsersProvider>
+            </LinesStationsProvider>
+          </RoutesProvider>
         </RoleProvider>
       </body>
     </html>
