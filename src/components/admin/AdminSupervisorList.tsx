@@ -1,5 +1,3 @@
-// components/AdminSupervisorList.tsx
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Supervisor } from "@/types/supervisor";
@@ -17,11 +15,25 @@ const AdminSupervisorList = () => {
   const router = useRouter();
   const { lines, stations } = useLinesStations();
 
+  const fetchUserById = async (userId: number) => {
+    const response = await fetch(`/api/user/${userId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch user details");
+    }
+    return response.json();
+  };
+
   useEffect(() => {
     const loadSupervisors = async () => {
       try {
-        const data = await fetchSupervisors();
-        setSupervisors(data);
+        const supervisorsData = await fetchSupervisors();
+        const supervisorsWithUserDetails = await Promise.all(
+          supervisorsData.map(async (supervisor) => {
+            const userDetails = await fetchUserById(supervisor.user);
+            return { ...supervisor, userDetails };
+          })
+        );
+        setSupervisors(supervisorsWithUserDetails);
       } catch (error) {
         setError((error as Error).message);
       } finally {
@@ -72,7 +84,7 @@ const AdminSupervisorList = () => {
                   {supervisor.sup}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
-                  {supervisor.user}
+                  {supervisor.userDetails?.name} {supervisor.userDetails?.lastname_pat}
                 </td>
                 <td className="py-3 px-6 border-b text-center">
                   {supervisor.admin}

@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useReports } from "@/contexts/ReportsContext";
 import { useLinesStations } from "@/stores/LinesStationsContext";
 import { Station } from "@/types";
-import sendKnockNotification, { recipients } from "@/utils/knock/sendNotification";
+import sendKnockNotification, {
+  recipients,
+} from "@/utils/knock/sendNotification";
 
 const RegisterList: React.FC = () => {
   const [filteredRegisters, setFilteredRegisters] = useState<Register[]>([]);
@@ -28,7 +30,23 @@ const RegisterList: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<Status | "">("");
 
-  const filterRegisters = useCallback(() => {
+  const fetchUserById = async (userId: number) => {
+    const response = await fetch(`/api/user/${userId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch user details");
+    }
+    return response.json();
+  };
+
+  const fetchRouteById = async (routeId: number) => {
+    const response = await fetch(`/api/routes/${routeId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch route details");
+    }
+    return response.json();
+  };
+
+  const filterRegisters = useCallback(async () => {
     let filtered = reports;
 
     if (filters.user) {
@@ -91,7 +109,15 @@ const RegisterList: React.FC = () => {
       }
     });
 
-    setFilteredRegisters(filtered);
+    const registersWithDetails = await Promise.all(
+      filtered.map(async (register) => {
+        const userDetails = await fetchUserById(register.user);
+        const routeDetails = await fetchRouteById(register.route);
+        return { ...register, userDetails, routeDetails };
+      })
+    );
+
+    setFilteredRegisters(registersWithDetails);
   }, [reports, filters]);
 
   useEffect(() => {
@@ -153,10 +179,10 @@ const RegisterList: React.FC = () => {
 
     try {
       for (const register of filteredRegisters) {
-        const response = await fetch('/api/reports/update/status', {
-          method: 'PUT',
+        const response = await fetch("/api/reports/update/status", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             id: register.id,
@@ -167,23 +193,26 @@ const RegisterList: React.FC = () => {
         if (selectedStatus === Status.Validado && response.ok) {
           sendKnockNotification(recipients, {
             value: register.body,
-            station: stations.find(
-              (station) => station.id === Number(register.station)
-            )?.name || register.station.toString(),
+            station:
+              stations.find(
+                (station) => station.id === Number(register.station)
+              )?.name || register.station.toString(),
           });
         }
 
         if (!response.ok) {
-          throw new Error(`Failed to update status for register ID ${register.id}`);
+          throw new Error(
+            `Failed to update status for register ID ${register.id}`
+          );
         }
       }
 
-      alert('Estado de los reportes actualizado correctamente');
+      alert("Estado de los reportes actualizado correctamente");
       filterRegisters(); // Refresh the filtered registers
       setShowModal(false); // Close the modal
     } catch (error) {
       console.error(error);
-      alert('Error updating status');
+      alert("Error updating status");
     }
   };
 
@@ -205,11 +234,22 @@ const RegisterList: React.FC = () => {
           className="p-2 border border-gray-300 rounded"
         >
           <option value="">Todos los usuarios</option>
-          {uniqueValues("user").map((user) => (
-            <option key={user} value={user}>
-              {user}
-            </option>
-          ))}
+          {uniqueValues("user").map((user) => {
+            const userDetails = filteredRegisters.find(
+              (register) => register.user === user
+            )?.userDetails;
+            const displayName = userDetails
+              ? `${userDetails.name} ${userDetails.lastname_pat}`
+              : String(user);
+            return (
+              <option
+                key={String(user)}
+                value={user !== null && user !== undefined ? String(user) : ""}
+              >
+                {displayName}
+              </option>
+            );
+          })}
         </select>
         <select
           name="transport"
@@ -219,8 +259,17 @@ const RegisterList: React.FC = () => {
         >
           <option value="">Todos los transportes</option>
           {uniqueValues("transport").map((transport) => (
-            <option key={transport} value={transport}>
-              {transport}
+            <option
+              key={String(transport)}
+              value={
+                transport !== null && transport !== undefined
+                  ? String(transport)
+                  : ""
+              }
+            >
+              {transport !== null && transport !== undefined
+                ? String(transport)
+                : ""}
             </option>
           ))}
         </select>
@@ -250,11 +299,22 @@ const RegisterList: React.FC = () => {
           className="p-2 border border-gray-300 rounded"
         >
           <option value="">Todas las rutas</option>
-          {uniqueValues("route").map((route) => (
-            <option key={route} value={route}>
-              {route}
-            </option>
-          ))}
+          {uniqueValues("route").map((route) => {
+            const routeDetails = filteredRegisters.find(
+              (register) => register.route === route
+            )?.routeDetails;
+            const displayName = routeDetails
+              ? `${routeDetails.name}`
+              : String(route);
+            return (
+              <option
+                key={String(route)}
+                value={route !== null && route !== undefined ? String(route) : ""}
+              >
+                {displayName}
+              </option>
+            );
+          })}
         </select>
         <select
           name="station"
@@ -327,7 +387,8 @@ const RegisterList: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between">
               <div>
                 <p>
-                  <strong>Usuario:</strong> {register.user}
+                  <strong>Usuario:</strong> {register.userDetails?.name}{" "}
+                  {register.userDetails?.lastname_pat}
                 </p>
                 <p>
                   <strong>Transporte:</strong> {register.transport}
@@ -339,7 +400,10 @@ const RegisterList: React.FC = () => {
                   )?.information || register.line}
                 </p>
                 <p>
-                  <strong>Ruta:</strong> {register.route}
+                  <strong>Ruta:</strong>{" "}
+                  {register.routeDetails?.name ||
+                    register.routeDetails?.id ||
+                    register.route}
                 </p>
                 <p>
                   <strong>Estación:</strong>{" "}

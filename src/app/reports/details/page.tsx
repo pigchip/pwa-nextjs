@@ -29,7 +29,7 @@ const EvidenceDetails: React.FC = () => {
   const knockNode = new Knock(knockApiKey);
 
   const handleBack = () => {
-    if (role === "supervisor") {
+    if (role === "supervisor" || role === "admin") {
       router.push("/supervisor");
     } else {
       router.push("/reports");
