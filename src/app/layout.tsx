@@ -67,7 +67,7 @@ export default function RootLayout({
       knockClient.users
         .identify(storedEmail, {
           email: storedEmail,
-          name: userDetails?.name || "Usuario",
+          name: userDetails?.name || "Usuario/a",
         })
         .then((response) => {
           console.log("Knock user identified:", response);
