@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Register, Status } from "@/types/register";
 import { useRouter } from "next/navigation";
 import { useReports } from "@/contexts/ReportsContext";
@@ -161,6 +161,16 @@ const RegisterList: React.FC = () => {
     return Array.from(new Set(reports.map((register) => register[key])));
   };
 
+  const availableUsers = useMemo(() => {
+    const userIds = new Set(reports.map((register) => register.user));
+    return users.filter((user) => userIds.has(user.id));
+  }, [reports, users]);
+
+  const availableRoutes = useMemo(() => {
+    const routeIds = new Set(reports.map((register) => register.route));
+    return routes.filter((route) => routeIds.has(route.id));
+  }, [reports, routes]);
+
   // Calculate paginated data
   const paginatedRegisters = filteredRegisters.slice(
     (currentPage - 1) * itemsPerPage,
@@ -238,7 +248,7 @@ const RegisterList: React.FC = () => {
           className="p-2 border border-gray-300 rounded"
         >
           <option value="">Todos los usuarios</option>
-          {users.map((user) => (
+          {availableUsers.map((user) => (
             <option key={user.id} value={user.id}>
               {user.name} {user.lastname_pat}
             </option>
@@ -292,7 +302,7 @@ const RegisterList: React.FC = () => {
           className="p-2 border border-gray-300 rounded"
         >
           <option value="">Todas las rutas</option>
-          {routes.map((route) => (
+          {availableRoutes.map((route) => (
             <option key={route.id} value={route.id}>
               {route.name}
             </option>
