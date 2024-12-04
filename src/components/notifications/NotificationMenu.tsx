@@ -29,7 +29,7 @@ const NotificationMenu = () => {
     isClient ? (
     <KnockProvider
       apiKey={process.env.NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY || ""}
-      userId={userDetails?.email || "iespinosas1700@alumno.ipn.mx"}
+      userId={"iespinosas1700@alumno.ipn.mx"}
       i18n={{
         translations: {
           emptyFeedTitle: "No tienes notificaciones aún",
