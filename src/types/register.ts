@@ -1,3 +1,6 @@
+import { Route } from "./route";
+import { User } from "./user";
+
 export interface Register {
     id: number;
     user: number;
@@ -11,6 +14,8 @@ export interface Register {
     status: Status;
     x: string;
     y: string;
+    userDetails?: User | null;
+    routeDetails?: Route | null;
 }
 
 export enum Status {

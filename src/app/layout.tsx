@@ -11,6 +11,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { LinesStationsProvider } from "@/stores/LinesStationsContext";
 import Animation from "./Animation"; // Asegúrate de ajustar la ruta según tu estructura de carpetas
+import { RoutesProvider } from "@/stores/RoutesContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,26 +26,27 @@ export default function RootLayout({
   const { userDetails, fetchUserDetails } = useUserStore();
 
   useEffect(() => {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        if (registrations.length === 0) {
-          // No hay SW registrados, registrar uno nuevo
-          navigator.serviceWorker
-            .register("/custom-sw.js", { scope: "/" })
-            .then(() => {
-              console.log("Service Worker registrado correctamente.");
-            })
-            .catch((error) => {
-              console.error("Error al registrar el Service Worker:", error);
-            });
-        } else {
-          console.log("Service Worker ya registrado.");
-        }
-      });
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      if (registrations.length === 0) {
+        // No hay SW registrados, registrar uno nuevo
+        navigator.serviceWorker
+          .register("/custom-sw.js", { scope: "/" })
+          .then(() => {
+            console.log("Service Worker registrado correctamente.");
+          })
+          .catch((error) => {
+            console.error("Error al registrar el Service Worker:", error);
+          });
+      } else {
+        console.log("Service Worker ya registrado.");
+      }
+    });
   }, []);
-  
+
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const email = localStorage.getItem("email") || "iespinosas1700@alumno.ipn.mx";
+      const email =
+        localStorage.getItem("email") || "iespinosas1700@alumno.ipn.mx";
       setStoredEmail(email);
     }
   }, []);
@@ -57,7 +59,9 @@ export default function RootLayout({
 
   useEffect(() => {
     if (storedEmail && !isKnockInitialized) {
-      const knockClient = new Knock(process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY);
+      const knockClient = new Knock(
+        process.env.NEXT_PUBLIC_KNOCK_SECRET_API_KEY
+      );
 
       knockClient.users
         .identify(storedEmail, {
@@ -91,19 +95,32 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover"
         />
-        <meta name="theme-color" content="#fff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#000" media="(prefers-color-scheme: dark)" />
+        <meta
+          name="theme-color"
+          content="#fff"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#000"
+          media="(prefers-color-scheme: dark)"
+        />
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body>
         <RoleProvider>
           <LinesStationsProvider>
-            <SelectedItineraryProvider>
-              <ReportsProvider>{children}</ReportsProvider>
-            </SelectedItineraryProvider>
+            <RoutesProvider>
+              <SelectedItineraryProvider>
+                <ReportsProvider>{children}</ReportsProvider>
+              </SelectedItineraryProvider>
+            </RoutesProvider>
           </LinesStationsProvider>
         </RoleProvider>
       </body>
