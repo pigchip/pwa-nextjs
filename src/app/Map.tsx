@@ -162,8 +162,14 @@ export default function Map({ startLocation, endLocation }: MapProps) {
   return (
     <MapContainer
       center={userLocation ? [userLocation.lat, userLocation.lon] : defaultPosition}
+      minZoom={10}
       zoom={13}
       style={{ height: '100%', width: '100%' }}
+      maxBounds={[
+        [18.85, -99.75], // Esquina suroeste de la Zona Metropolitana
+        [19.80, -98.50], // Esquina noreste de la Zona Metropolitana
+      ]}
+      maxBoundsViscosity={0.7}    
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       
