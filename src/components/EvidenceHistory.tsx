@@ -88,7 +88,7 @@ const EvidenceHistory: React.FC<EvidenceHistoryProps> = ({ reports }) => {
       <>
         <p className="mb-6">
           Pulsa <AssignmentIcon className="inline-block" /> para consultar
-          alguna evidencia. Mantén presionado para borrar.
+          alguna evidencia.
         </p>
         {reports.map((report, index) => (
           <div
