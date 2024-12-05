@@ -14,6 +14,14 @@ import "@knocklabs/react/dist/index.css";
 import useUserStore from "@/stores/useUser";
 
 const NotificationMenu = () => {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const email = localStorage.getItem("email") || "iespinosas1700@alumno.ipn.mx";
+      setUserEmail(email);
+    }
+  }, []);
   const [isVisible, setIsVisible] = useState(false);
   const notifButtonRef = useRef(null);
 
@@ -23,13 +31,13 @@ const NotificationMenu = () => {
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+  }, [userDetails]);
 
   return (
     isClient ? (
     <KnockProvider
       apiKey={process.env.NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY || ""}
-      userId={"iespinosas1700@alumno.ipn.mx"}
+      userId={userEmail || "iespinosas1700@alumno.ipn.mx"}
       i18n={{
         translations: {
           emptyFeedTitle: "No tienes notificaciones aún",
